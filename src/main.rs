@@ -66,10 +66,59 @@ fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// How many extensions the skip notice names before summarising the rest. A
+/// project that vendors an entire distribution can have hundreds, and a wall of
+/// them hides the ones that matter.
+const NAMED_EXTENSIONS: usize = 4;
+
+/// Describe skipped files by extension, commonest first, without listing an
+/// unbounded number of extensions.
 fn describe(by_extension: &BTreeMap<String, usize>) -> String {
-    by_extension
+    let mut counts: Vec<(&String, &usize)> = by_extension.iter().collect();
+    counts.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
+
+    let named = counts
         .iter()
+        .take(NAMED_EXTENSIONS)
         .map(|(extension, count)| format!("{count} .{extension}"))
         .collect::<Vec<_>>()
-        .join(", ")
+        .join(", ");
+
+    match counts.len().saturating_sub(NAMED_EXTENSIONS) {
+        0 => named,
+        remaining => format!("{named}, and {remaining} more extensions"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn counts(pairs: &[(&str, usize)]) -> BTreeMap<String, usize> {
+        pairs
+            .iter()
+            .map(|(extension, count)| ((*extension).to_string(), *count))
+            .collect()
+    }
+
+    #[test]
+    fn names_the_commonest_extensions_and_summarises_the_rest() {
+        let described = describe(&counts(&[
+            ("js", 127),
+            ("ts", 57),
+            ("py", 3),
+            ("rb", 2),
+            ("hs", 1),
+        ]));
+
+        assert_eq!(
+            described,
+            "127 .js, 57 .ts, 3 .py, 2 .rb, and 1 more extensions"
+        );
+    }
+
+    #[test]
+    fn lists_every_extension_when_there_are_few() {
+        assert_eq!(describe(&counts(&[("py", 2), ("rb", 1)])), "2 .py, 1 .rb");
+    }
 }

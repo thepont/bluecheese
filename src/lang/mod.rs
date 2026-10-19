@@ -131,19 +131,27 @@ pub fn supported_extensions() -> Vec<&'static str> {
         .collect()
 }
 
-/// Directory names that never hold first-party source: build output and
-/// dependency trees. Vendored dependencies are other people's code, and
-/// reporting smells in them is noise.
-const PRUNED_DIRECTORIES: &[&str] = &["target", "vendor", "node_modules"];
+/// Conventional build-output directories, pruned even in a tree that carries no
+/// ignore file. The primary mechanism is `.gitignore`, below; this is only a
+/// fallback for projects that have declared nothing.
+///
+/// `vendor` is deliberately *not* listed. A project that ignores `vendor/*` and
+/// then re-includes one crate (`!vendor/cpal/`) is stating that crate *is* its
+/// source, and a name we guessed must not overrule a declaration like that.
+const CONVENTIONAL_OUTPUT_DIRECTORIES: &[&str] = &["target", "node_modules"];
 
 /// Load and parse every source file under `root` that a known adapter claims,
 /// sorted by path for determinism.
 ///
 /// Files no adapter claims are skipped, so a mixed or partly-irrelevant tree can
 /// be pointed at safely; the skipped ones are counted rather than dropped
-/// silently. Hidden directories and the conventional build and dependency
-/// directories in [`PRUNED_DIRECTORIES`] are pruned entirely: build output can
-/// contain generated source, and vendored code is not the project's own.
+/// silently.
+///
+/// What counts as the project's source is the project's own declaration: hidden
+/// files, and anything `.gitignore` or `.ignore` excludes, are left out, so a
+/// checked-out dependency tree or a build directory is never reported as the
+/// project's own smells. [`CONVENTIONAL_OUTPUT_DIRECTORIES`] is pruned as well,
+/// for trees that carry no ignore file.
 pub fn load_project(root: &Path) -> Result<Project> {
     let mut parsers = ParserCache::default();
     let mut files = Vec::new();
@@ -166,14 +174,20 @@ pub fn load_project(root: &Path) -> Result<Project> {
 /// Which files an adapter actually claims is decided later, in
 /// [`load_project`]: this step only answers "what counts as this project's
 /// source at all?".
+///
+/// The walker's standard filters are on, so hidden files and anything matched by
+/// a `.gitignore` or `.ignore` file are excluded. `require_git(false)` applies
+/// those files outside a repository too: a project's declaration of its own
+/// source is worth honouring whether or not we are the ones tracking it.
 fn candidate_paths(root: &Path) -> Vec<PathBuf> {
-    let walker = walkdir::WalkDir::new(root)
-        .into_iter()
-        .filter_entry(|entry| !is_pruned(entry));
+    let walker = ignore::WalkBuilder::new(root)
+        .require_git(false)
+        .filter_entry(|entry| !is_pruned(entry))
+        .build();
 
     let mut paths: Vec<PathBuf> = walker
         .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().is_file())
+        .filter(|entry| entry.file_type().is_some_and(|kind| kind.is_file()))
         .map(|entry| entry.into_path())
         .collect();
     paths.sort();
@@ -181,12 +195,15 @@ fn candidate_paths(root: &Path) -> Vec<PathBuf> {
 }
 
 /// Whether to skip descending into `entry`.
-fn is_pruned(entry: &walkdir::DirEntry) -> bool {
-    if entry.depth() == 0 || !entry.file_type().is_dir() {
+///
+/// Hidden directories and ignore files are already handled by the walker; this
+/// adds only the conventional fallback.
+fn is_pruned(entry: &ignore::DirEntry) -> bool {
+    if entry.depth() == 0 || !entry.file_type().is_some_and(|kind| kind.is_dir()) {
         return false;
     }
     let name = entry.file_name().to_string_lossy();
-    name.starts_with('.') || PRUNED_DIRECTORIES.contains(&name.as_ref())
+    CONVENTIONAL_OUTPUT_DIRECTORIES.contains(&name.as_ref())
 }
 
 /// Parsers are reusable and costly to set up, so keep one per language.
