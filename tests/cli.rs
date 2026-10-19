@@ -117,21 +117,25 @@ fn a_folder_with_nothing_it_can_read_says_what_it_saw() {
 }
 
 #[test]
-fn an_unported_smell_is_refused_by_name() {
-    // A smell of the book with no detector yet must not come back as an empty
-    // report, which is what clean code looks like.
-    let output = run_smell(&fixtures().join("rust"), "feature-envy", &[]);
+fn feature_envy_can_be_requested_from_the_cli() {
+    let tree = TempTree::new("feature-envy-cli");
+    tree.write(
+        "invoice.java",
+        "class Invoice { int total(Customer c) { return c.balance + c.discount + c.tax; } }",
+    );
 
-    assert!(!output.status.success());
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let output = run_smell(tree.path(), "feature-envy", &[]);
+
     assert!(
-        stderr.contains("no detector for smell 'feature-envy'"),
-        "stderr was: {stderr}"
+        output.status.success(),
+        "stderr was: {}",
+        String::from_utf8_lossy(&output.stderr)
     );
-    assert!(
-        stderr.contains("long-method"),
-        "and it must say what can be run instead; stderr was: {stderr}"
-    );
+    let findings: Vec<Finding> =
+        serde_json::from_slice(&output.stdout).expect("report is a JSON array");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].class_name, "Invoice");
+    assert_eq!(findings[0].smell_name, "Feature Envy");
 }
 
 #[test]
