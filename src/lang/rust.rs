@@ -53,9 +53,9 @@ impl LanguageModel for RustModel {
             node.kind(),
             "return_expression" | "break_expression" | "continue_expression"
         ) {
-            return !node
+            return node
                 .parent()
-                .is_some_and(|parent| parent.kind() == "expression_statement");
+                .is_none_or(|parent| parent.kind() != "expression_statement");
         }
         matches!(node.kind(), "let_declaration" | "expression_statement")
     }
