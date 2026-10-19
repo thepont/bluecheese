@@ -10,6 +10,7 @@ use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Data Clumps";
 const MIN_SHARED_PARAMETERS: usize = 2;
+type Parameters = BTreeMap<String, Option<String>>;
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files.iter().flat_map(detect_file).collect()
@@ -67,11 +68,21 @@ impl ParameterAnalysis<'_> {
     }
 }
 
-fn matching_method_lines(groups: &[(usize, BTreeSet<String>)]) -> BTreeSet<usize> {
+fn matching_method_lines(groups: &[(usize, Parameters)]) -> BTreeSet<usize> {
     let mut lines = BTreeSet::new();
     for left in 0..groups.len() {
         for right in left + 1..groups.len() {
-            if groups[left].1.intersection(&groups[right].1).count() >= MIN_SHARED_PARAMETERS {
+            let shared = groups[left]
+                .1
+                .iter()
+                .filter(|(name, kind)| {
+                    groups[right]
+                        .1
+                        .get(*name)
+                        .is_some_and(|other| kind.is_none() || other.is_none() || kind == &other)
+                })
+                .count();
+            if shared >= MIN_SHARED_PARAMETERS {
                 lines.insert(groups[left].0);
                 lines.insert(groups[right].0);
             }
@@ -80,30 +91,51 @@ fn matching_method_lines(groups: &[(usize, BTreeSet<String>)]) -> BTreeSet<usize
     lines
 }
 
-fn parameter_names(executable: Node<'_>, file: &SourceFile) -> BTreeSet<String> {
+fn parameter_names(executable: Node<'_>, file: &SourceFile) -> Parameters {
     let Some(parameters) = executable.child_by_field_name("parameters") else {
-        return BTreeSet::new();
+        return Parameters::new();
     };
     let mut cursor = parameters.walk();
     parameters
         .named_children(&mut cursor)
         .filter_map(|parameter| {
-            (parameter.kind() == "identifier")
+            let name = (parameter.kind() == "identifier")
                 .then_some(parameter)
                 .or_else(|| {
                     parameter
                         .child_by_field_name("name")
                         .or_else(|| parameter.child_by_field_name("pattern"))
-                })
-        })
-        .filter(|name| {
-            matches!(
+                })?;
+            if !matches!(
                 name.kind(),
                 "identifier" | "shorthand_property_identifier_pattern"
-            )
+            ) {
+                return None;
+            }
+            Some((file.text(name).to_string(), parameter_type(file, parameter)))
         })
-        .map(|name| file.text(name).to_string())
         .collect()
+}
+
+fn parameter_type(file: &SourceFile, parameter: Node<'_>) -> Option<String> {
+    let ty = parameter.child_by_field_name("type")?;
+    let lifetimes: Vec<_> = descendants(ty)
+        .into_iter()
+        .filter(|node| node.kind() == "lifetime")
+        .map(|node| node.byte_range())
+        .collect();
+    Some(
+        file.text(ty)
+            .char_indices()
+            .filter(|(offset, ch)| {
+                !ch.is_whitespace()
+                    && !lifetimes
+                        .iter()
+                        .any(|range| range.contains(&(ty.start_byte() + offset)))
+            })
+            .map(|(_, ch)| ch)
+            .collect(),
+    )
 }
 
 fn repeated_argument_groups(file: &SourceFile) -> Vec<Finding> {
