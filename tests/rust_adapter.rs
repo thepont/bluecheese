@@ -144,14 +144,25 @@ fn partitions_a_mixed_tree_by_language() {
     // Nothing crosses over: every finding is attributed to a file an adapter of
     // the same language claimed, and the two sets together are all of them.
     assert!(
-        rust.iter()
-            .all(|(path, class, _)| path == "rust/sample.rs" && class == "Analyzer")
-    );
-    assert!(
-        java.iter().all(|(path, _, _)| !path.starts_with("rust/")),
+        java.iter().all(|(path, _, _)| path.ends_with(".java")),
         "a Rust file must not produce a Java finding"
     );
-    assert_eq!(rust.len(), 1, "the Rust fixture holds exactly one long method");
+    assert!(
+        rust.iter().all(|(path, _, _)| path.ends_with(".rs")),
+        "a Java file must not produce a Rust finding"
+    );
+    // The whole Rust corpus is pinned by `smelly_rust.rs`; all this test needs
+    // from it is that the sample under `rust/` is still the one finding there.
+    let under_rust: BTreeSet<_> = rust
+        .iter()
+        .filter(|(path, _, _)| path.starts_with("rust/"))
+        .cloned()
+        .collect();
+    let sample: BTreeSet<(String, String, Vec<usize>)> =
+        [("rust/sample.rs".to_string(), "Analyzer".to_string(), vec![18])]
+            .into_iter()
+            .collect();
+    assert_eq!(under_rust, sample);
     assert_eq!(
         &java
             .union(&rust)
