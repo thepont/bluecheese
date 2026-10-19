@@ -5,37 +5,19 @@
 //! reasoned by hand from the fixture source rather than proven against another
 //! tool. They lock in behaviour; they are not evidence of correctness.
 
+mod common;
+
 use std::collections::{BTreeMap, BTreeSet};
-use std::path::PathBuf;
 
-use bluecheese::finding::Finding;
 use bluecheese::lang::{LanguageId, load_project, model_for};
-
-fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
-}
-
-fn keys(findings: &[Finding]) -> BTreeSet<(String, String, Vec<usize>)> {
-    findings
-        .iter()
-        .map(|f| {
-            (
-                f.relative_file_path.clone(),
-                f.class_name.clone(),
-                f.line_numbers.clone(),
-            )
-        })
-        .collect()
-}
+use common::{keys, load};
 
 /// `Analyzer::accumulate` is the only method over the threshold: 33 logical
 /// lines against a limit of 30, complexity 14 against 15, so it is the line
 /// count driving the finding and not the complexity.
 #[test]
 fn finds_the_long_method_and_nothing_else() {
-    let files = load_project(&fixture_root().join("rust"))
-        .expect("load rust fixture")
-        .files;
+    let files = load("rust").files;
     let findings = bluecheese::detect(&files, "long-method");
 
     let expected: BTreeSet<(String, String, Vec<usize>)> =
@@ -50,9 +32,7 @@ fn finds_the_long_method_and_nothing_else() {
 /// they are reported under a pseudo-type named after the file.
 #[test]
 fn maps_impl_blocks_and_free_functions() {
-    let files = load_project(&fixture_root().join("rust"))
-        .expect("load rust fixture")
-        .files;
+    let files = load("rust").files;
     let file = files
         .iter()
         .find(|f| f.rel == "sample.rs")
@@ -97,9 +77,7 @@ fn maps_impl_blocks_and_free_functions() {
 /// codebase, where the wildcard arm inflated the count.
 #[test]
 fn wildcard_match_arm_is_not_a_decision() {
-    let files = load_project(&fixture_root().join("rust"))
-        .expect("load rust fixture")
-        .files;
+    let files = load("rust").files;
     let file = files
         .iter()
         .find(|f| f.rel == "sample.rs")
@@ -125,7 +103,7 @@ fn wildcard_match_arm_is_not_a_decision() {
 /// the adapter that claims it, and findings never cross over.
 #[test]
 fn partitions_a_mixed_tree_by_language() {
-    let files = load_project(&fixture_root())
+    let files = load_project(&common::fixtures())
         .expect("load mixed fixture tree")
         .files;
     assert!(files.iter().any(|f| f.language == LanguageId::Java));
