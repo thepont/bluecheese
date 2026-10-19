@@ -133,7 +133,32 @@ fn the_ignore_file_is_honoured_without_a_repository() {
 }
 
 #[test]
-fn a_malformed_pattern_is_rejected_with_the_pattern_named() {
+fn a_malformed_include_pattern_is_rejected_too() {
+    // The two lists are validated separately, so a pattern that is bad in the
+    // include list must be reported as an include: `--include` and `--exclude`
+    // mean opposite things, and a message that named the wrong one would send a
+    // reader to edit the wrong flag.
+    let tree = two_files("scope-malformed-include");
+
+    let Err(error) = load_project_with(
+        tree.path(),
+        &Scope {
+            include: vec!["[".to_string()],
+            ..Scope::default()
+        },
+    ) else {
+        panic!("an unclosed character class is not a pattern");
+    };
+
+    let message = format!("{error:#}");
+    assert!(
+        message.contains("invalid include pattern '['"),
+        "the error must say which list the pattern came from; it was: {message}"
+    );
+}
+
+#[test]
+fn a_malformed_exclude_pattern_is_rejected_with_the_pattern_named() {
     let tree = two_files("scope-malformed");
 
     let Err(error) = load_project_with(

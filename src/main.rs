@@ -138,4 +138,12 @@ mod tests {
     fn lists_every_extension_when_there_are_few() {
         assert_eq!(describe(&counts(&[("py", 2), ("rb", 1)])), "2 .py, 1 .rb");
     }
+
+    #[test]
+    fn breaks_ties_by_extension_so_the_notice_is_stable() {
+        // Two extensions with the same count could otherwise come out either way
+        // round. The notice is printed on every run: a person diffing two runs,
+        // or two machines, should not see it churn for no reason.
+        assert_eq!(describe(&counts(&[("rb", 2), ("py", 2)])), "2 .py, 2 .rb");
+    }
 }
