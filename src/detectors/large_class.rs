@@ -118,18 +118,7 @@ fn non_java_tcc(file: &SourceFile, fields: &BTreeSet<String>, methods: &[Node<'_
                 .collect::<BTreeSet<_>>()
         })
         .collect();
-    let mut connected = 0usize;
-    for left in 0..usages.len() {
-        for right in left + 1..usages.len() {
-            if usages[left]
-                .iter()
-                .any(|field| usages[right].contains(field))
-            {
-                connected += 1;
-            }
-        }
-    }
-    connected as f64 / (usages.len() * (usages.len() - 1) / 2) as f64
+    connected_pair_ratio(&usages)
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
@@ -255,15 +244,25 @@ fn tcc(analysis: &Analysis<'_>) -> f64 {
         .iter()
         .map(|method| usage.get(&method_key(*method)).cloned().unwrap_or_default())
         .collect();
+    connected_pair_ratio(&sets)
+}
+
+fn connected_pair_ratio(usages: &[BTreeSet<String>]) -> f64 {
+    if usages.len() < 2 {
+        return 1.0;
+    }
     let mut connected = 0usize;
-    for left in 0..sets.len() {
-        for right in left + 1..sets.len() {
-            if sets[left].iter().any(|field| sets[right].contains(field)) {
+    for left in 0..usages.len() {
+        for right in left + 1..usages.len() {
+            if usages[left]
+                .iter()
+                .any(|field| usages[right].contains(field))
+            {
                 connected += 1;
             }
         }
     }
-    connected as f64 / (sets.len() * (sets.len() - 1) / 2) as f64
+    connected as f64 / (usages.len() * (usages.len() - 1) / 2) as f64
 }
 
 fn field_counts(
