@@ -1,21 +1,24 @@
-//! Debug helper: print the types found in a file and the parse tree roots.
-//! Run: `cargo run --example dump_types -- <dir-or-file>`
+//! Debug helper: list the types an adapter finds in a tree.
+//!
+//! Run: `cargo run --example dump_types -- <dir>`
 
 use std::path::Path;
 
+use bluecheese::lang::{load_project, model_for};
+
 fn main() {
     let root = std::env::args().nth(1).expect("usage: dump_types <dir>");
-    let files = bluecheese::java::load_project(Path::new(&root)).expect("load");
+    let files = load_project(Path::new(&root)).expect("load");
+
     for file in &files {
+        let model = model_for(file.language);
         println!("== {}", file.rel);
-        for ty in bluecheese::types::all_types(file) {
+        for ty in model.types(file) {
             println!(
                 "   TYPE {} name={} body={}",
                 ty.kind(),
-                bluecheese::types::simple_name(file, ty).unwrap_or("?"),
-                bluecheese::types::body(ty)
-                    .map(|b| b.kind())
-                    .unwrap_or("none"),
+                model.type_name(file, ty).unwrap_or("?"),
+                model.body(ty).map(|b| b.kind()).unwrap_or("none"),
             );
         }
     }

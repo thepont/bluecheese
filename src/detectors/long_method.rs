@@ -3,33 +3,37 @@
 //! A method is long when its logical lines of code reach `MAX_LLOC` or its
 //! cyclomatic complexity exceeds `MAX_COMPLEXITY`. The reported line is the
 //! first line of the method body.
+//!
+//! The thresholds are the Java tool's defaults, tuned on Java source. A
+//! language adapter supplies the metrics; the thresholds may well need to
+//! become per-language once there is a second adapter.
 
 use crate::finding::Finding;
-use crate::java::JavaFile;
-use crate::metrics::{cyclomatic_complexity, lloc};
-use crate::types;
+use crate::lang::{SourceFile, model_for};
 
 pub const SMELL_NAME: &str = "Long Method";
 pub const MAX_LLOC: usize = 30;
 pub const MAX_COMPLEXITY: usize = 15;
 
-pub fn detect(files: &[JavaFile]) -> Vec<Finding> {
+pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     let mut findings = Vec::new();
 
     for file in files {
-        for ty in types::all_types(file) {
-            let Some(class_name) = types::simple_name(file, ty) else {
+        let model = model_for(file.language);
+
+        for ty in model.types(file) {
+            let Some(class_name) = model.type_name(file, ty) else {
                 continue;
             };
 
             let mut lines = Vec::new();
-            for method in types::methods(ty) {
-                let Some(body) = method.child_by_field_name("body") else {
+            for method in model.methods(ty) {
+                let Some(body) = model.body(method) else {
                     continue;
                 };
 
-                let loc = lloc(file, body);
-                let complexity = cyclomatic_complexity(file, method);
+                let loc = model.lloc(file, body);
+                let complexity = model.complexity(file, method);
 
                 if loc >= MAX_LLOC || complexity > MAX_COMPLEXITY {
                     lines.push(file.line(body));

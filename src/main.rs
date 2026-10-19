@@ -21,7 +21,7 @@ struct Args {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    let files = bluecheese::java::load_project(&args.folder)?;
+    let files = bluecheese::lang::load_project(&args.folder)?;
     let findings = bluecheese::detect(&files, &args.smell);
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())

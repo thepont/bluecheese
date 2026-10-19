@@ -23,7 +23,7 @@ fn golden() -> Vec<Finding> {
 /// Compare one detector's output with the Java golden output for that smell.
 fn assert_parity(smell: &str, golden_name: &str) {
     let root = fixtures().join("smellbench");
-    let files = bluecheese::java::load_project(&root).expect("load smellbench fixtures");
+    let files = bluecheese::lang::load_project(&root).expect("load smellbench fixtures");
 
     let actual: BTreeSet<_> = bluecheese::detect(&files, smell)
         .iter()

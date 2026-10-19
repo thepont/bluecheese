@@ -1,12 +1,11 @@
 //! Port of `edu.northeastern.utils.Metrics`.
 //!
-//! Only the metrics needed by the detectors ported so far. Each function is
-//! written to mirror the Java implementation, and the parity tests in
-//! `tests/parity.rs` hold it to that.
+//! Only the metrics the ported detectors need. Each function mirrors the Java
+//! implementation, and `tests/parity.rs` holds it to Spoon's own output.
 
 use tree_sitter::Node;
 
-use crate::java::JavaFile;
+use crate::lang::SourceFile;
 use crate::walk::{ancestor_while, descendants};
 
 /// Node kinds that correspond to Spoon `CtStatement` elements. Spoon excludes
@@ -79,7 +78,7 @@ const LOOP_OR_BRANCH_KINDS: &[&str] = &[
 /// Logical lines of code: every statement under the body, excluding blocks.
 /// A for-each loop additionally contributes its implicit loop variable, which
 /// Spoon materialises as a `CtLocalVariable`.
-pub fn lloc(_file: &JavaFile, body: Node<'_>) -> usize {
+pub fn lloc(_file: &SourceFile, body: Node<'_>) -> usize {
     let nodes = descendants(body);
     let statements = nodes
         .iter()
@@ -93,7 +92,7 @@ pub fn lloc(_file: &JavaFile, body: Node<'_>) -> usize {
 }
 
 /// `Metrics.calculateCyclomaticComplexity(CtMethod)`.
-pub fn cyclomatic_complexity(file: &JavaFile, method: Node<'_>) -> usize {
+pub fn cyclomatic_complexity(file: &SourceFile, method: Node<'_>) -> usize {
     let mut complexity = 1;
 
     for node in descendants(method) {

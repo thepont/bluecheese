@@ -3,7 +3,7 @@
 
 use tree_sitter::Node;
 
-use crate::java::JavaFile;
+use crate::lang::SourceFile;
 
 /// Spoon `CtType` implementations that appear in `getAllTypes()`.
 pub const TYPE_KINDS: &[&str] = &[
@@ -16,7 +16,7 @@ pub const TYPE_KINDS: &[&str] = &[
 
 /// All top-level types in the file, in source order. Spoon's
 /// `CtModel.getAllTypes()` does not include nested types, so neither does this.
-pub fn all_types<'a>(file: &'a JavaFile) -> Vec<Node<'a>> {
+pub fn all_types<'a>(file: &'a SourceFile) -> Vec<Node<'a>> {
     let root = file.root();
     let mut out = Vec::new();
     let mut cursor = root.walk();
@@ -29,7 +29,7 @@ pub fn all_types<'a>(file: &'a JavaFile) -> Vec<Node<'a>> {
 }
 
 /// Simple name of a type declaration (`CtType.getSimpleName()`).
-pub fn simple_name<'a>(file: &'a JavaFile, ty: Node<'a>) -> Option<&'a str> {
+pub fn simple_name<'a>(file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str> {
     ty.child_by_field_name("name").map(|n| file.text(n))
 }
 
@@ -41,8 +41,7 @@ pub fn body<'a>(ty: Node<'a>) -> Option<Node<'a>> {
 /// annotations are excluded, so `@Override` on its own line does not shift the
 /// reported line. When the only modifier is an annotation, the position starts
 /// at the next token (e.g. the return type).
-pub fn decl_line<'a>(file: &'a JavaFile, node: Node<'a>) -> usize {
-    let _ = file;
+pub fn decl_line(node: Node<'_>) -> usize {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         if child.kind() == "modifiers" {
