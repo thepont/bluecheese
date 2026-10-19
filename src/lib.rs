@@ -24,6 +24,8 @@ use lang::SourceFile;
 pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
     if smell == "data-clumps" {
         Ok(detectors::data_clumps::detect(files))
+    } else if smell == "data-class" {
+        Ok(detectors::data_class::detect(files))
     } else if smell == "dup-code" {
         Ok(detectors::dup_code::detect(files))
     } else if smell == "long-method" {
@@ -69,6 +71,7 @@ fn refused(smell: &str) -> anyhow::Error {
 pub fn ported_smells() -> &'static [&'static str] {
     &[
         "data-clumps",
+        "data-class",
         "dup-code",
         "long-method",
         "long-params",

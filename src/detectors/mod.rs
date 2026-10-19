@@ -3,6 +3,7 @@
 
 pub mod comments;
 pub mod cross_language_duplicates;
+pub mod data_class;
 pub mod data_clumps;
 pub mod dup_code;
 pub mod long_method;
