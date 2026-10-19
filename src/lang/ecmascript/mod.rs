@@ -14,6 +14,16 @@ pub static TYPESCRIPT: EcmaModel = EcmaModel(LanguageId::TypeScript);
 pub static TSX: EcmaModel = EcmaModel(LanguageId::Tsx);
 
 impl LanguageModel for EcmaModel {
+    fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)> {
+        if node.kind() != "member_expression" {
+            return None;
+        }
+        Some((
+            node.child_by_field_name("object")?,
+            node.child_by_field_name("property")?,
+        ))
+    }
+
     fn is_statement(&self, node: Node<'_>) -> bool {
         node.kind().ends_with("_statement")
             || matches!(node.kind(), "lexical_declaration" | "variable_declaration")

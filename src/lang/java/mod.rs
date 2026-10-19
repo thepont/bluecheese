@@ -18,6 +18,16 @@ pub struct JavaModel;
 pub static JAVA: JavaModel = JavaModel;
 
 impl LanguageModel for JavaModel {
+    fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)> {
+        if node.kind() != "field_access" {
+            return None;
+        }
+        Some((
+            node.child_by_field_name("object")?,
+            node.child_by_field_name("field")?,
+        ))
+    }
+
     fn is_statement(&self, node: Node<'_>) -> bool {
         node.kind().ends_with("_statement") || node.kind() == "local_variable_declaration"
     }

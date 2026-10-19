@@ -38,6 +38,16 @@ pub struct RustModel;
 pub static RUST: RustModel = RustModel;
 
 impl LanguageModel for RustModel {
+    fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)> {
+        if node.kind() != "field_expression" {
+            return None;
+        }
+        Some((
+            node.child_by_field_name("value")?,
+            node.child_by_field_name("field")?,
+        ))
+    }
+
     fn is_statement(&self, node: Node<'_>) -> bool {
         matches!(
             node.kind(),

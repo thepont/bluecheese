@@ -107,17 +107,12 @@ fn non_java_findings(files: &[SourceFile]) -> Vec<Finding> {
     let known: BTreeSet<_> = types.iter().map(|ty| ty.name.clone()).collect();
     let mut findings = Vec::new();
     for owner in &types {
+        let model = model_for(owner.file.language);
         let mut lines = Vec::new();
-        for method in model_for(owner.file.language).methods(owner.file, owner.node) {
+        for method in model.methods(owner.file, owner.node) {
             let vars = non_java_variable_types(owner, method);
-            for access in descendants(method)
-                .into_iter()
-                .filter(|node| field_access_kind(owner.file.language, *node))
-            {
-                let (Some(receiver), Some(field)) = (
-                    access_receiver(owner.file.language, access),
-                    access_field(owner.file.language, access),
-                ) else {
+            for access in descendants(method) {
+                let Some((receiver, field)) = model.field_access_parts(access) else {
                     continue;
                 };
                 if matches!(receiver.kind(), "this")
@@ -256,36 +251,6 @@ fn non_java_variable_types(owner: &NonJavaType<'_>, method: Node<'_>) -> BTreeMa
         }
     }
     vars
-}
-
-fn field_access_kind(language: LanguageId, node: Node<'_>) -> bool {
-    match language {
-        LanguageId::Rust => node.kind() == "field_expression",
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
-            node.kind() == "member_expression"
-        }
-        LanguageId::Java => false,
-    }
-}
-
-fn access_receiver(language: LanguageId, node: Node<'_>) -> Option<Node<'_>> {
-    match language {
-        LanguageId::Rust => node.child_by_field_name("value"),
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
-            node.child_by_field_name("object")
-        }
-        LanguageId::Java => None,
-    }
-}
-
-fn access_field(language: LanguageId, node: Node<'_>) -> Option<Node<'_>> {
-    match language {
-        LanguageId::Rust => node.child_by_field_name("field"),
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
-            node.child_by_field_name("property")
-        }
-        LanguageId::Java => None,
-    }
 }
 
 fn expression_type(

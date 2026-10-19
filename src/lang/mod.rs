@@ -84,6 +84,8 @@ pub trait LanguageModel {
 
     fn is_statement(&self, node: Node<'_>) -> bool;
 
+    fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)>;
+
     /// Adapter-resolved coupling. Languages without a resolver return no
     /// relationships; adapters must never invent cross-language call edges.
     fn method_coupling(&self, _files: &[SourceFile]) -> Vec<coupling::MethodCoupling> {
