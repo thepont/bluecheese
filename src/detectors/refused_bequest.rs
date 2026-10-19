@@ -355,10 +355,10 @@ impl<'a> Project<'a> {
                 .into_iter()
                 .filter(|node| matches!(node.kind(), "type_identifier" | "scoped_type_identifier"))
             {
-                if let Some(parent) = self.resolve_reference(index, reference) {
-                    if !parents.contains(&parent) {
-                        parents.push(parent);
-                    }
+                if let Some(parent) = self.resolve_reference(index, reference)
+                    && !parents.contains(&parent)
+                {
+                    parents.push(parent);
                 }
             }
         }
@@ -427,18 +427,17 @@ fn implicit_refusal(context: &ChildContext<'_, '_>, parent: usize) -> bool {
             .methods
             .iter()
             .any(|method| signature(child_file, *method) == parent_sig)
+            || child_calls.iter().any(|call| {
+                call_matches(
+                    child_file,
+                    *call,
+                    ParentMethod {
+                        node: *parent_method,
+                        file: project.types[parent].file,
+                    },
+                )
+            })
         {
-            used += 1;
-        } else if child_calls.iter().any(|call| {
-            call_matches(
-                child_file,
-                *call,
-                ParentMethod {
-                    node: *parent_method,
-                    file: project.types[parent].file,
-                },
-            )
-        }) {
             used += 1;
         }
     }
