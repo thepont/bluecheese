@@ -26,33 +26,45 @@ fn type_findings(file: &SourceFile) -> Vec<Finding> {
     model
         .method_comparison_owners(file)
         .into_iter()
-        .filter_map(|ty| type_finding(file, ty))
+        .filter_map(|ty| ParameterAnalysis { file, ty }.finding())
         .collect()
 }
 
-fn type_finding(file: &SourceFile, ty: Node<'_>) -> Option<Finding> {
-    let model = model_for(file.language);
-    let class_name = model.type_name(file, ty)?;
-    let lines = repeated_parameter_lines(file, ty);
-
-    (!lines.is_empty()).then(|| Finding {
-        smell_name: SMELL_NAME.to_string(),
-        file_path: file.rel.clone(),
-        class_name: class_name.to_string(),
-        line_numbers: lines.into_iter().collect(),
-        relative_file_path: file.rel.clone(),
-        additional_info: String::new(),
-    })
+struct ParameterAnalysis<'a> {
+    file: &'a SourceFile,
+    ty: Node<'a>,
 }
 
-fn repeated_parameter_lines(file: &SourceFile, ty: Node<'_>) -> BTreeSet<usize> {
-    let model = model_for(file.language);
-    let groups: Vec<_> = model
-        .methods(file, ty)
-        .iter()
-        .map(|method| (model.decl_line(*method), parameter_names(*method, file)))
-        .collect();
-    matching_method_lines(&groups)
+impl ParameterAnalysis<'_> {
+    fn finding(&self) -> Option<Finding> {
+        let model = model_for(self.file.language);
+        let class_name = model.type_name(self.file, self.ty)?;
+        let lines = self.repeated_parameter_lines();
+
+        (!lines.is_empty()).then(|| Finding {
+            smell_name: SMELL_NAME.to_string(),
+            file_path: self.file.rel.clone(),
+            class_name: class_name.to_string(),
+            line_numbers: lines.into_iter().collect(),
+            relative_file_path: self.file.rel.clone(),
+            additional_info: String::new(),
+        })
+    }
+
+    fn repeated_parameter_lines(&self) -> BTreeSet<usize> {
+        let model = model_for(self.file.language);
+        let groups: Vec<_> = model
+            .methods(self.file, self.ty)
+            .iter()
+            .map(|method| {
+                (
+                    model.decl_line(*method),
+                    parameter_names(*method, self.file),
+                )
+            })
+            .collect();
+        matching_method_lines(&groups)
+    }
 }
 
 fn matching_method_lines(groups: &[(usize, BTreeSet<String>)]) -> BTreeSet<usize> {
