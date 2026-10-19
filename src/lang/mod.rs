@@ -73,6 +73,20 @@ pub struct Project {
     pub skipped: BTreeMap<String, usize>,
 }
 
+impl Project {
+    pub fn language_summary(&self) -> String {
+        let mut counts = BTreeMap::<LanguageId, usize>::new();
+        for file in &self.files {
+            *counts.entry(file.language).or_default() += 1;
+        }
+        counts
+            .iter()
+            .map(|(language, count)| format!("{count} {language:?}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
 /// Maps one language's syntax onto the concepts the detectors use.
 ///
 /// The vocabulary is deliberately small: it is what the ported detectors

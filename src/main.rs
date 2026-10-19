@@ -57,15 +57,7 @@ fn main() -> anyhow::Result<()> {
         );
     }
 
-    let mut counts: BTreeMap<bluecheese::lang::LanguageId, usize> = BTreeMap::new();
-    for file in &project.files {
-        *counts.entry(file.language).or_default() += 1;
-    }
-    let summary = counts
-        .iter()
-        .map(|(language, count)| format!("{count} {language:?}"))
-        .collect::<Vec<_>>()
-        .join(", ");
+    let summary = project.language_summary();
     eprintln!("analysed {} files ({summary})", project.files.len());
 
     // Files with no adapter are invisible in the report otherwise: pointing a
