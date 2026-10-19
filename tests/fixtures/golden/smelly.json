@@ -1,0 +1,103 @@
+[
+ {
+  "additionalInfo": "",
+  "className": "LongConstructor",
+  "filePath": "LongConstructor.java",
+  "lineNumbers": [
+   8
+  ],
+  "relativeFilePath": "LongConstructor.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "Clean",
+  "filePath": "Clean.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "Clean.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 1 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "NestedLong",
+  "filePath": "NestedLong.java",
+  "lineNumbers": [
+   8
+  ],
+  "relativeFilePath": "NestedLong.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EnumLong",
+  "filePath": "EnumLong.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "EnumLong.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ExtractMe",
+  "filePath": "ExtractMe.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "ExtractMe.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LongBySize",
+  "filePath": "LongBySize.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "LongBySize.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LongMethod",
+  "filePath": "LongMethod.java",
+  "lineNumbers": [
+   23,
+   67
+  ],
+  "relativeFilePath": "LongMethod.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ManyTemps",
+  "filePath": "ManyTemps.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "ManyTemps.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SwitchOnKind",
+  "filePath": "SwitchOnKind.java",
+  "lineNumbers": [
+   22
+  ],
+  "relativeFilePath": "SwitchOnKind.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SwitchOnKind",
+  "filePath": "SwitchOnKind.java",
+  "lineNumbers": [
+   24
+  ],
+  "relativeFilePath": "SwitchOnKind.java",
+  "smellName": "Switch Statements"
+ }
+]

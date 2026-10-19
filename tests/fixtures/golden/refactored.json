@@ -1,0 +1,52 @@
+[
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "ManyTemps",
+  "filePath": "ManyTemps.java",
+  "lineNumbers": [
+   17
+  ],
+  "relativeFilePath": "ManyTemps.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "SwitchOnKind",
+  "filePath": "SwitchOnKind.java",
+  "lineNumbers": [
+   13
+  ],
+  "relativeFilePath": "SwitchOnKind.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ManyTempsCalculator",
+  "filePath": "ManyTemps.java",
+  "lineNumbers": [
+   37
+  ],
+  "relativeFilePath": "ManyTemps.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ManyTempsCalculator",
+  "filePath": "ManyTemps.java",
+  "lineNumbers": [
+   24
+  ],
+  "relativeFilePath": "ManyTemps.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ExtractMe",
+  "filePath": "ExtractMe.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "ExtractMe.java",
+  "smellName": "Temporary Field"
+ }
+]
