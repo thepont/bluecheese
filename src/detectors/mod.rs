@@ -8,6 +8,7 @@ pub mod data_class;
 pub mod data_clumps;
 pub mod large_class;
 pub mod lazy_class;
+pub mod primitive_obsession;
 pub mod intimacy;
 pub mod refused_bequest;
 pub mod dup_code;
