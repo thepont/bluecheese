@@ -46,7 +46,7 @@ impl LanguageModel for RustModel {
         if node.kind() != "call_expression" {
             return 0;
         }
-        crate::lang::accessors::rust_accessor_depth(file, node)
+        crate::lang::accessors::RUST.depth(file, node)
     }
 
     fn is_comment(&self, node: Node<'_>) -> bool {

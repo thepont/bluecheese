@@ -22,64 +22,57 @@ pub(super) fn java_accessor_depth(file: &SourceFile, node: Node<'_>) -> usize {
     }
 }
 
-pub(super) fn rust_accessor_depth(file: &SourceFile, node: Node<'_>) -> usize {
-    let Some(function) = node.child_by_field_name("function") else {
-        return 0;
-    };
-    if function.kind() != "field_expression" {
-        return 0;
-    }
-    let Some(name) = function
-        .child_by_field_name("field")
-        .map(|field| file.text(field))
-    else {
-        return 0;
-    };
-    if !is_accessor(name) {
-        return 0;
-    }
-    let Some(receiver) = function
-        .child_by_field_name("value")
-        .and_then(unwrap_parens)
-    else {
-        return 1;
-    };
-    let depth = if receiver.kind() == "call_expression" {
-        rust_accessor_depth(file, receiver)
-    } else {
-        0
-    };
-    if depth == 0 { 1 } else { depth + 1 }
+pub(super) struct MemberAccessorSyntax {
+    member_kind: &'static str,
+    name_field: &'static str,
+    receiver_field: &'static str,
+    prefixes: &'static [&'static str],
 }
 
-pub(super) fn ecma_accessor_depth(file: &SourceFile, node: Node<'_>) -> usize {
-    let Some(function) = node.child_by_field_name("function") else {
-        return 0;
-    };
-    if function.kind() != "member_expression" {
-        return 0;
+pub(super) const RUST: MemberAccessorSyntax = MemberAccessorSyntax {
+    member_kind: "field_expression",
+    name_field: "field",
+    receiver_field: "value",
+    prefixes: &["get", "is"],
+};
+
+pub(super) const ECMASCRIPT: MemberAccessorSyntax = MemberAccessorSyntax {
+    member_kind: "member_expression",
+    name_field: "property",
+    receiver_field: "object",
+    prefixes: &["get", "is", "has"],
+};
+
+impl MemberAccessorSyntax {
+    pub(super) fn depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+        let Some(function) = node.child_by_field_name("function") else {
+            return 0;
+        };
+        if function.kind() != self.member_kind {
+            return 0;
+        }
+        let Some(name) = function
+            .child_by_field_name(self.name_field)
+            .map(|field| file.text(field))
+        else {
+            return 0;
+        };
+        if !self.prefixes.iter().any(|prefix| name.starts_with(prefix)) {
+            return 0;
+        }
+        let Some(receiver) = function
+            .child_by_field_name(self.receiver_field)
+            .and_then(unwrap_parens)
+        else {
+            return 1;
+        };
+        let depth = if receiver.kind() == "call_expression" {
+            self.depth(file, receiver)
+        } else {
+            0
+        };
+        if depth == 0 { 1 } else { depth + 1 }
     }
-    let Some(name) = function
-        .child_by_field_name("property")
-        .map(|property| file.text(property))
-    else {
-        return 0;
-    };
-    if !is_ecma_accessor(name) {
-        return 0;
-    }
-    let Some(receiver) = function
-        .child_by_field_name("object")
-        .and_then(unwrap_parens)
-    else {
-        return 1;
-    };
-    let depth = if receiver.kind() == "call_expression" {
-        ecma_accessor_depth(file, receiver)
-    } else {
-        0
-    };
-    if depth == 0 { 1 } else { depth + 1 }
 }
 
 fn unwrap_parens(mut node: Node<'_>) -> Option<Node<'_>> {
@@ -95,23 +88,11 @@ fn unwrap_parens(mut node: Node<'_>) -> Option<Node<'_>> {
     Some(node)
 }
 
-fn is_ecma_accessor(name: &str) -> bool {
-    name.starts_with("get") || name.starts_with("is") || name.starts_with("has")
-}
-
 fn is_accessor(name: &str) -> bool {
     name.starts_with("get") || name.starts_with("is")
 }
 
-fn unwrap_receiver<'tree>(mut node: Node<'tree>) -> Option<Node<'tree>> {
-    while matches!(
-        node.kind(),
-        "primary_expression" | "parenthesized_expression"
-    ) {
-        let mut cursor = node.walk();
-        node = node
-            .named_children(&mut cursor)
-            .find(|child| child.kind() != "identifier")?;
-    }
+fn unwrap_receiver(node: Node<'_>) -> Option<Node<'_>> {
+    let node = unwrap_parens(node)?;
     (node.kind() == "method_invocation").then_some(node)
 }
