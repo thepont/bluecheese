@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -22,6 +23,29 @@ struct Args {
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
     let files = bluecheese::lang::load_project(&args.folder)?;
+
+    // An empty report from a working analyser and an empty report from an
+    // analyser that understood nothing are the same bytes. Refuse to produce
+    // one without saying which happened.
+    if files.is_empty() {
+        anyhow::bail!(
+            "no source files found under {} (understood extensions: {})",
+            args.folder.display(),
+            bluecheese::lang::supported_extensions().join(", ")
+        );
+    }
+
+    let mut counts: BTreeMap<bluecheese::lang::LanguageId, usize> = BTreeMap::new();
+    for file in &files {
+        *counts.entry(file.language).or_default() += 1;
+    }
+    let summary = counts
+        .iter()
+        .map(|(language, count)| format!("{count} {language:?}"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    eprintln!("analysed {} files ({summary})", files.len());
+
     let findings = bluecheese::detect(&files, &args.smell);
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())

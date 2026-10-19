@@ -112,6 +112,14 @@ pub fn model_for_path(path: &Path) -> Option<&'static dyn LanguageModel> {
         .find(|model| model.extensions().contains(&extension))
 }
 
+/// Every file extension the tool understands, for diagnostics.
+pub fn supported_extensions() -> Vec<&'static str> {
+    models()
+        .into_iter()
+        .flat_map(|model| model.extensions().iter().copied())
+        .collect()
+}
+
 /// Load and parse every source file under `root` that a known adapter claims,
 /// sorted by path for determinism.
 ///
