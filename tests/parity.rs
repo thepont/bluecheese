@@ -35,7 +35,11 @@ fn golden(name: &str) -> Vec<Finding> {
 ///
 /// The golden files carry all 19 smells the Java CLI exposes, so a port that
 /// lands later has its evidence already captured.
-fn assert_parity(corpus: &str, golden_name: &str, smell: &str, java_smell: &str) {
+fn assert_parity(corpus: &str, smell: &str) {
+    let golden_name = format!("{corpus}.json");
+    let java_smell = bluecheese::smells::by_label(smell)
+        .expect("parity case names a known smell")
+        .name;
     let Project { files, .. } = load_project(&fixtures().join(corpus)).expect("load fixtures");
     let java: Vec<_> = files
         .into_iter()
@@ -47,7 +51,7 @@ fn assert_parity(corpus: &str, golden_name: &str, smell: &str, java_smell: &str)
         .iter()
         .map(Finding::key)
         .collect();
-    let expected: BTreeSet<_> = golden(golden_name)
+    let expected: BTreeSet<_> = golden(&golden_name)
         .into_iter()
         .filter(|finding| finding.smell_name == java_smell)
         .map(|finding| finding.key())
@@ -66,42 +70,22 @@ fn assert_parity(corpus: &str, golden_name: &str, smell: &str, java_smell: &str)
 
 #[test]
 fn long_parameter_list_matches_java_on_smellbench() {
-    assert_parity(
-        "smellbench",
-        "smellbench.json",
-        "long-params",
-        "Long Parameter List",
-    );
+    assert_parity("smellbench", "long-params");
 }
 
 #[test]
 fn long_parameter_list_matches_java_on_the_smelly_corpus() {
-    assert_parity(
-        "smelly",
-        "smelly.json",
-        "long-params",
-        "Long Parameter List",
-    );
+    assert_parity("smelly", "long-params");
 }
 
 #[test]
 fn long_parameter_list_matches_java_on_the_refactored_corpus() {
-    assert_parity(
-        "refactored",
-        "refactored.json",
-        "long-params",
-        "Long Parameter List",
-    );
+    assert_parity("refactored", "long-params");
 }
 
 #[test]
 fn long_method_matches_java_on_smellbench() {
-    assert_parity(
-        "smellbench",
-        "smellbench.json",
-        "long-method",
-        "Long Method",
-    );
+    assert_parity("smellbench", "long-method");
 }
 
 /// The published smell vocabulary, checked against the evidence rather than
@@ -142,7 +126,7 @@ fn the_goldens_name_the_reference_tools_whole_vocabulary() {
 
 #[test]
 fn long_method_matches_java_on_the_smelly_corpus() {
-    assert_parity("smelly", "smelly.json", "long-method", "Long Method");
+    assert_parity("smelly", "long-method");
 }
 
 #[test]
@@ -150,100 +134,65 @@ fn long_method_matches_java_on_the_refactored_corpus() {
     // The interesting half: the Java tool also reports the body that Replace
     // Method with Method Object moved into a new class, and reports it under
     // that class. The pair's claim is verified rather than asserted.
-    assert_parity(
-        "refactored",
-        "refactored.json",
-        "long-method",
-        "Long Method",
-    );
+    assert_parity("refactored", "long-method");
 }
 
 #[test]
 fn message_chains_match_java_on_smellbench() {
-    assert_parity(
-        "smellbench",
-        "smellbench.json",
-        "message-chains",
-        "Message Chains",
-    );
+    assert_parity("smellbench", "message-chains");
 }
 
 #[test]
 fn message_chains_match_java_on_the_smelly_corpus() {
-    assert_parity("smelly", "smelly.json", "message-chains", "Message Chains");
+    assert_parity("smelly", "message-chains");
 }
 
 #[test]
 fn message_chains_match_java_on_the_refactored_corpus() {
-    assert_parity(
-        "refactored",
-        "refactored.json",
-        "message-chains",
-        "Message Chains",
-    );
+    assert_parity("refactored", "message-chains");
 }
 
 #[test]
 fn switch_statements_match_java_on_smellbench() {
-    assert_parity(
-        "smellbench",
-        "smellbench.json",
-        "switch-stmts",
-        "Switch Statements",
-    );
+    assert_parity("smellbench", "switch-stmts");
 }
 
 #[test]
 fn switch_statements_match_java_on_the_smelly_corpus() {
-    assert_parity("smelly", "smelly.json", "switch-stmts", "Switch Statements");
+    assert_parity("smelly", "switch-stmts");
 }
 
 #[test]
 fn switch_statements_match_java_on_the_refactored_corpus() {
-    assert_parity(
-        "refactored",
-        "refactored.json",
-        "switch-stmts",
-        "Switch Statements",
-    );
+    assert_parity("refactored", "switch-stmts");
 }
 
 #[test]
 fn comments_match_java_on_smellbench() {
-    assert_parity("smellbench", "smellbench.json", "comments", "Comments");
+    assert_parity("smellbench", "comments");
 }
 
 #[test]
 fn comments_match_java_on_the_smelly_corpus() {
-    assert_parity("smelly", "smelly.json", "comments", "Comments");
+    assert_parity("smelly", "comments");
 }
 
 #[test]
 fn comments_match_java_on_the_refactored_corpus() {
-    assert_parity("refactored", "refactored.json", "comments", "Comments");
+    assert_parity("refactored", "comments");
 }
 
 #[test]
 fn shotgun_matches_java_on_smellbench() {
-    assert_parity(
-        "smellbench",
-        "smellbench.json",
-        "shotgun",
-        "Shotgun Surgery",
-    );
+    assert_parity("smellbench", "shotgun");
 }
 
 #[test]
 fn shotgun_matches_java_on_the_smelly_corpus() {
-    assert_parity("smelly", "smelly.json", "shotgun", "Shotgun Surgery");
+    assert_parity("smelly", "shotgun");
 }
 
 #[test]
 fn shotgun_matches_java_on_the_refactored_corpus() {
-    assert_parity(
-        "refactored",
-        "refactored.json",
-        "shotgun",
-        "Shotgun Surgery",
-    );
+    assert_parity("refactored", "shotgun");
 }
