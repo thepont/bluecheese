@@ -1,9 +1,8 @@
-//! Best-effort Incomplete Library Class heuristics for Java, Rust and TypeScript.
+//! Best-effort Incomplete Library Class heuristics for Java, Rust, JavaScript and TypeScript.
 //!
 //! Without library documentation or usage intent, missing API surface cannot
-//! be established from source alone. This detector reports a narrower proxy:
-//! a class with multiple static helper methods that extend the same imported
-//! type through calls on their first parameter.
+//! be established from source alone. Findings therefore require repeated,
+//! non-trivial implementations around the same imported type.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -14,6 +13,12 @@ use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Incomplete Library Class";
 const MIN_EXTENSIONS: usize = 2;
+const MIN_BODY_SHAPE_NODES: usize = 8;
+
+struct PrototypePatch {
+    line: usize,
+    shape: Vec<String>,
+}
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
@@ -35,39 +40,60 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         .filter_map(|ty| java::JAVA.type_name(file, ty).map(str::to_owned))
         .collect::<BTreeSet<_>>();
 
-    java::JAVA
+    let mut groups = BTreeMap::<(String, Vec<String>), BTreeMap<String, usize>>::new();
+    for ty in java::JAVA
         .types(file)
         .into_iter()
         .filter(|ty| ty.kind() == "class_declaration")
-        .filter_map(|ty| {
-            let mut extensions = BTreeMap::<String, usize>::new();
-            for method in java::JAVA.methods(file, ty) {
-                let Some((type_name, receiver)) = extension_parameter(file, method) else {
-                    continue;
-                };
-                if imported.contains(&type_name)
-                    && !local.contains(&type_name)
-                    && extends_receiver(file, method, &receiver)
-                {
-                    *extensions.entry(type_name).or_default() += 1;
-                }
+    {
+        let Some(owner_name) = java::JAVA.type_name(file, ty).map(str::to_owned) else {
+            continue;
+        };
+        for method in java::JAVA.methods(file, ty) {
+            let (Some((type_name, receiver)), Some(body)) = (
+                extension_parameter(file, method),
+                method.child_by_field_name("body"),
+            ) else {
+                continue;
+            };
+            if !imported.contains(&type_name)
+                || local.contains(&type_name)
+                || !extends_receiver(file, method, &receiver)
+            {
+                continue;
             }
+            let shape = body_shape(body);
+            if shape.len() >= MIN_BODY_SHAPE_NODES {
+                groups
+                    .entry((type_name, shape))
+                    .or_default()
+                    .entry(owner_name.clone())
+                    .or_insert_with(|| java::JAVA.decl_line(ty));
+            }
+        }
+    }
 
-            let (type_name, count) = extensions
-                .into_iter()
-                .filter(|(_, count)| *count >= MIN_EXTENSIONS)
-                .max_by_key(|(_, count)| *count)?;
-            Some(Finding {
-                smell_name: SMELL_NAME.to_owned(),
-                file_path: file.rel.clone(),
-                class_name: java::JAVA.type_name(file, ty)?.to_owned(),
-                line_numbers: vec![java::JAVA.decl_line(ty)],
-                relative_file_path: file.rel.clone(),
-                additional_info: format!(
-                    "{} helper methods extend imported type {}",
-                    count, type_name
-                ),
-            })
+    let mut findings = BTreeMap::<(String, String), usize>::new();
+    for ((type_name, _), owners) in groups {
+        if owners.len() < MIN_EXTENSIONS {
+            continue;
+        }
+        for (owner, line) in owners {
+            findings.entry((owner, type_name.clone())).or_insert(line);
+        }
+    }
+    findings
+        .into_iter()
+        .map(|((class_name, type_name), line)| Finding {
+            smell_name: SMELL_NAME.to_owned(),
+            file_path: file.rel.clone(),
+            class_name,
+            line_numbers: vec![line],
+            relative_file_path: file.rel.clone(),
+            additional_info: format!(
+                "repeated helper behavior extends imported type {}",
+                type_name
+            ),
         })
         .collect()
 }
@@ -85,36 +111,71 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         .filter_map(|ty| rust::RUST.type_name(file, *ty).map(str::to_owned))
         .collect::<BTreeSet<_>>();
 
-    descendants(file.root())
+    let mut groups = BTreeMap::<(String, Vec<String>), BTreeMap<String, usize>>::new();
+    for implementation in descendants(file.root())
         .into_iter()
         .filter(|node| node.kind() == "impl_item")
-        .filter_map(|implementation| {
-            let trait_node = implementation.child_by_field_name("trait")?;
-            let target_node = implementation.child_by_field_name("type")?;
-            let trait_name = simple_rust_type(file.text(trait_node))?;
-            let target_name = simple_rust_type(file.text(target_node))?;
-            if !local_traits.contains(&trait_name)
-                || !imported.contains(&target_name)
-                || local_types.contains(&target_name)
-            {
-                return None;
+    {
+        let (Some(trait_node), Some(target_node), Some(body)) = (
+            implementation.child_by_field_name("trait"),
+            implementation.child_by_field_name("type"),
+            implementation.child_by_field_name("body"),
+        ) else {
+            continue;
+        };
+        let (Some(trait_name), Some(target_name)) = (
+            simple_rust_type(file.text(trait_node)),
+            simple_rust_type(file.text(target_node)),
+        ) else {
+            continue;
+        };
+        if !local_traits.contains(&trait_name)
+            || !imported.contains(&target_name)
+            || local_types.contains(&target_name)
+        {
+            continue;
+        }
+        for method in direct_rust_functions(body) {
+            if !rust_extension_method(file, method) {
+                continue;
             }
-            let body = implementation.child_by_field_name("body")?;
-            let methods = direct_rust_functions(body)
-                .into_iter()
-                .filter(|method| rust_extension_method(file, *method))
-                .count();
-            (methods >= MIN_EXTENSIONS).then(|| Finding {
-                smell_name: SMELL_NAME.to_owned(),
-                file_path: file.rel.clone(),
-                class_name: trait_name.clone(),
-                line_numbers: vec![implementation.start_position().row + 1],
-                relative_file_path: file.rel.clone(),
-                additional_info: format!(
-                    "{} extension trait methods add behavior to imported type {}",
-                    methods, target_name
-                ),
-            })
+            let Some(method_body) = method.child_by_field_name("body") else {
+                continue;
+            };
+            let shape = body_shape(method_body);
+            if shape.len() >= MIN_BODY_SHAPE_NODES {
+                groups
+                    .entry((target_name.clone(), shape))
+                    .or_default()
+                    .entry(trait_name.clone())
+                    .or_insert(implementation.start_position().row + 1);
+            }
+        }
+    }
+
+    let mut findings = BTreeMap::<(String, String), usize>::new();
+    for ((target_name, _), traits) in groups {
+        if traits.len() < MIN_EXTENSIONS {
+            continue;
+        }
+        for (trait_name, line) in traits {
+            findings
+                .entry((trait_name, target_name.clone()))
+                .or_insert(line);
+        }
+    }
+    findings
+        .into_iter()
+        .map(|((class_name, target_name), line)| Finding {
+            smell_name: SMELL_NAME.to_owned(),
+            file_path: file.rel.clone(),
+            class_name,
+            line_numbers: vec![line],
+            relative_file_path: file.rel.clone(),
+            additional_info: format!(
+                "repeated extension behavior for imported type {}",
+                target_name
+            ),
         })
         .collect()
 }
@@ -205,20 +266,19 @@ fn typescript_findings(file: &SourceFile) -> Vec<Finding> {
                         .filter(|node| node.kind() == "method_signature")
                         .count();
                     let patches = runtime_patches.get(local_name)?;
-                    if signatures < MIN_EXTENSIONS || patches.len() < MIN_EXTENSIONS {
+                    let duplicate_lines = duplicated_patch_lines(patches);
+                    if signatures < MIN_EXTENSIONS || duplicate_lines.len() < MIN_EXTENSIONS {
                         return None;
                     }
                     Some(Finding {
                         smell_name: SMELL_NAME.to_owned(),
                         file_path: file.rel.clone(),
                         class_name: name.to_owned(),
-                        line_numbers: patches.values().copied().collect(),
+                        line_numbers: duplicate_lines,
                         relative_file_path: file.rel.clone(),
                         additional_info: format!(
-                            "{} module-augmented methods and runtime patches for {} from {}",
-                            patches.len(),
-                            name,
-                            module_name
+                            "repeated runtime implementation of module-augmented type {} from {}",
+                            name, module_name
                         ),
                     })
                 })
@@ -236,20 +296,19 @@ fn javascript_findings(file: &SourceFile) -> Vec<Finding> {
             let Some(methods) = patches.get(&local_name) else {
                 continue;
             };
-            if methods.len() < MIN_EXTENSIONS {
+            let duplicate_lines = duplicated_patch_lines(methods);
+            if duplicate_lines.len() < MIN_EXTENSIONS {
                 continue;
             }
             findings.push(Finding {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
                 class_name: name.clone(),
-                line_numbers: methods.values().copied().collect(),
+                line_numbers: duplicate_lines,
                 relative_file_path: file.rel.clone(),
                 additional_info: format!(
-                    "{} prototype methods patch imported type {} from {}",
-                    methods.len(),
-                    name,
-                    module
+                    "repeated prototype implementation for imported type {} from {}",
+                    name, module
                 ),
             });
         }
@@ -288,8 +347,8 @@ fn ecma_named_imports(file: &SourceFile) -> BTreeMap<String, Vec<(String, String
     imports
 }
 
-fn ecma_prototype_patches(file: &SourceFile) -> BTreeMap<String, BTreeMap<String, usize>> {
-    let mut patches = BTreeMap::<String, BTreeMap<String, usize>>::new();
+fn ecma_prototype_patches(file: &SourceFile) -> BTreeMap<String, BTreeMap<String, PrototypePatch>> {
+    let mut patches = BTreeMap::<String, BTreeMap<String, PrototypePatch>>::new();
     for assignment in descendants(file.root())
         .into_iter()
         .filter(|node| node.kind() == "assignment_expression")
@@ -328,15 +387,58 @@ fn ecma_prototype_patches(file: &SourceFile) -> BTreeMap<String, BTreeMap<String
             .entry(file.text(receiver).to_owned())
             .or_default()
             .entry(file.text(method).to_owned())
-            .or_insert(assignment.start_position().row + 1);
+            .or_insert_with(|| PrototypePatch {
+                line: assignment.start_position().row + 1,
+                shape: body_shape(right.child_by_field_name("body").unwrap_or(right)),
+            });
     }
     patches
+}
+
+fn duplicated_patch_lines(patches: &BTreeMap<String, PrototypePatch>) -> Vec<usize> {
+    let mut groups = BTreeMap::<Vec<String>, BTreeMap<String, usize>>::new();
+    for (method, patch) in patches {
+        if patch.shape.len() >= MIN_BODY_SHAPE_NODES {
+            groups
+                .entry(patch.shape.clone())
+                .or_default()
+                .insert(method.clone(), patch.line);
+        }
+    }
+    let mut lines = groups
+        .into_values()
+        .filter(|methods| methods.len() >= MIN_EXTENSIONS)
+        .flat_map(BTreeMap::into_values)
+        .collect::<Vec<_>>();
+    lines.sort_unstable();
+    lines.dedup();
+    lines
 }
 
 fn unquote(text: &str) -> &str {
     text.strip_prefix(['\'', '"', '`'])
         .and_then(|text| text.strip_suffix(['\'', '"', '`']))
         .unwrap_or(text)
+}
+
+fn body_shape(body: Node<'_>) -> Vec<String> {
+    let mut shape = Vec::new();
+    let mut stack = vec![body];
+    while let Some(node) = stack.pop() {
+        let kind = node.kind();
+        if kind == "identifier" || kind.ends_with("_identifier") || kind.ends_with("_name") {
+            continue;
+        }
+        if kind.ends_with("_literal") || matches!(kind, "true" | "false" | "null") {
+            shape.push("literal".to_owned());
+            continue;
+        }
+        shape.push(kind.to_owned());
+        let mut cursor = node.walk();
+        let children = node.children(&mut cursor).collect::<Vec<_>>();
+        stack.extend(children.into_iter().rev());
+    }
+    shape
 }
 
 fn imported_types(file: &SourceFile) -> BTreeSet<String> {

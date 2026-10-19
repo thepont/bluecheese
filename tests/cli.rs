@@ -146,7 +146,9 @@ fn incomplete_library_class_can_be_requested_from_the_cli() {
         "import vendor.Calendar;\n\
          class CalendarExtensions {\n\
              static boolean isWeekend(Calendar calendar) { return calendar.getDay() > 5; }\n\
-             static Calendar nextBusinessDay(Calendar calendar) { return calendar.plusDays(1); }\n\
+         }\n\
+         class WeekendPolicy {\n\
+             static boolean shouldSkip(Calendar calendar) { return calendar.getDay() > 5; }\n\
          }",
     );
 
@@ -158,9 +160,22 @@ fn incomplete_library_class_can_be_requested_from_the_cli() {
         String::from_utf8_lossy(&output.stderr)
     );
     let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).expect("JSON findings");
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].class_name, "CalendarExtensions");
-    assert_eq!(findings[0].smell_name, "Incomplete Library Class");
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "CalendarExtensions")
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "WeekendPolicy")
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.smell_name == "Incomplete Library Class")
+    );
 }
 
 #[test]
@@ -169,11 +184,10 @@ fn incomplete_library_class_finds_rust_and_ecmascript_extensions_from_the_cli() 
     tree.write(
         "date_helpers.rs",
         "use chrono::DateTime;\n\
-         trait DateTimeExt { fn first(&self); fn second(&self); }\n\
-         impl DateTimeExt for DateTime {\n\
-             fn first(&self) { self.day(); }\n\
-             fn second(&self) { self.month(); }\n\
-         }",
+         trait DateTimeExt { fn first(&self); }\n\
+         impl DateTimeExt for DateTime { fn first(&self) { self.day().number_from_monday() > 5; } }\n\
+         trait WeekendPolicy { fn second(&self); }\n\
+         impl WeekendPolicy for DateTime { fn second(&self) { self.day().number_from_monday() > 5; } }",
     );
     tree.write(
         "observable.ts",
@@ -181,14 +195,14 @@ fn incomplete_library_class_finds_rust_and_ecmascript_extensions_from_the_cli() 
          declare module 'rxjs' {\n\
              interface Observable<T> { map<U>(fn: (value: T) => U): Observable<U>; filter(predicate: (value: T) => boolean): Observable<T>; }\n\
          }\n\
-         Observable.prototype.map = function(fn) { return this; };\n\
-         Observable.prototype.filter = function(predicate) { return this; };",
+         Observable.prototype.map = function(value) { return value.trim().toLowerCase(); };\n\
+         Observable.prototype.filter = function(value) { return value.trim().toLowerCase(); };",
     );
     tree.write(
         "observable.js",
         "import { Stream } from 'stream-lib';\n\
-         Stream.prototype.map = function(fn) { return this; };\n\
-         Stream.prototype.filter = function(predicate) { return this; };",
+         Stream.prototype.map = function(value) { return value.trim().toLowerCase(); };\n\
+         Stream.prototype.filter = function(value) { return value.trim().toLowerCase(); };",
     );
 
     let output = run_smell(tree.path(), "incomp-lib-class", &[]);
@@ -199,7 +213,7 @@ fn incomplete_library_class_finds_rust_and_ecmascript_extensions_from_the_cli() 
         String::from_utf8_lossy(&output.stderr)
     );
     let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).expect("JSON findings");
-    assert_eq!(findings.len(), 3, "findings: {findings:#?}");
+    assert_eq!(findings.len(), 4, "findings: {findings:#?}");
     assert!(
         findings
             .iter()
