@@ -89,6 +89,25 @@ fn default_and_namespace_imports_resolve_relative_modules() {
 }
 
 #[test]
+fn runtime_module_suffixes_resolve_their_typescript_source_files() {
+    for (path, import_path) in [
+        ("policy.mts", "./policy.mjs"),
+        ("policy.cts", "./policy.cjs"),
+    ] {
+        let client_a =
+            format!("import {{check}} from '{import_path}'; export function run() {{ check(); }}");
+        let client_b =
+            format!("import {{check}} from '{import_path}'; export function run() {{ check(); }}");
+        let findings = scan(&[
+            (path, "export function check(): void {}"),
+            ("a.js", &client_a),
+            ("b.ts", &client_b),
+        ]);
+        assert_eq!(findings.len(), 1, "{path}");
+    }
+}
+
+#[test]
 fn constructors_and_same_owner_calls_do_not_inflate_counts() {
     assert!(scan(&[("example.js", "class Policy { check() {} run() { this.check(); } } class A { constructor() { new Policy().check(); } run() { new Policy().check(); } again() { new Policy().check(); } }")]).is_empty());
 }

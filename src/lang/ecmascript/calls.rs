@@ -475,6 +475,14 @@ impl<'a> Project<'a> {
         if let Some(index) = self.files.iter().position(|file| file.rel == base) {
             return Some(index);
         }
+        for (runtime, source) in [(".mjs", ".mts"), (".cjs", ".cts")] {
+            if let Some(stem) = base.strip_suffix(runtime) {
+                return self
+                    .files
+                    .iter()
+                    .position(|file| file.rel == format!("{stem}{source}"));
+            }
+        }
         let base = base.strip_suffix(".js").unwrap_or(&base);
         let candidates: Vec<_> = self
             .files
