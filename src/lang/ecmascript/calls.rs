@@ -74,6 +74,14 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
 }
 
 impl<'a> Project<'a> {
+    fn expression(&self, context: Context, node: Node<'a>) -> Option<Target> {
+        ExpressionResolver {
+            project: self,
+            context,
+        }
+        .read(node)
+    }
+
     fn module(&self, file_index: usize, depth: usize) -> ModuleResolver<'_, 'a> {
         ModuleResolver {
             project: self,
@@ -166,74 +174,6 @@ impl<'a> Project<'a> {
         self.owners[self.methods[context.caller].owner].file
     }
 
-    fn expression(&self, context: Context, node: Node<'a>) -> Option<Target> {
-        if context.depth > 24 {
-            return None;
-        }
-        let file = self.file_index(context);
-        let source = self.files[file];
-        if node.kind() == "identifier" {
-            return self.identifier(context, node, source.text(node));
-        }
-        if node.kind() == "this" {
-            let owner = self.methods[context.caller].owner;
-            return is_owner(self.owners[owner].node).then_some(Target::Class(owner));
-        }
-        if node.kind() == "object" {
-            return self
-                .owners
-                .iter()
-                .position(|owner| owner.file == file && owner.node.id() == node.id())
-                .map(Target::Class);
-        }
-        if node.kind() == "new_expression" {
-            return self
-                .named_type(
-                    file,
-                    source.text(node.child_by_field_name("constructor")?),
-                    context.depth + 1,
-                )
-                .map(Target::Class);
-        }
-        if node.kind() == "member_expression" {
-            return self.member(context, node);
-        }
-        if [
-            "parenthesized_expression",
-            "as_expression",
-            "non_null_expression",
-        ]
-        .contains(&node.kind())
-        {
-            return children(node)
-                .first()
-                .and_then(|child| self.expression(context.deeper(), *child));
-        }
-        None
-    }
-
-    fn identifier(&self, context: Context, usage: Node<'a>, name: &str) -> Option<Target> {
-        let file = self.file_index(context);
-        if let Some(binding) = find_binding(self.files[file], usage, name) {
-            if let Some(annotation) = binding.child_by_field_name("type") {
-                return self
-                    .named_type(
-                        file,
-                        annotation_name(self.files[file], annotation)?,
-                        context.depth + 1,
-                    )
-                    .map(Target::Class);
-            }
-            return binding.child_by_field_name("value").and_then(|value| {
-                self.method_node(file, value)
-                    .map(Target::Function)
-                    .or_else(|| self.expression(context.deeper(), value))
-            });
-        }
-        self.local_symbol(file, name)
-            .or_else(|| self.module(file, context.depth + 1).imported(name))
-    }
-
     fn local_symbol(&self, file: usize, name: &str) -> Option<Target> {
         let classes: Vec<_> = self
             .owners
@@ -277,25 +217,6 @@ impl<'a> Project<'a> {
         } else {
             None
         }
-    }
-
-    fn member(&self, context: Context, node: Node<'a>) -> Option<Target> {
-        let file = self.files[self.file_index(context)];
-        let name = file.text(node.child_by_field_name("property")?);
-        let receiver = self.expression(context.deeper(), node.child_by_field_name("object")?)?;
-        if let Target::Namespace(module) = receiver {
-            return self.module(module, context.depth + 1).exported(name);
-        }
-        if let Target::Class(owner) = receiver {
-            return self
-                .method_named(owner, name)
-                .map(Target::Function)
-                .or_else(|| {
-                    self.field_type(owner, name, context.depth + 1)
-                        .map(Target::Class)
-                });
-        }
-        None
     }
 
     fn hierarchy(&self, owner: usize) -> Vec<usize> {
@@ -380,6 +301,120 @@ impl<'a> Project<'a> {
                     );
                 }
             }
+        }
+        None
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ExpressionResolver<'query, 'source> {
+    project: &'query Project<'source>,
+    context: Context,
+}
+
+impl<'a> ExpressionResolver<'_, 'a> {
+    fn deeper(self) -> Self {
+        Self {
+            context: self.context.deeper(),
+            ..self
+        }
+    }
+
+    fn read(&self, node: Node<'a>) -> Option<Target> {
+        if self.context.depth > 24 {
+            return None;
+        }
+        let file = self.project.file_index(self.context);
+        let source = self.project.files[file];
+        if node.kind() == "identifier" {
+            return self.identifier(node, source.text(node));
+        }
+        if node.kind() == "this" {
+            let owner = self.project.methods[self.context.caller].owner;
+            return is_owner(self.project.owners[owner].node).then_some(Target::Class(owner));
+        }
+        if node.kind() == "object" {
+            return self
+                .project
+                .owners
+                .iter()
+                .position(|owner| owner.file == file && owner.node.id() == node.id())
+                .map(Target::Class);
+        }
+        if node.kind() == "new_expression" {
+            return self
+                .project
+                .named_type(
+                    file,
+                    source.text(node.child_by_field_name("constructor")?),
+                    self.context.depth + 1,
+                )
+                .map(Target::Class);
+        }
+        if node.kind() == "member_expression" {
+            return self.member(node);
+        }
+        if [
+            "parenthesized_expression",
+            "as_expression",
+            "non_null_expression",
+        ]
+        .contains(&node.kind())
+        {
+            return children(node)
+                .first()
+                .and_then(|child| self.deeper().read(*child));
+        }
+        None
+    }
+
+    fn identifier(&self, usage: Node<'a>, name: &str) -> Option<Target> {
+        let file = self.project.file_index(self.context);
+        if let Some(binding) = find_binding(self.project.files[file], usage, name) {
+            if let Some(annotation) = binding.child_by_field_name("type") {
+                return self
+                    .project
+                    .named_type(
+                        file,
+                        annotation_name(self.project.files[file], annotation)?,
+                        self.context.depth + 1,
+                    )
+                    .map(Target::Class);
+            }
+            return binding.child_by_field_name("value").and_then(|value| {
+                self.project
+                    .method_node(file, value)
+                    .map(Target::Function)
+                    .or_else(|| self.deeper().read(value))
+            });
+        }
+        self.project.local_symbol(file, name).or_else(|| {
+            self.project
+                .module(file, self.context.depth + 1)
+                .imported(name)
+        })
+    }
+
+    fn member(&self, node: Node<'a>) -> Option<Target> {
+        let file = self.project.files[self.project.file_index(self.context)];
+        let name = file.text(node.child_by_field_name("property")?);
+        let receiver = self.deeper().read(node.child_by_field_name("object")?)?;
+        if let Target::Namespace(module) = receiver {
+            return self
+                .project
+                .module(module, self.context.depth + 1)
+                .exported(name);
+        }
+        if let Target::Class(owner) = receiver {
+            return self
+                .project
+                .method_named(owner, name)
+                .map(Target::Function)
+                .or_else(|| {
+                    self.project
+                        .field_type(owner, name, self.context.depth + 1)
+                        .map(Target::Class)
+                });
         }
         None
     }
