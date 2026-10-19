@@ -54,6 +54,10 @@ fn compatible_language(left: LanguageId, right: LanguageId) -> bool {
 }
 
 fn non_java_file_findings(file: &SourceFile, project_types: &BTreeSet<String>) -> Vec<Finding> {
+    let analysis = Analysis {
+        file,
+        project_types,
+    };
     let model = model_for(file.language);
     model
         .types(file)
@@ -70,7 +74,7 @@ fn non_java_file_findings(file: &SourceFile, project_types: &BTreeSet<String>) -
             }
             let delegate_count = methods
                 .iter()
-                .filter(|method| non_java_pure_delegate(file, **method, &fields, project_types))
+                .filter(|method| non_java_pure_delegate(&analysis, **method, &fields))
                 .count();
             let referenced = fields
                 .values()
@@ -179,11 +183,12 @@ fn non_java_field_types(
 }
 
 fn non_java_pure_delegate(
-    file: &SourceFile,
+    analysis: &Analysis<'_>,
     method: Node<'_>,
     fields: &std::collections::BTreeMap<String, String>,
-    project_types: &BTreeSet<String>,
 ) -> bool {
+    let file = analysis.file;
+    let project_types = analysis.project_types;
     let Some(body) = method.child_by_field_name("body") else {
         return false;
     };
