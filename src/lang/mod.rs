@@ -16,6 +16,7 @@ pub mod coupling;
 pub mod ecmascript;
 pub mod java;
 pub mod rust;
+pub mod rust_calls;
 pub mod structure;
 
 use std::collections::hash_map::Entry;

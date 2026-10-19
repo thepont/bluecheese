@@ -38,6 +38,10 @@ pub struct RustModel;
 pub static RUST: RustModel = RustModel;
 
 impl LanguageModel for RustModel {
+    fn method_coupling(&self, files: &[SourceFile]) -> Vec<crate::lang::coupling::MethodCoupling> {
+        crate::lang::rust_calls::coupling(files)
+    }
+
     fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
         if node.kind() != "call_expression" {
             return 0;
