@@ -22,21 +22,26 @@ struct Args {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    let files = bluecheese::lang::load_project(&args.folder)?;
+    let project = bluecheese::lang::load_project(&args.folder)?;
 
     // An empty report from a working analyser and an empty report from an
     // analyser that understood nothing are the same bytes. Refuse to produce
     // one without saying which happened.
-    if files.is_empty() {
+    if project.files.is_empty() {
+        let tail = if project.skipped.is_empty() {
+            String::new()
+        } else {
+            format!("; saw {}", describe(&project.skipped))
+        };
         anyhow::bail!(
-            "no source files found under {} (understood extensions: {})",
+            "no source files found under {} (understood extensions: {}){tail}",
             args.folder.display(),
             bluecheese::lang::supported_extensions().join(", ")
         );
     }
 
     let mut counts: BTreeMap<bluecheese::lang::LanguageId, usize> = BTreeMap::new();
-    for file in &files {
+    for file in &project.files {
         *counts.entry(file.language).or_default() += 1;
     }
     let summary = counts
@@ -44,9 +49,27 @@ fn main() -> anyhow::Result<()> {
         .map(|(language, count)| format!("{count} {language:?}"))
         .collect::<Vec<_>>()
         .join(", ");
-    eprintln!("analysed {} files ({summary})", files.len());
+    eprintln!("analysed {} files ({summary})", project.files.len());
 
-    let findings = bluecheese::detect(&files, &args.smell);
+    // Files with no adapter are invisible in the report otherwise: pointing a
+    // Rust-only tool at a half-JavaScript project would look like a clean run.
+    if !project.skipped.is_empty() {
+        eprintln!(
+            "skipped {} files with no adapter: {}",
+            project.skipped.values().sum::<usize>(),
+            describe(&project.skipped)
+        );
+    }
+
+    let findings = bluecheese::detect(&project.files, &args.smell);
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())
+}
+
+fn describe(by_extension: &BTreeMap<String, usize>) -> String {
+    by_extension
+        .iter()
+        .map(|(extension, count)| format!("{count} .{extension}"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }

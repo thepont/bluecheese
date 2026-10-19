@@ -8,9 +8,9 @@ use bluecheese::lang::{load_project, model_for};
 
 fn main() {
     let root = std::env::args().nth(1).expect("usage: dump_types <dir>");
-    let files = load_project(Path::new(&root)).expect("load");
+    let project = load_project(Path::new(&root)).expect("load");
 
-    for file in &files {
+    for file in &project.files {
         let model = model_for(file.language);
         println!("== {}", file.rel);
         for ty in model.types(file) {

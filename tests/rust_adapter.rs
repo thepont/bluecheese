@@ -33,7 +33,9 @@ fn keys(findings: &[Finding]) -> BTreeSet<(String, String, Vec<usize>)> {
 /// count driving the finding and not the complexity.
 #[test]
 fn finds_the_long_method_and_nothing_else() {
-    let files = load_project(&fixture_root().join("rust")).expect("load rust fixture");
+    let files = load_project(&fixture_root().join("rust"))
+        .expect("load rust fixture")
+        .files;
     let findings = bluecheese::detect(&files, "long-method");
 
     let expected: BTreeSet<(String, String, Vec<usize>)> =
@@ -48,7 +50,9 @@ fn finds_the_long_method_and_nothing_else() {
 /// they are reported under a pseudo-type named after the file.
 #[test]
 fn maps_impl_blocks_and_free_functions() {
-    let files = load_project(&fixture_root().join("rust")).expect("load rust fixture");
+    let files = load_project(&fixture_root().join("rust"))
+        .expect("load rust fixture")
+        .files;
     let file = files
         .iter()
         .find(|f| f.rel == "sample.rs")
@@ -93,7 +97,9 @@ fn maps_impl_blocks_and_free_functions() {
 /// codebase, where the wildcard arm inflated the count.
 #[test]
 fn wildcard_match_arm_is_not_a_decision() {
-    let files = load_project(&fixture_root().join("rust")).expect("load rust fixture");
+    let files = load_project(&fixture_root().join("rust"))
+        .expect("load rust fixture")
+        .files;
     let file = files
         .iter()
         .find(|f| f.rel == "sample.rs")
@@ -119,7 +125,9 @@ fn wildcard_match_arm_is_not_a_decision() {
 /// the adapter that claims it, and findings never cross over.
 #[test]
 fn partitions_a_mixed_tree_by_language() {
-    let files = load_project(&fixture_root()).expect("load mixed fixture tree");
+    let files = load_project(&fixture_root())
+        .expect("load mixed fixture tree")
+        .files;
     assert!(files.iter().any(|f| f.language == LanguageId::Java));
     assert!(files.iter().any(|f| f.language == LanguageId::Rust));
 

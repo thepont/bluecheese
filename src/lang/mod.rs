@@ -14,7 +14,7 @@
 pub mod java;
 pub mod rust;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::collections::hash_map::Entry;
 use std::path::{Path, PathBuf};
 
@@ -52,6 +52,17 @@ impl SourceFile {
     pub fn text(&self, node: Node<'_>) -> &str {
         &self.source[node.byte_range()]
     }
+}
+
+/// A loaded project: the files an adapter claimed, and an account of the files
+/// that were left out because no adapter understands them.
+pub struct Project {
+    pub files: Vec<SourceFile>,
+    /// Skipped files by extension. Surfaced because an empty report from a
+    /// working analyser and an empty report from an analyser that understood
+    /// nothing are otherwise the same bytes: a tree of JavaScript analysed by a
+    /// Rust-only tool must not look like clean code.
+    pub skipped: BTreeMap<String, usize>,
 }
 
 /// Maps one language's syntax onto the concepts the detectors use.
@@ -133,7 +144,7 @@ const PRUNED_DIRECTORIES: &[&str] = &["target", "vendor", "node_modules"];
 /// dependency directories in [`PRUNED_DIRECTORIES`] are pruned entirely: build
 /// output can contain generated source, and vendored code is not the project's
 /// own. Parsers are reused per language.
-pub fn load_project(root: &Path) -> Result<Vec<SourceFile>> {
+pub fn load_project(root: &Path) -> Result<Project> {
     let walker = walkdir::WalkDir::new(root).into_iter().filter_entry(|e| {
         if e.depth() == 0 || !e.file_type().is_dir() {
             return true;
@@ -151,9 +162,16 @@ pub fn load_project(root: &Path) -> Result<Vec<SourceFile>> {
 
     let mut parsers: HashMap<LanguageId, Parser> = HashMap::new();
     let mut files = Vec::new();
+    let mut skipped: BTreeMap<String, usize> = BTreeMap::new();
 
     for path in paths {
         let Some(model) = model_for_path(&path) else {
+            let extension = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("<none>")
+                .to_string();
+            *skipped.entry(extension).or_default() += 1;
             continue;
         };
 
@@ -186,5 +204,5 @@ pub fn load_project(root: &Path) -> Result<Vec<SourceFile>> {
         });
     }
 
-    Ok(files)
+    Ok(Project { files, skipped })
 }

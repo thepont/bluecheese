@@ -30,7 +30,8 @@ fn problems(node: Node<'_>) -> (usize, usize) {
 
 fn main() {
     let root = std::env::args().nth(1).expect("usage: parse_check <dir>");
-    let files = load_project(Path::new(&root)).expect("load project");
+    let project = load_project(Path::new(&root)).expect("load project");
+    let files = project.files;
 
     let mut flagged = 0;
     for file in &files {
