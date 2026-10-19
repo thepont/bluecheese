@@ -361,7 +361,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
                 .named_type(
                     file,
                     source.text(node.child_by_field_name("constructor")?),
-                    self.context.depth + 1,
+                    self.context.deeper().depth,
                 )
                 .map(Target::Class);
         }
@@ -392,7 +392,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
                     .named_type(
                         file,
                         annotation_name(self.project.files[file], annotation)?,
-                        self.context.depth + 1,
+                        self.context.deeper().depth,
                     )
                     .map(Target::Class);
             }
@@ -405,7 +405,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
         }
         self.project.local_symbol(file, name).or_else(|| {
             self.project
-                .module(file, self.context.depth + 1)
+                .module(file, self.context.deeper().depth)
                 .imported(name)
         })
     }
@@ -417,7 +417,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
         if let Target::Namespace(module) = receiver {
             return self
                 .project
-                .module(module, self.context.depth + 1)
+                .module(module, self.context.deeper().depth)
                 .exported(name);
         }
         if let Target::Class(owner) = receiver {
@@ -429,7 +429,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
                 .or_else(|| {
                     self.project
                         .type_resolver()
-                        .field_type(owner, name, self.context.depth + 1)
+                        .field_type(owner, name, self.context.deeper().depth)
                         .map(Target::Class)
                 });
         }
