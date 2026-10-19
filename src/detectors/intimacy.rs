@@ -233,13 +233,13 @@ fn non_java_variable_types(owner: &NonJavaType<'_>, method: Node<'_>) -> BTreeMa
             ) else {
                 continue;
             };
-            if value.kind() == "new_expression" {
-                if let Some(constructor) = value.child_by_field_name("constructor") {
-                    vars.insert(
-                        file.text(name).to_owned(),
-                        file.text(constructor).to_owned(),
-                    );
-                }
+            if value.kind() == "new_expression"
+                && let Some(constructor) = value.child_by_field_name("constructor")
+            {
+                vars.insert(
+                    file.text(name).to_owned(),
+                    file.text(constructor).to_owned(),
+                );
             }
         } else if declaration.kind() == "let_declaration" {
             let Some(pattern) = declaration.child_by_field_name("pattern") else {
@@ -248,10 +248,10 @@ fn non_java_variable_types(owner: &NonJavaType<'_>, method: Node<'_>) -> BTreeMa
             let Some(value) = declaration.child_by_field_name("value") else {
                 continue;
             };
-            if value.kind() == "call_expression" {
-                if let Some(name) = value.child_by_field_name("function") {
-                    vars.insert(file.text(pattern).to_owned(), file.text(name).to_owned());
-                }
+            if value.kind() == "call_expression"
+                && let Some(name) = value.child_by_field_name("function")
+            {
+                vars.insert(file.text(pattern).to_owned(), file.text(name).to_owned());
             }
         }
     }
@@ -597,10 +597,10 @@ impl<'a> Analyzer<'a> {
             .into_iter()
             .find(|node| matches!(node.kind(), "type_identifier" | "scoped_type_identifier"))
             .map(|node| ty.file.text(node).to_owned());
-        if let Some(parent) = parent_name.and_then(|name| self.resolve_type(type_index, &name)) {
-            if parent != type_index {
-                fields.extend(self.field_declarations(parent));
-            }
+        if let Some(parent) = parent_name.and_then(|name| self.resolve_type(type_index, &name))
+            && parent != type_index
+        {
+            fields.extend(self.field_declarations(parent));
         }
         fields
     }
