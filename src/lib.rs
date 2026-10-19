@@ -16,59 +16,48 @@ use anyhow::{Result, anyhow};
 use finding::Finding;
 use lang::SourceFile;
 
+type Detector = fn(&[SourceFile]) -> Vec<Finding>;
+
+const DETECTORS: &[(&str, Detector)] = &[
+    ("data-clumps", detectors::data_clumps::detect),
+    ("alt-classes", detectors::alt_classes::detect),
+    ("lazy-class", detectors::lazy_class::detect),
+    ("prim-obsession", detectors::primitive_obsession::detect),
+    ("feature-envy", detectors::feature_envy::detect),
+    (
+        "incomp-lib-class",
+        detectors::incomplete_library_class::detect,
+    ),
+    ("temp-field", detectors::temp_field::detect),
+    ("parallel-hierarchy", detectors::parallel_hierarchy::detect),
+    ("divergent-change", detectors::divergent_change::detect),
+    ("data-class", detectors::data_class::detect),
+    ("middle-man", detectors::middle_man::detect),
+    ("large-class", detectors::large_class::detect),
+    ("intimacy", detectors::intimacy::detect),
+    ("refused-bequest", detectors::refused_bequest::detect),
+    ("dup-code", detectors::dup_code::detect),
+    ("long-method", detectors::long_method::detect),
+    ("long-params", detectors::long_params::detect),
+    ("comments", detectors::comments::detect),
+    ("shotgun", detectors::shotgun::detect),
+    ("message-chains", detectors::message_chains::detect),
+    ("switch-stmts", detectors::switch_stmts::detect),
+    ("spec-gen", detectors::spec_gen::detect),
+];
+
 /// Run a single detector by its smell label.
 ///
 /// Fails when the smell is one the book names but no detector has been ported
 /// for yet, and when the label is not a smell of the book at all. Both have to
 /// come back as a message: an empty report reads exactly like clean code.
 pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
-    if smell == "data-clumps" {
-        Ok(detectors::data_clumps::detect(files))
-    } else if smell == "alt-classes" {
-        Ok(detectors::alt_classes::detect(files))
-    } else if smell == "lazy-class" {
-        Ok(detectors::lazy_class::detect(files))
-    } else if smell == "prim-obsession" {
-        Ok(detectors::primitive_obsession::detect(files))
-    } else if smell == "feature-envy" {
-        Ok(detectors::feature_envy::detect(files))
-    } else if smell == "incomp-lib-class" {
-        Ok(detectors::incomplete_library_class::detect(files))
-    } else if smell == "temp-field" {
-        Ok(detectors::temp_field::detect(files))
-    } else if smell == "parallel-hierarchy" {
-        Ok(detectors::parallel_hierarchy::detect(files))
-    } else if smell == "divergent-change" {
-        Ok(detectors::divergent_change::detect(files))
-    } else if smell == "data-class" {
-        Ok(detectors::data_class::detect(files))
-    } else if smell == "middle-man" {
-        Ok(detectors::middle_man::detect(files))
-    } else if smell == "large-class" {
-        Ok(detectors::large_class::detect(files))
-    } else if smell == "intimacy" {
-        Ok(detectors::intimacy::detect(files))
-    } else if smell == "refused-bequest" {
-        Ok(detectors::refused_bequest::detect(files))
-    } else if smell == "dup-code" {
-        Ok(detectors::dup_code::detect(files))
-    } else if smell == "long-method" {
-        Ok(detectors::long_method::detect(files))
-    } else if smell == "long-params" {
-        Ok(detectors::long_params::detect(files))
-    } else if smell == "shotgun" {
-        Ok(detectors::shotgun::detect(files))
-    } else if smell == "comments" {
-        Ok(detectors::comments::detect(files))
-    } else if smell == "message-chains" {
-        Ok(detectors::message_chains::detect(files))
-    } else if smell == "switch-stmts" {
-        Ok(detectors::switch_stmts::detect(files))
-    } else if smell == "spec-gen" {
-        Ok(detectors::spec_gen::detect(files))
-    } else {
-        Err(refused(smell))
-    }
+    let detector = DETECTORS
+        .iter()
+        .find(|(label, _)| *label == smell)
+        .map(|(_, detector)| detector)
+        .ok_or_else(|| refused(smell))?;
+    Ok(detector(files))
 }
 
 /// Why `smell` cannot be run, as a message that says which of the two mistakes
