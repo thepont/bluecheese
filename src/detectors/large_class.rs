@@ -167,10 +167,10 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 .map(|m| model.complexity(file, m))
                 .sum();
             let tcc = tcc(&analysis);
-            if wmc < WMC_THRESHOLD || tcc >= TCC_THRESHOLD {
-                if analysis.fields.len() < FIELD_THRESHOLD {
-                    return None;
-                }
+            if (wmc < WMC_THRESHOLD || tcc >= TCC_THRESHOLD)
+                && analysis.fields.len() < FIELD_THRESHOLD
+            {
+                return None;
             }
             Some(Finding {
                 smell_name: SMELL_NAME.to_string(),
