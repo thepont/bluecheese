@@ -21,6 +21,12 @@ pub struct Callable {
     pub reportable: bool,
 }
 
+impl Callable {
+    fn is_external_to(&self, other: &Self) -> bool {
+        self.owner != other.owner
+    }
+}
+
 /// Resolve within each adapter's supported language family, then combine the
 /// independent results. The adapters own name resolution; this owns counts.
 pub fn analyse(files: &[SourceFile]) -> Vec<MethodCoupling> {
@@ -35,7 +41,7 @@ pub fn count(methods: &[Callable], edges: &[(usize, usize)]) -> Vec<MethodCoupli
     let mut incoming = vec![BTreeSet::new(); methods.len()];
     let mut outgoing = vec![BTreeSet::new(); methods.len()];
     for &(caller, target) in edges {
-        if methods[caller].owner != methods[target].owner {
+        if methods[caller].is_external_to(&methods[target]) {
             incoming[target].insert(caller);
             outgoing[caller].insert(target);
         }
