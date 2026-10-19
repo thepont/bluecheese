@@ -10,7 +10,7 @@ mod common;
 use std::collections::{BTreeMap, BTreeSet};
 
 use bluecheese::lang::{LanguageId, load_project, model_for};
-use common::{keys, load};
+use common::{TempTree, file, keys, line_of, load};
 
 /// `Analyzer::accumulate` is the only method over the threshold: 33 logical
 /// lines against a limit of 30, complexity 14 against 15, so it is the line
@@ -18,7 +18,7 @@ use common::{keys, load};
 #[test]
 fn finds_the_long_method_and_nothing_else() {
     let files = load("rust").files;
-    let findings = bluecheese::detect(&files, "long-method");
+    let findings = bluecheese::detect(&files, "long-method").expect("run the detector");
 
     let expected: BTreeSet<(String, String, Vec<usize>)> =
         [("sample.rs".to_string(), "Analyzer".to_string(), vec![18])]
@@ -109,7 +109,7 @@ fn partitions_a_mixed_tree_by_language() {
     assert!(files.iter().any(|f| f.language == LanguageId::Java));
     assert!(files.iter().any(|f| f.language == LanguageId::Rust));
 
-    let findings = bluecheese::detect(&files, "long-method");
+    let findings = bluecheese::detect(&files, "long-method").expect("run the detector");
     let rust: BTreeSet<_> = keys(&findings)
         .into_iter()
         .filter(|(path, _, _)| path.ends_with(".rs"))

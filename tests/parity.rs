@@ -43,6 +43,7 @@ fn assert_parity(corpus: &str, golden_name: &str, smell: &str, java_smell: &str)
         .collect();
 
     let actual: BTreeSet<_> = bluecheese::detect(&java, smell)
+        .expect("run a ported detector")
         .iter()
         .map(Finding::key)
         .collect();

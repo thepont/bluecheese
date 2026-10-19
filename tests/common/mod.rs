@@ -60,7 +60,7 @@ pub fn finding_keys_in(dir: &str, name: &str) -> BTreeSet<(String, String, Vec<u
         .filter(|f| f.rel.ends_with(name))
         .collect();
     assert!(!files.is_empty(), "no fixture matching {dir}/{name}");
-    keys(&bluecheese::detect(&files, "long-method"))
+    keys(&bluecheese::detect(&files, "long-method").expect("run the long-method detector"))
 }
 
 /// How many lines of `source` start, after indentation, with `prefix`.

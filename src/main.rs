@@ -78,7 +78,7 @@ fn main() -> anyhow::Result<()> {
         );
     }
 
-    let findings = bluecheese::detect(&project.files, &args.smell);
+    let findings = bluecheese::detect(&project.files, &args.smell)?;
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())
 }
