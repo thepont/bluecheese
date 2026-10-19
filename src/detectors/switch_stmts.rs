@@ -79,10 +79,7 @@ fn if_chain_target<'tree>(
 ) -> Option<tree_sitter::Node<'tree>> {
     let mut chain = vec![root];
     let mut current = root;
-    loop {
-        let Some(alternative) = current.child_by_field_name("alternative") else {
-            break;
-        };
+    while let Some(alternative) = current.child_by_field_name("alternative") {
         if alternative.kind() == "if_statement" {
             current = alternative;
             chain.push(current);
