@@ -6,6 +6,7 @@ pub mod cross_language_duplicates;
 pub mod alt_classes;
 pub mod data_class;
 pub mod data_clumps;
+pub mod divergent_change;
 pub mod feature_envy;
 pub mod parallel_hierarchy;
 pub mod large_class;
