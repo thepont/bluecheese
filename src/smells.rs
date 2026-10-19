@@ -36,6 +36,12 @@ pub struct Smell {
     pub in_reference_tool: bool,
 }
 
+impl std::fmt::Display for Smell {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "'{}' ({})", self.label, self.name)
+    }
+}
+
 /// The book's list, in the order the chapter takes them.
 pub const SMELLS: &[Smell] = &[
     Smell {

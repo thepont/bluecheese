@@ -78,9 +78,7 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
 fn refused(smell: &str) -> anyhow::Error {
     if let Some(known) = smells::by_label(smell) {
         anyhow!(
-            "no detector for smell '{}' ({}) yet; ported: {}",
-            known.label,
-            known.name,
+            "no detector for smell {known} yet; ported: {}",
             ported_smells().join(", ")
         )
     } else {
