@@ -3,14 +3,48 @@
 use std::collections::BTreeSet;
 
 use super::{SourceFile, model_for};
+use crate::finding::Finding;
 
 pub struct MethodCoupling {
     pub file_path: String,
     pub class_name: String,
     pub line: usize,
-    pub callers: usize,
-    pub calling_classes: usize,
-    pub fan_out: usize,
+    pub counts: CouplingCounts,
+}
+
+pub struct CouplingCounts {
+    callers: usize,
+    calling_classes: usize,
+    fan_out: usize,
+}
+
+impl CouplingCounts {
+    pub fn is_shared_across_classes(&self) -> bool {
+        self.callers >= 2 && self.calling_classes >= 2
+    }
+}
+
+impl std::fmt::Display for CouplingCounts {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "[CM={}, CC={}, Fan-Out={}]",
+            self.callers, self.calling_classes, self.fan_out
+        )
+    }
+}
+
+impl MethodCoupling {
+    pub fn into_finding(self, smell_name: &str) -> Finding {
+        Finding {
+            smell_name: smell_name.into(),
+            file_path: self.file_path.clone(),
+            relative_file_path: self.file_path,
+            class_name: self.class_name,
+            line_numbers: vec![self.line],
+            additional_info: format!("{smell_name} {}", self.counts),
+        }
+    }
 }
 
 pub struct Callable {
@@ -59,9 +93,11 @@ pub fn count(methods: &[Callable], edges: &[(usize, usize)]) -> Vec<MethodCoupli
                 file_path: method.file_path.clone(),
                 class_name: method.class_name.clone(),
                 line: method.line,
-                callers: incoming[index].len(),
-                calling_classes: classes.len(),
-                fan_out: outgoing[index].len(),
+                counts: CouplingCounts {
+                    callers: incoming[index].len(),
+                    calling_classes: classes.len(),
+                    fan_out: outgoing[index].len(),
+                },
             }
         })
         .collect()
