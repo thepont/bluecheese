@@ -26,6 +26,8 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         Ok(detectors::data_clumps::detect(files))
     } else if smell == "alt-classes" {
         Ok(detectors::alt_classes::detect(files))
+    } else if smell == "lazy-class" {
+        Ok(detectors::lazy_class::detect(files))
     } else if smell == "data-class" {
         Ok(detectors::data_class::detect(files))
     } else if smell == "middle-man" {
@@ -82,6 +84,7 @@ pub fn ported_smells() -> &'static [&'static str] {
     &[
         "data-clumps",
         "alt-classes",
+        "lazy-class",
         "data-class",
         "middle-man",
         "large-class",
