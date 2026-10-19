@@ -120,20 +120,26 @@ pub fn supported_extensions() -> Vec<&'static str> {
         .collect()
 }
 
+/// Directory names that never hold first-party source: build output and
+/// dependency trees. Vendored dependencies are other people's code, and
+/// reporting smells in them is noise.
+const PRUNED_DIRECTORIES: &[&str] = &["target", "vendor", "node_modules"];
+
 /// Load and parse every source file under `root` that a known adapter claims,
 /// sorted by path for determinism.
 ///
 /// Files no adapter claims are skipped, so a mixed or partly-irrelevant tree can
-/// be pointed at safely. Hidden directories and `target` are skipped: build
-/// output can contain generated source that is not the project's own. Parsers
-/// are reused per language.
+/// be pointed at safely. Hidden directories and the conventional build and
+/// dependency directories in [`PRUNED_DIRECTORIES`] are pruned entirely: build
+/// output can contain generated source, and vendored code is not the project's
+/// own. Parsers are reused per language.
 pub fn load_project(root: &Path) -> Result<Vec<SourceFile>> {
     let walker = walkdir::WalkDir::new(root).into_iter().filter_entry(|e| {
-        if e.depth() == 0 {
+        if e.depth() == 0 || !e.file_type().is_dir() {
             return true;
         }
         let name = e.file_name().to_string_lossy();
-        !(e.file_type().is_dir() && (name == "target" || name.starts_with('.')))
+        !(name.starts_with('.') || PRUNED_DIRECTORIES.contains(&name.as_ref()))
     });
 
     let mut paths: Vec<PathBuf> = walker
