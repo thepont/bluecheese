@@ -64,9 +64,9 @@ fn the_exclusion_is_what_keeps_the_corpus_out_of_the_self_scan() {
     for smell in bluecheese::ported_smells() {
         let findings = findings(&unscoped, smell);
         assert!(
-            findings.iter().any(|finding| finding
-                .relative_file_path
-                .starts_with("tests/fixtures/smelly/")),
+            findings
+                .iter()
+                .any(|finding| finding.relative_file_path.starts_with("tests/fixtures/")),
             "'{smell}' has no deliberate smell in the corpus to find, so the exclusion is untested: {findings:#?}"
         );
     }

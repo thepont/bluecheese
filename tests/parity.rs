@@ -157,3 +157,28 @@ fn long_method_matches_java_on_the_refactored_corpus() {
         "Long Method",
     );
 }
+
+#[test]
+fn message_chains_match_java_on_smellbench() {
+    assert_parity(
+        "smellbench",
+        "smellbench.json",
+        "message-chains",
+        "Message Chains",
+    );
+}
+
+#[test]
+fn message_chains_match_java_on_the_smelly_corpus() {
+    assert_parity("smelly", "smelly.json", "message-chains", "Message Chains");
+}
+
+#[test]
+fn message_chains_match_java_on_the_refactored_corpus() {
+    assert_parity(
+        "refactored",
+        "refactored.json",
+        "message-chains",
+        "Message Chains",
+    );
+}
