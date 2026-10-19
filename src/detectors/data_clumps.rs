@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, SourceFile, model_for};
+use crate::lang::{model_for, LanguageId, SourceFile};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -12,54 +12,65 @@ pub const SMELL_NAME: &str = "Data Clumps";
 const MIN_SHARED_PARAMETERS: usize = 2;
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
-    let mut findings = Vec::new();
-    for file in files {
-        if file.language != LanguageId::Java {
-            continue;
-        }
-        let model = model_for(file.language);
-        for ty in model.types(file) {
-            if ty.kind() != "class_declaration" {
-                continue;
-            }
-            let Some(class_name) = model.type_name(file, ty) else {
-                continue;
-            };
-            let executables = model.methods(file, ty);
-            let groups: Vec<_> = executables
-                .iter()
-                .map(|executable| {
-                    (
-                        model.decl_line(*executable),
-                        parameter_names(*executable, file),
-                    )
-                })
-                .collect();
-            let mut lines = BTreeSet::new();
-            for left in 0..groups.len() {
-                for right in left + 1..groups.len() {
-                    if groups[left].1.intersection(&groups[right].1).count()
-                        >= MIN_SHARED_PARAMETERS
-                    {
-                        lines.insert(groups[left].0);
-                        lines.insert(groups[right].0);
-                    }
-                }
-            }
-            if !lines.is_empty() {
-                findings.push(Finding {
-                    smell_name: SMELL_NAME.to_string(),
-                    file_path: file.rel.clone(),
-                    class_name: class_name.to_string(),
-                    line_numbers: lines.into_iter().collect(),
-                    relative_file_path: file.rel.clone(),
-                    additional_info: String::new(),
-                });
-            }
-        }
-        findings.extend(repeated_argument_groups(file));
-    }
+    files.iter().flat_map(detect_file).collect()
+}
+
+fn detect_file(file: &SourceFile) -> Vec<Finding> {
+    let mut findings = type_findings(file);
+    findings.extend(repeated_argument_groups(file));
     findings
+}
+
+fn type_findings(file: &SourceFile) -> Vec<Finding> {
+    if file.language != LanguageId::Java {
+        return Vec::new();
+    }
+
+    let model = model_for(file.language);
+    model
+        .types(file)
+        .into_iter()
+        .filter(|ty| ty.kind() == "class_declaration")
+        .filter_map(|ty| type_finding(file, ty))
+        .collect()
+}
+
+fn type_finding(file: &SourceFile, ty: Node<'_>) -> Option<Finding> {
+    let model = model_for(file.language);
+    let class_name = model.type_name(file, ty)?;
+    let lines = repeated_parameter_lines(file, ty);
+
+    (!lines.is_empty()).then(|| Finding {
+        smell_name: SMELL_NAME.to_string(),
+        file_path: file.rel.clone(),
+        class_name: class_name.to_string(),
+        line_numbers: lines.into_iter().collect(),
+        relative_file_path: file.rel.clone(),
+        additional_info: String::new(),
+    })
+}
+
+fn repeated_parameter_lines(file: &SourceFile, ty: Node<'_>) -> BTreeSet<usize> {
+    let model = model_for(file.language);
+    let groups: Vec<_> = model
+        .methods(file, ty)
+        .iter()
+        .map(|method| (model.decl_line(*method), parameter_names(*method, file)))
+        .collect();
+    matching_method_lines(&groups)
+}
+
+fn matching_method_lines(groups: &[(usize, BTreeSet<String>)]) -> BTreeSet<usize> {
+    let mut lines = BTreeSet::new();
+    for left in 0..groups.len() {
+        for right in left + 1..groups.len() {
+            if groups[left].1.intersection(&groups[right].1).count() >= MIN_SHARED_PARAMETERS {
+                lines.insert(groups[left].0);
+                lines.insert(groups[right].0);
+            }
+        }
+    }
+    lines
 }
 
 fn parameter_names(executable: Node<'_>, file: &SourceFile) -> BTreeSet<String> {
@@ -75,16 +86,37 @@ fn parameter_names(executable: Node<'_>, file: &SourceFile) -> BTreeSet<String> 
 }
 
 fn repeated_argument_groups(file: &SourceFile) -> Vec<Finding> {
-    let model = model_for(file.language);
-    let declared_methods: BTreeSet<String> = model
+    let declared = declared_methods(file);
+    let (calls_by_executable, calls_by_type) = collect_argument_calls(file, &declared);
+
+    // Repeated arguments in one executable are a direct data clump. A
+    // constructor forwarding the same group and a method using it again in
+    // the same type is also a clump; sibling constructors alone are ordinary
+    // inheritance plumbing.
+    let repeated = repeated_executable_groups(calls_by_executable);
+    let repeated = repeated_type_groups(calls_by_type, repeated);
+    findings_for_groups(file, repeated)
+}
+
+fn declared_methods(file: &SourceFile) -> BTreeSet<String> {
+    model_for(file.language)
         .types(file)
         .into_iter()
-        .flat_map(|ty| model.methods(file, ty))
+        .flat_map(|ty| model_for(file.language).methods(file, ty))
         .filter_map(|method| method.child_by_field_name("name"))
         .map(|name| file.text(name).to_string())
-        .collect();
-    let mut calls_by_executable: BTreeMap<(usize, Vec<String>), Vec<usize>> = BTreeMap::new();
-    let mut calls_by_type: BTreeMap<(usize, Vec<String>), Vec<(usize, bool)>> = BTreeMap::new();
+        .collect()
+}
+
+type ExecutableCalls = BTreeMap<(usize, Vec<String>), Vec<usize>>;
+type TypeCalls = BTreeMap<(usize, Vec<String>), Vec<(usize, bool)>>;
+
+fn collect_argument_calls(
+    file: &SourceFile,
+    declared_methods: &BTreeSet<String>,
+) -> (ExecutableCalls, TypeCalls) {
+    let mut calls_by_executable = ExecutableCalls::new();
+    let mut calls_by_type = TypeCalls::new();
     for call in descendants(file.root()).into_iter().filter(|node| {
         matches!(
             node.kind(),
@@ -127,19 +159,25 @@ fn repeated_argument_groups(file: &SourceFile) -> Vec<Finding> {
             }
         }
     }
+    (calls_by_executable, calls_by_type)
+}
 
-    // Repeated arguments in one executable are a direct data clump. A
-    // constructor forwarding the same group and a method using it again in
-    // the same type is also a clump; sibling constructors alone are ordinary
-    // inheritance plumbing.
+fn repeated_executable_groups(calls: ExecutableCalls) -> BTreeMap<Vec<String>, Vec<usize>> {
     let mut repeated = BTreeMap::<Vec<String>, Vec<usize>>::new();
-    for ((_, variables), mut lines) in calls_by_executable {
+    for ((_, variables), mut lines) in calls {
         if lines.len() >= 2 {
             lines.sort_unstable();
             lines.dedup();
             repeated.insert(variables, lines);
         }
     }
+    repeated
+}
+
+fn repeated_type_groups(
+    calls_by_type: TypeCalls,
+    mut repeated: BTreeMap<Vec<String>, Vec<usize>>,
+) -> BTreeMap<Vec<String>, Vec<usize>> {
     for ((_, variables), calls) in calls_by_type {
         let has_constructor = calls.iter().any(|(_, constructor)| *constructor);
         let has_method_call = calls.iter().any(|(_, constructor)| !constructor);
@@ -150,7 +188,13 @@ fn repeated_argument_groups(file: &SourceFile) -> Vec<Finding> {
             repeated.insert(variables, lines);
         }
     }
+    repeated
+}
 
+fn findings_for_groups(
+    file: &SourceFile,
+    repeated: BTreeMap<Vec<String>, Vec<usize>>,
+) -> Vec<Finding> {
     let file_class_name = Path::new(&file.rel)
         .file_stem()
         .and_then(|name| name.to_str())
