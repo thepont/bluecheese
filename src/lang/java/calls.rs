@@ -30,7 +30,11 @@ struct Project<'a> {
     methods: Vec<Method<'a>>,
 }
 
-type ExpressionReader<'a> = fn(&Project<'a>, CallSite<'a>, Node<'a>) -> Option<String>;
+type ExpressionReader<'query, 'source> = fn(
+    &JavaExpressionResolver<'query, 'source>,
+    CallSite<'source>,
+    Node<'source>,
+) -> Option<String>;
 
 #[derive(Clone, Copy)]
 struct CallSite<'a> {
@@ -92,6 +96,10 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
 }
 
 impl<'a> Project<'a> {
+    fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+        JavaExpressionResolver { project: self }.expression_type(site, expression)
+    }
+
     fn type_resolver(&self) -> TypeResolver<'_, 'a> {
         TypeResolver { types: &self.types }
     }
@@ -249,12 +257,18 @@ impl<'a> Project<'a> {
         }
         Some(score)
     }
+}
 
+struct JavaExpressionResolver<'query, 'source> {
+    project: &'query Project<'source>,
+}
+
+impl<'a> JavaExpressionResolver<'_, 'a> {
     fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
         if site.depth > 24 {
             return None;
         }
-        let readers: &[(&str, ExpressionReader<'a>)] = &[
+        let readers: &[(&str, ExpressionReader<'_, 'a>)] = &[
             ("scoped_identifier", Self::qualified_expression_type),
             ("this", Self::receiver_expression_type),
             ("super", Self::receiver_expression_type),
@@ -271,7 +285,7 @@ impl<'a> Project<'a> {
         if let Some((_, read)) = readers.iter().find(|(kind, _)| *kind == expression.kind()) {
             read(self, site, expression)
         } else {
-            literal_type(self.types[site.owner].file, expression)
+            literal_type(self.project.types[site.owner].file, expression)
         }
     }
 
@@ -280,20 +294,22 @@ impl<'a> Project<'a> {
         site: CallSite<'a>,
         expression: Node<'a>,
     ) -> Option<String> {
-        let name = self
-            .type_resolver()
-            .type_name(site.owner, self.types[site.owner].file.text(expression));
-        self.type_resolver().type_index(&name).map(|_| name)
+        let name = self.project.type_resolver().type_name(
+            site.owner,
+            self.project.types[site.owner].file.text(expression),
+        );
+        self.project.type_resolver().type_index(&name).map(|_| name)
     }
 
     fn receiver_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
         if expression.kind() == "this" {
-            Some(self.types[site.owner].qualified.clone())
+            Some(self.project.types[site.owner].qualified.clone())
         } else {
-            self.type_resolver()
+            self.project
+                .type_resolver()
                 .parents(site.owner)
                 .first()
-                .map(|p| self.types[*p].qualified.clone())
+                .map(|p| self.project.types[*p].qualified.clone())
         }
     }
 
@@ -308,8 +324,9 @@ impl<'a> Project<'a> {
 
     fn declared_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
         expression.child_by_field_name("type").map(|n| {
-            self.type_resolver()
-                .type_name(site.owner, self.types[site.owner].file.text(n))
+            self.project
+                .type_resolver()
+                .type_name(site.owner, self.project.types[site.owner].file.text(n))
         })
     }
 
@@ -324,25 +341,34 @@ impl<'a> Project<'a> {
     }
 
     fn call_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        let target = &self.methods[self.resolve_call(site.deeper(), expression)?];
-        let file = self.types[target.owner].file;
-        target
-            .node
-            .child_by_field_name("type")
-            .map(|n| self.type_resolver().type_name(target.owner, file.text(n)))
+        let target = &self.project.methods[self.project.resolve_call(site.deeper(), expression)?];
+        let file = self.project.types[target.owner].file;
+        target.node.child_by_field_name("type").map(|n| {
+            self.project
+                .type_resolver()
+                .type_name(target.owner, file.text(n))
+        })
     }
 
     fn field_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
         let owner = site.owner;
-        let file = self.types[owner].file;
-        let qualified = self.type_resolver().type_name(owner, file.text(expression));
-        if self.type_resolver().type_index(&qualified).is_some() {
+        let file = self.project.types[owner].file;
+        let qualified = self
+            .project
+            .type_resolver()
+            .type_name(owner, file.text(expression));
+        if self
+            .project
+            .type_resolver()
+            .type_index(&qualified)
+            .is_some()
+        {
             return Some(qualified);
         }
         let object = expression.child_by_field_name("object")?;
         let receiver = self.expression_type(site.deeper(), object)?;
-        let target_owner = self.type_resolver().type_index(&receiver)?;
-        self.type_resolver().field_type(
+        let target_owner = self.project.type_resolver().type_index(&receiver)?;
+        self.project.type_resolver().field_type(
             target_owner,
             file.text(expression.child_by_field_name("field")?),
         )
@@ -350,7 +376,7 @@ impl<'a> Project<'a> {
 
     fn variable_type(&self, site: CallSite<'a>, usage: Node<'a>) -> Option<String> {
         let owner = site.owner;
-        let file = self.types[owner].file;
+        let file = self.project.types[owner].file;
         let name = file.text(usage);
         let mut scope = usage.parent();
         while let Some(block) = scope {
@@ -371,7 +397,11 @@ impl<'a> Project<'a> {
             if let Some(binding) = candidate {
                 let declared = binding.child_by_field_name("type")?;
                 if file.text(declared) != "var" {
-                    return Some(self.type_resolver().type_name(owner, file.text(declared)));
+                    return Some(
+                        self.project
+                            .type_resolver()
+                            .type_name(owner, file.text(declared)),
+                    );
                 }
                 return descendants(binding)
                     .into_iter()
@@ -384,7 +414,7 @@ impl<'a> Project<'a> {
             }
             scope = block.parent();
         }
-        self.type_resolver().field_type(owner, name)
+        self.project.type_resolver().field_type(owner, name)
     }
 }
 
