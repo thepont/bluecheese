@@ -11,41 +11,49 @@ pub const SMELL_NAME: &str = "Duplicate Code";
 const MIN_SHARED_STATEMENTS: usize = 3;
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
-    let mut findings = Vec::new();
-    for file in files {
-        let model = model_for(file.language);
-        for ty in model.method_comparison_owners(file) {
-            let Some(class_name) = model.type_name(file, ty) else {
-                continue;
-            };
-            let methods: Vec<_> = model
-                .methods(file, ty)
-                .into_iter()
-                .map(|method| MethodFingerprint::new(file, method))
-                .collect();
-            let mut duplicate_lines = BTreeSet::new();
-            for left in 0..methods.len() {
-                for right in left + 1..methods.len() {
-                    if methods[left].duplicates(&methods[right]) {
-                        duplicate_lines.insert(methods[left].line);
-                        duplicate_lines.insert(methods[right].line);
-                    }
-                }
-            }
-            if !duplicate_lines.is_empty() {
-                findings.push(Finding {
-                    smell_name: SMELL_NAME.to_string(),
-                    file_path: file.rel.clone(),
-                    class_name: class_name.to_string(),
-                    line_numbers: duplicate_lines.into_iter().collect(),
-                    relative_file_path: file.rel.clone(),
-                    additional_info: String::new(),
-                });
+    let mut findings: Vec<_> = files.iter().flat_map(file_findings).collect();
+    findings.extend(super::cross_language_duplicates::detect(files));
+    findings
+}
+
+fn file_findings(file: &SourceFile) -> Vec<Finding> {
+    model_for(file.language)
+        .method_comparison_owners(file)
+        .into_iter()
+        .filter_map(|ty| owner_finding(file, ty))
+        .collect()
+}
+
+fn owner_finding(file: &SourceFile, ty: Node<'_>) -> Option<Finding> {
+    let model = model_for(file.language);
+    let class_name = model.type_name(file, ty)?;
+    let methods: Vec<_> = model
+        .methods(file, ty)
+        .into_iter()
+        .map(|method| MethodFingerprint::new(file, method))
+        .collect();
+    let lines = duplicate_lines(&methods);
+    (!lines.is_empty()).then(|| Finding {
+        smell_name: SMELL_NAME.to_string(),
+        file_path: file.rel.clone(),
+        class_name: class_name.to_string(),
+        line_numbers: lines.into_iter().collect(),
+        relative_file_path: file.rel.clone(),
+        additional_info: String::new(),
+    })
+}
+
+fn duplicate_lines(methods: &[MethodFingerprint]) -> BTreeSet<usize> {
+    let mut lines = BTreeSet::new();
+    for left in 0..methods.len() {
+        for right in left + 1..methods.len() {
+            if methods[left].duplicates(&methods[right]) {
+                lines.insert(methods[left].line);
+                lines.insert(methods[right].line);
             }
         }
     }
-    findings.extend(super::cross_language_duplicates::detect(files));
-    findings
+    lines
 }
 
 struct MethodFingerprint {
