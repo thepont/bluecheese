@@ -9,13 +9,9 @@ pub const SMELL_NAME: &str = "Speculative Generality";
 const MAX_INTERNAL_REFERENCES: usize = 2;
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
-    let java_files: Vec<_> = files
-        .iter()
-        .filter(|file| file.language == LanguageId::Java)
-        .collect();
     let mut findings = Vec::new();
 
-    for file in &java_files {
+    for file in files {
         let model = model_for(file.language);
         for ty in model.types(file) {
             if !is_abstract_type(file, ty) {
@@ -25,12 +21,15 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
                 continue;
             };
             let name = file.text(name_node);
-            let package = package_name(file);
-            let package_files: Vec<_> = java_files
+            let relevant_files: Vec<_> = files
                 .iter()
-                .filter(|source| package_name(source) == package)
+                .filter(|source| {
+                    source.language == file.language
+                        && (file.language != LanguageId::Java
+                            || package_name(source) == package_name(file))
+                })
                 .collect();
-            let uses: usize = package_files
+            let uses: usize = relevant_files
                 .iter()
                 .map(|source| {
                     descendants(source.root())
@@ -55,7 +54,10 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
 }
 
 fn is_abstract_type(file: &SourceFile, ty: Node<'_>) -> bool {
-    if ty.kind() == "interface_declaration" {
+    if matches!(
+        ty.kind(),
+        "interface_declaration" | "trait_item" | "abstract_class_declaration"
+    ) {
         return true;
     }
     let mut cursor = ty.walk();
