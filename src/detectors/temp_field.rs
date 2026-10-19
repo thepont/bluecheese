@@ -14,6 +14,12 @@ use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Temporary Field";
 
+struct DeclaredField<'a> {
+    node: Node<'a>,
+    name: String,
+    primitive: bool,
+}
+
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
@@ -33,14 +39,14 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             let declared_fields = fields(file, ty);
             let mut lines = declared_fields
                 .iter()
-                .filter(|(field, name, primitive)| {
-                    is_nullable_guarded(file, *field, name, &methods)
-                        || (*primitive
-                            && references_only_in_branches(file, name, &methods)
-                            && !has_unconditional_write(file, name, &methods)
-                            && !is_created_as_branch_local_object(file, name, &methods))
+                .filter(|field| {
+                    is_nullable_guarded(file, field, &methods)
+                        || (field.primitive
+                            && references_only_in_branches(file, &field.name, &methods)
+                            && !has_unconditional_write(file, &field.name, &methods)
+                            && !is_created_as_branch_local_object(file, &field.name, &methods))
                 })
-                .map(|(field, _, _)| file.line(*field))
+                .map(|field| file.line(field.node))
                 .collect::<BTreeSet<_>>();
             if lines.is_empty() && constructors.len() >= 2 {
                 lines.extend(
@@ -64,7 +70,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .collect()
 }
 
-fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<(Node<'a>, String, bool)> {
+fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<DeclaredField<'a>> {
     let Some(body) = class.child_by_field_name("body") else {
         return Vec::new();
     };
@@ -90,14 +96,14 @@ fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<(Node<'a>, String, bool
         .map(|(field, name, ty)| {
             let spelling = file.text(ty).trim();
             let base = spelling.trim_end_matches("[]");
-            (
-                field,
-                file.text(name).to_owned(),
-                matches!(
+            DeclaredField {
+                node: field,
+                name: file.text(name).to_owned(),
+                primitive: matches!(
                     base,
                     "byte" | "short" | "int" | "long" | "float" | "double" | "char" | "boolean"
                 ),
-            )
+            }
         })
         .collect()
 }
@@ -155,13 +161,9 @@ fn is_created_as_branch_local_object(file: &SourceFile, name: &str, methods: &[N
     })
 }
 
-fn is_nullable_guarded(
-    file: &SourceFile,
-    field: Node<'_>,
-    name: &str,
-    methods: &[Node<'_>],
-) -> bool {
-    if field.child_by_field_name("value").is_some() {
+fn is_nullable_guarded(file: &SourceFile, field: &DeclaredField<'_>, methods: &[Node<'_>]) -> bool {
+    let name = field.name.as_str();
+    if field.node.child_by_field_name("value").is_some() {
         return false;
     }
     methods.iter().any(|method| {
@@ -191,12 +193,13 @@ fn is_nullable_guarded(
 
 fn rarely_used_fields<'a>(
     file: &SourceFile,
-    fields: &[(Node<'a>, String, bool)],
+    fields: &[DeclaredField<'a>],
     methods: &[Node<'a>],
 ) -> Vec<Node<'a>> {
     let use_counts = fields
         .iter()
-        .map(|(_, name, _)| {
+        .map(|field| {
+            let name = field.name.as_str();
             let methods_using_field = methods
                 .iter()
                 .filter(|method| {
@@ -205,7 +208,7 @@ fn rarely_used_fields<'a>(
                         .any(|node| node.kind() == "identifier" && file.text(node) == name)
                 })
                 .count();
-            (name.as_str(), methods_using_field)
+            (name, methods_using_field)
         })
         .collect::<Vec<_>>();
     let common = use_counts
@@ -218,14 +221,14 @@ fn rarely_used_fields<'a>(
     }
     fields
         .iter()
-        .filter(|(_, name, primitive)| {
-            *primitive
+        .filter(|field| {
+            field.primitive
                 && use_counts
                     .iter()
-                    .find(|(field_name, _)| *field_name == name)
+                    .find(|(field_name, _)| *field_name == field.name.as_str())
                     .is_some_and(|(_, count)| *count > 0 && *count < common)
         })
-        .map(|(field, _, _)| *field)
+        .map(|field| field.node)
         .collect()
 }
 
