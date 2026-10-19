@@ -162,9 +162,12 @@ impl LanguageModel for RustModel {
                 complexity += 1;
             }
             if kind == "match_arm" {
+                // The wildcard arm is the fall-through case, not a decision.
+                // tree-sitter-rust does not always give `_` a distinct kind, so
+                // the text is checked as well as the kind.
                 let is_wildcard = node
                     .child_by_field_name("pattern")
-                    .is_some_and(|p| p.kind() == "wildcard_pattern");
+                    .is_some_and(|p| p.kind() == "wildcard_pattern" || file.text(p).trim() == "_");
                 if !is_wildcard {
                     complexity += 1;
                 }

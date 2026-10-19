@@ -80,8 +80,39 @@ fn maps_impl_blocks_and_free_functions() {
             "accumulate".to_string()
         ])
     );
-    assert_eq!(by_type.get("sample"), Some(&vec!["free_short".to_string()]));
+    assert_eq!(
+        by_type.get("sample"),
+        Some(&vec!["free_short".to_string(), "classify".to_string()])
+    );
     assert_eq!(by_type.get("Status"), Some(&Vec::new()));
+}
+
+/// A wildcard arm is the fall-through case, not a decision, so it must not
+/// raise complexity. `classify` has two real arms plus a wildcard: 1 + 2 = 3.
+/// This bug was found by hand-checking `pick_output_buffer_size` in a real
+/// codebase, where the wildcard arm inflated the count.
+#[test]
+fn wildcard_match_arm_is_not_a_decision() {
+    let files = load_project(&fixture_root().join("rust")).expect("load rust fixture");
+    let file = files
+        .iter()
+        .find(|f| f.rel == "sample.rs")
+        .expect("sample.rs is loaded");
+    let model = model_for(file.language);
+
+    let mut classified = None;
+    for ty in model.types(file) {
+        for method in model.methods(file, ty) {
+            let name = method
+                .child_by_field_name("name")
+                .expect("method has a name");
+            if file.text(name) == "classify" {
+                classified = Some(model.complexity(file, method));
+            }
+        }
+    }
+
+    assert_eq!(classified, Some(3), "1 base + two non-wildcard arms");
 }
 
 /// A tree holding several languages is partitioned: every file is handled by

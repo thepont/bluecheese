@@ -69,3 +69,11 @@ pub enum Status {
 pub fn free_short() -> bool {
     true
 }
+
+pub fn classify(n: i64) -> &'static str {
+    match n {
+        0 => "zero",
+        1 => "one",
+        _ => "many",
+    }
+}
