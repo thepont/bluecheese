@@ -8,7 +8,6 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
 use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
-use crate::walk::descendants;
 use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Parallel Inheritance Hierarchies";
@@ -91,11 +90,29 @@ fn parent_types(file: &SourceFile, ty: Node<'_>) -> Vec<String> {
 }
 
 fn type_names(file: &SourceFile, node: Node<'_>) -> Vec<String> {
-    descendants(node)
-        .into_iter()
-        .filter(|child| matches!(child.kind(), "type_identifier" | "scoped_type_identifier"))
-        .map(|child| file.text(child).to_owned())
-        .collect()
+    let mut names = Vec::new();
+    collect_type_names(file, node, &mut names);
+    names
+}
+
+fn collect_type_names(file: &SourceFile, node: Node<'_>, names: &mut Vec<String>) {
+    if matches!(node.kind(), "type_identifier" | "scoped_type_identifier") {
+        names.push(
+            file.text(node)
+                .rsplit('.')
+                .next()
+                .unwrap_or(file.text(node))
+                .to_owned(),
+        );
+        return;
+    }
+    if node.kind() == "type_arguments" {
+        return;
+    }
+    let mut cursor = node.walk();
+    for child in node.named_children(&mut cursor) {
+        collect_type_names(file, child, names);
+    }
 }
 
 fn paired_children(left: &[usize], right: &[usize], types: &[TypeInfo<'_>]) -> Vec<(usize, usize)> {
