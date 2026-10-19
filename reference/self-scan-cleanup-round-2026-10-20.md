@@ -1,5 +1,33 @@
 # Self-scan cleanup round — 2026-10-20
 
+## Reporting corrections after review
+
+The earlier inventory below is historical. Unresolved findings must lead to a
+code correction or a demonstrated detector correction; calling them intentional
+does not resolve them. No finding suppressions or threshold increases were added.
+
+- `ebf48b4` corrects Comments classification. Rust module and field documentation
+  was reported because exclusion depended on the next declaration rather than
+  parsed documentation markers. Conversely, trailing explanations before a
+  declaration were missed in Rust, JavaScript and TypeScript. Regression tests
+  first reproduced both failures, then passed. Ordinary `////` and `/***` comments
+  remain reportable. The source Comments report fell from 47 groups to 8 groups.
+- `6e9cc81` corrects non-Java Large Class cohesion. Ordinary-identifier lookup
+  missed the actual field nodes in `self.field` and `this.field`. A complex class
+  sharing one field reproduced the false report before correction. Regression
+  cases now distinguish shared fields, separate fields, other receivers, local
+  variables and private ECMAScript fields. Java parity is unchanged.
+- `aa63626` and `832899f` simplify two equivalent expressions required by strict
+  Clippy, without changing detector behavior.
+
+Validation on the working repository after these corrections: **224 tests passed**
+with the source-cleanliness assertion filtered out; **strict all-targets Clippy**
+and changed-file rustfmt checks passed. The source-cleanliness assertion was run
+separately and **still fails on Data Clumps**. The remaining source findings have
+not been resolved or proved harmless. This is not a clean self-scan.
+
+## Earlier refactoring round
+
 Ran all 22 detectors on a frozen source snapshot at `87fd6bd`, then reran them
 after five small refactoring commits. The scope excludes `tests/` and `reference/`,
 retaining the implementation and examples. Concurrent unrelated work was excluded
