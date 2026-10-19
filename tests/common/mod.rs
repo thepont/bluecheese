@@ -49,17 +49,30 @@ pub fn keys(findings: &[Finding]) -> BTreeSet<(String, String, Vec<usize>)> {
         .collect()
 }
 
-/// Findings for one file of a fixture directory, so each example can be checked
-/// on its own without an aggregate expectation that every new example would have
-/// to rewrite.
-pub fn findings_in(dir: &str, name: &str) -> Vec<Finding> {
+/// Findings for one file of a fixture directory, as an order-insensitive set of
+/// `(path, class, lines)`, so each corpus example can be checked on its own
+/// without an aggregate expectation that every new example would have to
+/// rewrite.
+pub fn finding_keys_in(dir: &str, name: &str) -> BTreeSet<(String, String, Vec<usize>)> {
     let files: Vec<SourceFile> = load(dir)
         .files
         .into_iter()
         .filter(|f| f.rel.ends_with(name))
         .collect();
     assert!(!files.is_empty(), "no fixture matching {dir}/{name}");
-    bluecheese::detect(&files, "long-method")
+    keys(&bluecheese::detect(&files, "long-method"))
+}
+
+/// How many lines of `source` start, after indentation, with `prefix`.
+///
+/// The corpus uses this to show that a trap is real: the code really is long,
+/// and is still not reported.
+pub fn count_lines_starting_with(source: &SourceFile, prefix: &str) -> usize {
+    source
+        .source
+        .lines()
+        .filter(|line| line.trim_start().starts_with(prefix))
+        .count()
 }
 
 /// A throwaway directory tree, so behaviour that depends on ignore files can be
