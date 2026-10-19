@@ -61,9 +61,9 @@ public final class LongMethod {
         return runningTotal;
     }
 
-    // Smelly by branching only: sixteen `&&` inside one `if` put complexity at
-    // 18 against a limit of 15, while the method holds two statements, so the
-    // size limit cannot be what triggers the finding.
+    // Smelly by branching only: fifteen `&&` inside one `if` put complexity at
+    // 17 against a limit of 15, while the body is three logical lines against a
+    // limit of 30, so size cannot be what triggers the finding.
     public boolean inRange(int a) {
         if (a > 0
             && a < 1
