@@ -18,6 +18,10 @@ pub struct JavaModel;
 pub static JAVA: JavaModel = JavaModel;
 
 impl LanguageModel for JavaModel {
+    fn is_statement(&self, node: Node<'_>) -> bool {
+        node.kind().ends_with("_statement") || node.kind() == "local_variable_declaration"
+    }
+
     fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
         if node.kind() != "method_invocation" {
             return 0;

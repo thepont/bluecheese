@@ -82,6 +82,8 @@ pub trait LanguageModel {
 
     fn is_comment(&self, node: Node<'_>) -> bool;
 
+    fn is_statement(&self, node: Node<'_>) -> bool;
+
     /// Adapter-resolved coupling. Languages without a resolver return no
     /// relationships; adapters must never invent cross-language call edges.
     fn method_coupling(&self, _files: &[SourceFile]) -> Vec<coupling::MethodCoupling> {

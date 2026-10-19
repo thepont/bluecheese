@@ -38,6 +38,17 @@ pub struct RustModel;
 pub static RUST: RustModel = RustModel;
 
 impl LanguageModel for RustModel {
+    fn is_statement(&self, node: Node<'_>) -> bool {
+        matches!(
+            node.kind(),
+            "let_declaration"
+                | "expression_statement"
+                | "return_expression"
+                | "break_expression"
+                | "continue_expression"
+        )
+    }
+
     fn method_coupling(&self, files: &[SourceFile]) -> Vec<crate::lang::coupling::MethodCoupling> {
         crate::lang::rust_calls::coupling(files)
     }

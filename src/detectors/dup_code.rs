@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, SourceFile, model_for};
+use crate::lang::{SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -57,31 +57,12 @@ fn duplicate_pair(file: &SourceFile, left: Node<'_>, right: Node<'_>) -> bool {
 }
 
 fn statement_fingerprints(file: &SourceFile, method: Node<'_>) -> BTreeSet<String> {
+    let model = model_for(file.language);
     descendants(method)
         .into_iter()
-        .filter(|node| is_statement(file.language, *node))
+        .filter(|node| model.is_statement(*node))
         .map(|node| normalize(file.text(node)))
         .collect()
-}
-
-fn is_statement(language: LanguageId, node: Node<'_>) -> bool {
-    match language {
-        LanguageId::Java => {
-            node.kind().ends_with("_statement") || node.kind() == "local_variable_declaration"
-        }
-        LanguageId::Rust => matches!(
-            node.kind(),
-            "let_declaration"
-                | "expression_statement"
-                | "return_expression"
-                | "break_expression"
-                | "continue_expression"
-        ),
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
-            node.kind().ends_with("_statement")
-                || matches!(node.kind(), "lexical_declaration" | "variable_declaration")
-        }
-    }
 }
 
 fn arithmetic_fingerprints(file: &SourceFile, method: Node<'_>) -> BTreeSet<String> {
