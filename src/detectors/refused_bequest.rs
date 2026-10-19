@@ -170,7 +170,7 @@ impl EcmaClass<'_> {
     }
 
     fn refuses(&self, method: Node<'_>, parent: &Self, parent_methods: &[Node<'_>]) -> bool {
-        if !(ecma_empty_body(self.file, method) || ecma_refusal_throw(self.file, method)) {
+        if !(ecma_empty_body(self.file, method) || is_refusal_throw(self.file, method)) {
             return false;
         }
         let Some(name) = method.child_by_field_name("name") else {
@@ -254,16 +254,6 @@ fn ecma_empty_body(_file: &SourceFile, method: Node<'_>) -> bool {
         body.named_children(&mut cursor)
             .all(|node| node.kind() == "comment")
     })
-}
-
-fn ecma_refusal_throw(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(statements) = model_for(file.language).body_statements(method) else {
-        return false;
-    };
-    statements.len() == 1
-        && statements[0].kind() == "throw_statement"
-        && (file.text(statements[0]).contains("UnsupportedOperation")
-            || file.text(statements[0]).contains("NotImplemented"))
 }
 
 fn finding_for_type(project: &Project<'_>, index: usize) -> Option<Finding> {
