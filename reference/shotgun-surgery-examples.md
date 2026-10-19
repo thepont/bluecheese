@@ -5,7 +5,68 @@ defects in current releases. Keep adding examples here, including weak leads
 and controls. A large commit or frequently co-changing files alone does not
 establish that a responsibility is scattered.
 
-## What BlueCheese currently identifies
+## Port and follow-up validation, 2026-10-20
+
+The Java static-coupling detector is now available with `-s shotgun`, committed
+as `ecb540d854109807bbe3738dfec03eb6c766d057`. The
+original refusal results below are retained as the **pre-port baseline**.
+This port does not consume Git history or resolve Rust calls.
+
+**Assessment:** useful for proposing coupling candidates, unsuitable as an
+automatic verdict that shotgun surgery exists. Two characterisation tests
+make the distinction explicit: duplicated policy in two independent classes
+is invisible when neither calls a shared method; centralising that policy in
+one method called by both classes triggers a finding. Thus a successful
+refactoring can introduce the very static signal the detector reports.
+
+Fresh StaticNose build used revision
+`de3c2ef15c2c9fc6973eb78280e77e1ea30b5be5`, with default thresholds.
+Fresh Java runs used the same source inputs as the Rust scans.
+
+| Input | Rust port | Fresh StaticNose | Comparison |
+| --- | ---: | ---: | --- |
+| Full SmellBench corpus | 38 findings | 38 findings | All locations and all CM/CC/Fan-Out metrics match, also matching the existing golden |
+| Roommate before the labelled change, production Java only | 0 findings | 0 findings | Agreement; neither identifies this candidate |
+| Tomcat 7.0.39, `java/` | 1,162 findings | 1,281 findings | 1,148 shared locations, 133 reference-only, 14 port-only |
+| Clean Code School JavaScript | Unsupported | Not run | No JavaScript adapter |
+
+Tomcat's published example **is identified**: `AsyncStateMachine.isAsync()`,
+line 148 of `org/apache/coyote/AsyncStateMachine.java`, reports
+`CM=3, CC=3, Fan-Out=1` in both tools. This is a static rediscovery at our
+selected snapshot, not reproduction of HIST's historical association rules.
+
+The full Tomcat comparison uses `(relative path, class, declaration lines)`
+after removing the Java tool's leading `java/` path component. Shared locations
+are not a claim of identical metrics. These numbers measure agreement with
+StaticNose, **not precision/recall against independently verified smells**.
+The Java run emitted a Spoon comment-attachment error at `Matcher.java:467`
+but completed and wrote its report; retain that caveat when using its totals.
+
+The port reproduces the detector rule and the three fixture corpora; it does
+not reproduce Spoon's full Java type resolution. Unresolved or ambiguous
+targets can be omitted. Classpath interface definitions, generic inference,
+arrays/varargs, static imports and anonymous classes are not fully supported.
+The broader Tomcat disagreement is a known limit, not a passing parity result.
+Do not call this a complete Spoon-equivalent implementation.
+
+Validation added: 15 focused behaviour/CLI tests, plus parity tests on
+SmellBench, `smelly` and `refactored`. Cases cover caller/class deduplication,
+outgoing targets, overload separation, interface inheritance, nested classes,
+package-name collisions, scoped locals, qualified static receivers, ambiguous
+and unresolved calls, and cyclic inferred variables. The cyclic-variable test
+first exposed a stack overflow; bounded resolution now passes that case.
+
+All 126 tests passed in an isolated snapshot of the staged port, excluding
+concurrent work on another detector. Strict Clippy remains blocked by the
+existing `while_let_loop` diagnostic in `src/detectors/switch_stmts.rs:82`,
+outside this change; all-target Clippy passed with only that lint allowed.
+The changed Rust files pass rustfmt; repository-wide formatting also exposes
+the existing import ordering in `src/detectors/data_clumps.rs`, left untouched.
+The final release scan of Tomcat was byte-identical to the report counted
+above. No public-project application tests were run: this exercise evaluates
+analysis results.
+
+## Pre-port baseline
 
 Checked against BlueCheese revision `92560222b1745a47d3ba152846445483d6017e15`.
 `src/lib.rs` recognises the `shotgun` catalogue label but refuses it because
@@ -20,7 +81,7 @@ there is no detector. The CLI analyses source snapshots, not Git history.
 
 These are unsupported analyses, **not clean results and not measured false
 negatives**. Detection precision and recall cannot yet be calculated. No
-detector was implemented or changed during this investigation.
+detector was implemented or changed during the initial research pass.
 
 ## 1. Apache Tomcat: asynchronous request state
 
@@ -227,11 +288,11 @@ git clone https://github.com/guidesmiths/clean-code-school.git /tmp/shotgun-scho
 git -C /tmp/shotgun-school show e88f760414faac08e1f91b211c37f4daad4b4211
 ```
 
-All four scan attempts above were observed failing with exit 1 for the stated
-coverage reasons. Only documentation is added here; no runtime behaviour or
-tests changed. Foreign projects' tests and a fresh StaticNose run were not
-run. Git investigation was targeted, not an exhaustive or random survey of
-public repositories.
+In the initial research pass, all four scan attempts were observed failing
+with exit 1 for the stated coverage reasons; only documentation was added,
+and no fresh StaticNose run was performed. The follow-up results at the top
+supersede those baseline coverage results. Git investigation was targeted,
+not an exhaustive or random survey of public repositories.
 
 For a future history detector, retain production-code spread separately from
 tests/docs/generated files, exclude merges and flag bulk edits, report the
