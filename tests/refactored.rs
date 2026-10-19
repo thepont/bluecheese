@@ -11,6 +11,12 @@
 //! fixtures' own comments, and not by execution: nothing here is compiled or
 //! run, and no test below should be read as having checked it. What the tests do
 //! check is the only thing this tool can be wrong about — what it reports.
+//!
+//! Each pair exists in both languages. The Java halves are held to the reference
+//! tool's report by `parity.rs`; the Rust halves cannot be, because there is no
+//! reference tool for Rust. Those expectations are read off the fixture source,
+//! and lock in that a refactoring which works on Java works on the shapes Rust
+//! writes as well — which is a weaker claim, and is labelled as one.
 
 mod common;
 
@@ -81,6 +87,75 @@ fn replace_method_with_method_object_moves_the_finding_instead() {
     )];
     assert_eq!(
         finding_keys_in("refactored", "ManyTemps.java"),
+        after.into_iter().collect(),
+        "the method object has one short method and one that is still the old body"
+    );
+}
+
+#[test]
+fn extract_method_removes_the_finding_in_rust_as_well() {
+    // The same refactoring on the Rust half of the corpus, where the two jobs are
+    // an accumulation into a field and a rendering of labels. The Java test above
+    // is evidence about the port; this one only locks in behaviour.
+    let expected = [(
+        "extract_me.rs".to_string(),
+        "ExtractMe".to_string(),
+        vec![15],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "extract_me.rs"),
+        expected.into_iter().collect()
+    );
+
+    assert!(
+        finding_keys_in("refactored", "extract_me.rs").is_empty(),
+        "the same total and the same labels, in methods that each say what they do"
+    );
+}
+
+#[test]
+fn replace_conditional_with_polymorphism_removes_the_finding_in_rust_as_well() {
+    // Rust writes this one differently: a trait and a type per variant, rather
+    // than an abstract class and subclasses. The result is the same — no match,
+    // and every method in the file short.
+    let expected = [(
+        "switch_on_kind.rs".to_string(),
+        "SwitchOnKind".to_string(),
+        vec![24],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "switch_on_kind.rs"),
+        expected.into_iter().collect()
+    );
+
+    assert!(
+        finding_keys_in("refactored", "switch_on_kind.rs").is_empty(),
+        "a match that has become dispatch is not a smell"
+    );
+}
+
+#[test]
+fn replace_method_with_method_object_moves_the_finding_in_rust_as_well() {
+    // The same step and not a cure: the locals become fields of a new type, and
+    // the long body goes with them, still long, now reported under the object
+    // that holds it.
+    let before = [(
+        "many_temps.rs".to_string(),
+        "ManyTemps".to_string(),
+        vec![13],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "many_temps.rs"),
+        before.into_iter().collect()
+    );
+
+    let after = [(
+        "many_temps.rs".to_string(),
+        "ManyTempsCalculator".to_string(),
+        vec![45],
+    )];
+    assert_eq!(
+        finding_keys_in("refactored", "many_temps.rs"),
         after.into_iter().collect(),
         "the method object has one short method and one that is still the old body"
     );

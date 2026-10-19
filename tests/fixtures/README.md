@@ -31,12 +31,19 @@ nested Java type is.
 Not every file here is smelly. `Clean.java` and `clean.rs` are controls, and
 several others are traps: code that looks reportable and must not be.
 
+Where a Java fixture's shape has a Rust counterpart, it is a file of its own
+rather than a translation of it: `LongBySize.java` and `long_by_size.rs`,
+`EnumLong.java` and `enum_long.rs`, `LongConstructor.java` and `long_new.rs`,
+`NestedLong.java` and `nested_module.rs`. The pairs named after the refactorings
+they undo exist in both languages, and share their names.
+
 ## `refactored/`
 
 The after halves of the refactoring pairs whose before halves are in `smelly/`,
-sharing each file's name so the pairs read as pairs. Two of the three silence the
-detector; the third, Replace Method with Method Object, does not, and both halves
-of that claim sit in the corpus rather than in a comment.
+sharing each file's name so the pairs read as pairs — `ExtractMe.java` beside
+`extract_me.rs`, each in its own language's naming. In both languages two of the
+three silence the detector; the third, Replace Method with Method Object, does
+not, and both halves of that claim sit in the corpus rather than in a comment.
 
 ## `golden/smellbench.json`
 

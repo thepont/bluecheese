@@ -64,6 +64,18 @@ fn a_long_method_in_an_impl_block_is_reported_under_its_type() {
 }
 
 #[test]
+fn a_long_method_on_an_enum_is_reported_under_the_enum() {
+    // An enum is a type like any other for the impl lookup: the method is not
+    // inside it, as it is in Java, but the finding still names the enum. The Java
+    // corpus's EnumLong pins the same claim one AST level up.
+    let expected = [("enum_long.rs".to_string(), "Rank".to_string(), vec![22])];
+    assert_eq!(
+        finding_keys_in("smelly", "enum_long.rs"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
 fn a_long_method_called_new_is_reported() {
     // The deliberate opposite of the Java corpus's constructor trap. A Java
     // constructor is invisible however long it grows; Rust has no constructor in
