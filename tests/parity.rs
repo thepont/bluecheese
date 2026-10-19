@@ -182,3 +182,28 @@ fn message_chains_match_java_on_the_refactored_corpus() {
         "Message Chains",
     );
 }
+
+#[test]
+fn switch_statements_match_java_on_smellbench() {
+    assert_parity(
+        "smellbench",
+        "smellbench.json",
+        "switch-stmts",
+        "Switch Statements",
+    );
+}
+
+#[test]
+fn switch_statements_match_java_on_the_smelly_corpus() {
+    assert_parity("smelly", "smelly.json", "switch-stmts", "Switch Statements");
+}
+
+#[test]
+fn switch_statements_match_java_on_the_refactored_corpus() {
+    assert_parity(
+        "refactored",
+        "refactored.json",
+        "switch-stmts",
+        "Switch Statements",
+    );
+}
