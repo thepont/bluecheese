@@ -201,18 +201,15 @@ fn non_java_pure_delegate(
         return false;
     }
     let statement = statements[0];
-    let call = if statement.kind() == "return_statement" || statement.kind() == "return_expression"
-    {
-        descendants(statement)
-            .into_iter()
-            .find(|node| matches!(node.kind(), "call_expression" | "method_invocation"))
-    } else if matches!(statement.kind(), "expression_statement" | "call_expression") {
-        descendants(statement)
-            .into_iter()
-            .find(|node| matches!(node.kind(), "call_expression" | "method_invocation"))
-    } else {
-        None
-    };
+    if !matches!(
+        statement.kind(),
+        "return_statement" | "return_expression" | "expression_statement" | "call_expression"
+    ) {
+        return false;
+    }
+    let call = descendants(statement)
+        .into_iter()
+        .find(|node| matches!(node.kind(), "call_expression" | "method_invocation"));
     let Some(call) = call else {
         return false;
     };
