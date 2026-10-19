@@ -24,7 +24,7 @@ fn a_free_function_over_the_size_limit_is_reported() {
         vec![10],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "long_by_size.rs"),
+        finding_keys_in("smelly", "long_by_size.rs", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -42,7 +42,7 @@ fn an_expression_over_the_complexity_limit_is_reported() {
         vec![12],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "long_by_branching.rs"),
+        finding_keys_in("smelly", "long_by_branching.rs", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -58,7 +58,7 @@ fn a_long_method_in_an_impl_block_is_reported_under_its_type() {
         vec![24],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "long_impl.rs"),
+        finding_keys_in("smelly", "long_impl.rs", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -70,7 +70,7 @@ fn a_long_method_on_an_enum_is_reported_under_the_enum() {
     // corpus's EnumLong pins the same claim one AST level up.
     let expected = [("enum_long.rs".to_string(), "Rank".to_string(), vec![22])];
     assert_eq!(
-        finding_keys_in("smelly", "enum_long.rs"),
+        finding_keys_in("smelly", "enum_long.rs", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -83,7 +83,7 @@ fn a_long_method_called_new_is_reported() {
     // who carries the Java rule across would expect silence here.
     let expected = [("long_new.rs".to_string(), "Config".to_string(), vec![14])];
     assert_eq!(
-        finding_keys_in("smelly", "long_new.rs"),
+        finding_keys_in("smelly", "long_new.rs", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -97,7 +97,7 @@ fn a_long_default_method_in_a_trait_is_reported_under_the_trait() {
         vec![12],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "long_trait_default.rs"),
+        finding_keys_in("smelly", "long_trait_default.rs", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -112,12 +112,12 @@ fn a_long_function_in_a_nested_module_is_invisible() {
     // ever measured.
     assert_eq!(count_lines_starting_with(&file, "total +="), 30);
 
-    assert!(finding_keys_in("smelly", "nested_module.rs").is_empty());
+    assert!(finding_keys_in("smelly", "nested_module.rs", "long-method").is_empty());
 }
 
 #[test]
 fn the_clean_control_stays_clean() {
     // Short in every shape the adapter has to map: an impl method, a trait
     // default method, a free function and a match.
-    assert!(finding_keys_in("smelly", "clean.rs").is_empty());
+    assert!(finding_keys_in("smelly", "clean.rs", "long-method").is_empty());
 }

@@ -50,18 +50,22 @@ pub fn keys(findings: &[Finding]) -> BTreeSet<(String, String, Vec<usize>)> {
         .collect()
 }
 
-/// Findings for one file of a fixture directory, as an order-insensitive set of
-/// `(path, class, lines)`, so each corpus example can be checked on its own
-/// without an aggregate expectation that every new example would have to
-/// rewrite.
-pub fn finding_keys_in(dir: &str, name: &str) -> BTreeSet<(String, String, Vec<usize>)> {
+/// One detector's findings for one file of a fixture directory, as an
+/// order-insensitive set of `(path, class, lines)`, so each corpus example can be
+/// checked on its own without an aggregate expectation that every new example
+/// would have to rewrite.
+pub fn finding_keys_in(
+    dir: &str,
+    name: &str,
+    smell: &str,
+) -> BTreeSet<(String, String, Vec<usize>)> {
     let files: Vec<SourceFile> = load(dir)
         .files
         .into_iter()
         .filter(|f| f.rel.ends_with(name))
         .collect();
     assert!(!files.is_empty(), "no fixture matching {dir}/{name}");
-    keys(&bluecheese::detect(&files, "long-method").expect("run the long-method detector"))
+    keys(&bluecheese::detect(&files, smell).expect("run a ported detector"))
 }
 
 /// How many lines of `source` start, after indentation, with `prefix`.

@@ -22,7 +22,7 @@ fn a_method_over_the_size_limit_is_reported() {
         vec![12],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "LongBySize.java"),
+        finding_keys_in("smelly", "LongBySize.java", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -37,7 +37,7 @@ fn one_file_can_trip_either_limit() {
         vec![23, 67],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "LongMethod.java"),
+        finding_keys_in("smelly", "LongMethod.java", "long-method"),
         expected.into_iter().collect()
     );
 }
@@ -49,7 +49,7 @@ fn a_long_constructor_is_not_a_method() {
     let file = file("smelly", "LongConstructor.java");
     assert!(count_lines_starting_with(&file, "this.total") > 30);
 
-    assert!(finding_keys_in("smelly", "LongConstructor.java").is_empty());
+    assert!(finding_keys_in("smelly", "LongConstructor.java", "long-method").is_empty());
 }
 
 #[test]
@@ -63,7 +63,7 @@ fn a_long_method_in_a_nested_type_is_invisible() {
     // measures 32 logical lines in `EnumLong.java`, so this really is smelly.
     assert_eq!(count_lines_starting_with(&file, "total +="), 30);
 
-    assert!(finding_keys_in("smelly", "NestedLong.java").is_empty());
+    assert!(finding_keys_in("smelly", "NestedLong.java", "long-method").is_empty());
 }
 
 #[test]
@@ -76,12 +76,12 @@ fn a_long_method_in_a_top_level_enum_is_reported() {
         vec![11],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "EnumLong.java"),
+        finding_keys_in("smelly", "EnumLong.java", "long-method"),
         expected.into_iter().collect()
     );
 }
 
 #[test]
 fn the_clean_control_stays_clean() {
-    assert!(finding_keys_in("smelly", "Clean.java").is_empty());
+    assert!(finding_keys_in("smelly", "Clean.java", "long-method").is_empty());
 }

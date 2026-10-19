@@ -32,12 +32,12 @@ fn extract_method_removes_the_finding() {
         vec![14],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "ExtractMe.java"),
+        finding_keys_in("smelly", "ExtractMe.java", "long-method"),
         expected.into_iter().collect()
     );
 
     assert!(
-        finding_keys_in("refactored", "ExtractMe.java").is_empty(),
+        finding_keys_in("refactored", "ExtractMe.java", "long-method").is_empty(),
         "the same work, in methods that each say what they do, is not a smell"
     );
 }
@@ -53,12 +53,12 @@ fn replace_conditional_with_polymorphism_removes_the_finding() {
         vec![22],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "SwitchOnKind.java"),
+        finding_keys_in("smelly", "SwitchOnKind.java", "long-method"),
         expected.into_iter().collect()
     );
 
     assert!(
-        finding_keys_in("refactored", "SwitchOnKind.java").is_empty(),
+        finding_keys_in("refactored", "SwitchOnKind.java", "long-method").is_empty(),
         "a switch that has become dispatch is not a smell"
     );
 }
@@ -76,7 +76,7 @@ fn replace_method_with_method_object_moves_the_finding_instead() {
         vec![11],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "ManyTemps.java"),
+        finding_keys_in("smelly", "ManyTemps.java", "long-method"),
         before.into_iter().collect()
     );
 
@@ -86,7 +86,7 @@ fn replace_method_with_method_object_moves_the_finding_instead() {
         vec![37],
     )];
     assert_eq!(
-        finding_keys_in("refactored", "ManyTemps.java"),
+        finding_keys_in("refactored", "ManyTemps.java", "long-method"),
         after.into_iter().collect(),
         "the method object has one short method and one that is still the old body"
     );
@@ -103,12 +103,12 @@ fn extract_method_removes_the_finding_in_rust_as_well() {
         vec![15],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "extract_me.rs"),
+        finding_keys_in("smelly", "extract_me.rs", "long-method"),
         expected.into_iter().collect()
     );
 
     assert!(
-        finding_keys_in("refactored", "extract_me.rs").is_empty(),
+        finding_keys_in("refactored", "extract_me.rs", "long-method").is_empty(),
         "the same total and the same labels, in methods that each say what they do"
     );
 }
@@ -124,12 +124,12 @@ fn replace_conditional_with_polymorphism_removes_the_finding_in_rust_as_well() {
         vec![24],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "switch_on_kind.rs"),
+        finding_keys_in("smelly", "switch_on_kind.rs", "long-method"),
         expected.into_iter().collect()
     );
 
     assert!(
-        finding_keys_in("refactored", "switch_on_kind.rs").is_empty(),
+        finding_keys_in("refactored", "switch_on_kind.rs", "long-method").is_empty(),
         "a match that has become dispatch is not a smell"
     );
 }
@@ -145,7 +145,7 @@ fn replace_method_with_method_object_moves_the_finding_in_rust_as_well() {
         vec![13],
     )];
     assert_eq!(
-        finding_keys_in("smelly", "many_temps.rs"),
+        finding_keys_in("smelly", "many_temps.rs", "long-method"),
         before.into_iter().collect()
     );
 
@@ -155,7 +155,7 @@ fn replace_method_with_method_object_moves_the_finding_in_rust_as_well() {
         vec![45],
     )];
     assert_eq!(
-        finding_keys_in("refactored", "many_temps.rs"),
+        finding_keys_in("refactored", "many_temps.rs", "long-method"),
         after.into_iter().collect(),
         "the method object has one short method and one that is still the old body"
     );
