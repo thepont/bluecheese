@@ -44,7 +44,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 .collect::<BTreeSet<_>>();
             if lines.is_empty() && constructors.len() >= 2 {
                 lines.extend(
-                    rarely_used_fields(&file, &declared_fields, &methods)
+                    rarely_used_fields(file, &declared_fields, &methods)
                         .into_iter()
                         .map(|field| file.line(field)),
                 );
