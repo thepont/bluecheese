@@ -444,7 +444,10 @@ struct ModuleResolver<'query, 'source> {
     depth: usize,
 }
 
-impl ModuleResolver<'_, '_> {
+impl<'a> ModuleResolver<'_, 'a> {
+    fn source(&self) -> Option<&'a SourceFile> {
+        (self.depth <= 24).then(|| self.project.files[self.file_index])
+    }
     fn in_module(self, file_index: usize) -> Self {
         Self {
             file_index,
@@ -454,10 +457,7 @@ impl ModuleResolver<'_, '_> {
     }
 
     fn imported(&self, name: &str) -> Option<Target> {
-        if self.depth > 24 {
-            return None;
-        }
-        let file = self.project.files[self.file_index];
+        let file = self.source()?;
         for import in children(file.root())
             .into_iter()
             .filter(|node| node.kind() == "import_statement")
@@ -470,8 +470,7 @@ impl ModuleResolver<'_, '_> {
             };
             for specifier in descendants(import) {
                 if specifier.kind() == "import_specifier" {
-                    let original = specifier.child_by_field_name("name")?;
-                    let local = specifier.child_by_field_name("alias").unwrap_or(original);
+                    let (original, local) = specifier_names(specifier)?;
                     if file.text(local) == name {
                         return self.in_module(module).exported(file.text(original));
                     }
@@ -494,10 +493,7 @@ impl ModuleResolver<'_, '_> {
     }
 
     fn exported(&self, name: &str) -> Option<Target> {
-        if self.depth > 24 {
-            return None;
-        }
-        let file = self.project.files[self.file_index];
+        let file = self.source()?;
         for export in children(file.root())
             .into_iter()
             .filter(|node| node.kind() == "export_statement")
@@ -525,8 +521,7 @@ impl ModuleResolver<'_, '_> {
                 .into_iter()
                 .filter(|node| node.kind() == "export_specifier")
             {
-                let original = specifier.child_by_field_name("name")?;
-                let alias = specifier.child_by_field_name("alias").unwrap_or(original);
+                let (original, alias) = specifier_names(specifier)?;
                 if file.text(alias) == name {
                     return self
                         .project
@@ -581,6 +576,12 @@ impl ModuleResolver<'_, '_> {
             .collect();
         (candidates.len() == 1).then(|| candidates[0])
     }
+}
+
+fn specifier_names(specifier: Node<'_>) -> Option<(Node<'_>, Node<'_>)> {
+    let original = specifier.child_by_field_name("name")?;
+    let alias = specifier.child_by_field_name("alias").unwrap_or(original);
+    Some((original, alias))
 }
 
 fn string_value(raw: &str) -> Option<&str> {
