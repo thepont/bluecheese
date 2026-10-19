@@ -66,7 +66,7 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
                 reportable: file.language == language
                     && method.node.child_by_field_name("body").is_some()
                     && method.name != "constructor"
-                    && !project.interface_contract(method),
+                    && !project.type_resolver().interface_contract(method),
             }
         })
         .collect();
@@ -74,6 +74,10 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
 }
 
 impl<'a> Project<'a> {
+    fn type_resolver(&self) -> TypeResolver<'_, 'a> {
+        TypeResolver { project: self }
+    }
+
     fn expression(&self, context: Context, node: Node<'a>) -> Option<Target> {
         ExpressionResolver {
             project: self,
@@ -204,14 +208,21 @@ impl<'a> Project<'a> {
             self.owners[method.owner].file == file && method.node.id() == node.id()
         })
     }
+}
 
+struct TypeResolver<'query, 'source> {
+    project: &'query Project<'source>,
+}
+
+impl<'a> TypeResolver<'_, 'a> {
     fn named_type(&self, file: usize, name: &str, depth: usize) -> Option<usize> {
         if depth > 24 {
             return None;
         }
         let target = self
+            .project
             .local_symbol(file, name)
-            .or_else(|| self.module(file, depth + 1).imported(name))?;
+            .or_else(|| self.project.module(file, depth + 1).imported(name))?;
         if let Target::Class(owner) = target {
             Some(owner)
         } else {
@@ -233,8 +244,8 @@ impl<'a> Project<'a> {
     }
 
     fn parents(&self, index: usize) -> Vec<usize> {
-        let owner = &self.owners[index];
-        let file = self.files[owner.file];
+        let owner = &self.project.owners[index];
+        let file = self.project.files[owner.file];
         children(owner.node)
             .into_iter()
             .filter(|node| ["class_heritage", "extends_type_clause"].contains(&node.kind()))
@@ -247,6 +258,7 @@ impl<'a> Project<'a> {
     fn method_named(&self, owner: usize, name: &str) -> Option<usize> {
         for owner in self.hierarchy(owner) {
             let methods: Vec<_> = self
+                .project
                 .methods
                 .iter()
                 .enumerate()
@@ -264,8 +276,9 @@ impl<'a> Project<'a> {
 
     fn interface_contract(&self, method: &Method<'a>) -> bool {
         self.hierarchy(method.owner).into_iter().any(|owner| {
-            self.owners[owner].node.kind() == "interface_declaration"
+            self.project.owners[owner].node.kind() == "interface_declaration"
                 && self
+                    .project
                     .methods
                     .iter()
                     .any(|other| other.owner == owner && other.name == method.name)
@@ -274,8 +287,8 @@ impl<'a> Project<'a> {
 
     fn field_type(&self, index: usize, name: &str, depth: usize) -> Option<usize> {
         for owner_index in self.hierarchy(index) {
-            let owner = &self.owners[owner_index];
-            let file = self.files[owner.file];
+            let owner = &self.project.owners[owner_index];
+            let file = self.project.files[owner.file];
             for field in descendants(owner.node).into_iter().filter(|node| {
                 super::owner(*node).id() == owner.node.id() && field_binding(file, *node, name)
             }) {
@@ -344,6 +357,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
         if node.kind() == "new_expression" {
             return self
                 .project
+                .type_resolver()
                 .named_type(
                     file,
                     source.text(node.child_by_field_name("constructor")?),
@@ -374,6 +388,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
             if let Some(annotation) = binding.child_by_field_name("type") {
                 return self
                     .project
+                    .type_resolver()
                     .named_type(
                         file,
                         annotation_name(self.project.files[file], annotation)?,
@@ -408,10 +423,12 @@ impl<'a> ExpressionResolver<'_, 'a> {
         if let Target::Class(owner) = receiver {
             return self
                 .project
+                .type_resolver()
                 .method_named(owner, name)
                 .map(Target::Function)
                 .or_else(|| {
                     self.project
+                        .type_resolver()
                         .field_type(owner, name, self.context.depth + 1)
                         .map(Target::Class)
                 });
