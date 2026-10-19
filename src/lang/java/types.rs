@@ -72,17 +72,21 @@ pub fn methods<'a>(ty: Node<'a>) -> Vec<Node<'a>> {
     // optional would turn a grammar change into a type that looks like it has no
     // methods at all, which is indistinguishable from a clean type.
     let described = body(ty).expect("a type declaration has a body");
-    collect_methods(described, &mut out);
+    collect_declarations(described, &["method_declaration"], &mut out);
     out
 }
 
-fn collect_methods<'a>(body: Node<'a>, out: &mut Vec<Node<'a>>) {
+/// Declarations of the given kinds declared directly in a type body.
+///
+/// Enum members sit one level deeper than a class's, which is the only
+/// structural difference between the type kinds this has to read.
+fn collect_declarations<'a>(body: Node<'a>, kinds: &[&str], out: &mut Vec<Node<'a>>) {
     let mut cursor = body.walk();
     for child in body.named_children(&mut cursor) {
-        match child.kind() {
-            "method_declaration" => out.push(child),
-            "enum_body_declarations" => collect_methods(child, out),
-            _ => {}
+        if kinds.contains(&child.kind()) {
+            out.push(child);
+        } else if child.kind() == "enum_body_declarations" {
+            collect_declarations(child, kinds, out);
         }
     }
 }
