@@ -34,9 +34,121 @@ struct ParentMethod<'a> {
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     let project = Project::new(files);
-    (0..project.types.len())
+    let mut findings: Vec<_> = (0..project.types.len())
         .filter_map(|index| finding_for_type(&project, index))
-        .collect()
+        .collect();
+    findings.extend(ecmascript_findings(files));
+    findings
+}
+
+fn ecmascript_findings(files: &[SourceFile]) -> Vec<Finding> {
+    let classes: Vec<_> = files
+        .iter()
+        .filter(|file| {
+            matches!(
+                file.language,
+                LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx
+            )
+        })
+        .flat_map(|file| {
+            model_for(file.language)
+                .types(file)
+                .into_iter()
+                .filter(|node| {
+                    matches!(
+                        node.kind(),
+                        "class_declaration" | "abstract_class_declaration"
+                    )
+                })
+                .filter_map(move |node| {
+                    model_for(file.language)
+                        .type_name(file, node)
+                        .map(|name| (file, node, name.to_owned()))
+                })
+        })
+        .collect();
+    let mut findings = Vec::new();
+    for (file, child, child_name) in &classes {
+        let Some(heritage) = descendants(*child)
+            .into_iter()
+            .find(|node| node.kind() == "class_heritage")
+        else {
+            continue;
+        };
+        let Some(parent_name) = descendants(heritage)
+            .into_iter()
+            .find(|node| matches!(node.kind(), "type_identifier" | "identifier"))
+            .map(|node| file.text(node))
+        else {
+            continue;
+        };
+        let parents: Vec<_> = classes
+            .iter()
+            .filter(|(_, _, name)| name == parent_name)
+            .collect();
+        if parents.len() != 1 {
+            continue;
+        }
+        let (parent_file, parent, _) = parents[0];
+        let model = model_for(file.language);
+        let child_methods = model.methods(file, *child);
+        let parent_methods = model.methods(parent_file, *parent);
+        let mut lines = Vec::new();
+        for method in &child_methods {
+            if !(ecma_empty_body(file, *method) || ecma_refusal_throw(file, *method)) {
+                continue;
+            }
+            let Some(name) = method.child_by_field_name("name") else {
+                continue;
+            };
+            if parent_methods.iter().any(|parent_method| {
+                parent_method
+                    .child_by_field_name("name")
+                    .is_some_and(|parent_name| {
+                        parent_file.text(parent_name) == file.text(name)
+                            && model.parameters(*parent_method) == model.parameters(*method)
+                    })
+            }) {
+                lines.push(model.decl_line(*method));
+            }
+        }
+        lines.sort_unstable();
+        lines.dedup();
+        if !lines.is_empty() {
+            findings.push(Finding {
+                smell_name: SMELL_NAME.to_owned(),
+                file_path: file.rel.clone(),
+                class_name: child_name.clone(),
+                line_numbers: lines,
+                relative_file_path: file.rel.clone(),
+                additional_info: String::new(),
+            });
+        }
+    }
+    findings
+}
+
+fn ecma_empty_body(_file: &SourceFile, method: Node<'_>) -> bool {
+    method.child_by_field_name("body").is_some_and(|body| {
+        let mut cursor = body.walk();
+        body.named_children(&mut cursor)
+            .all(|node| node.kind() == "comment")
+    })
+}
+
+fn ecma_refusal_throw(file: &SourceFile, method: Node<'_>) -> bool {
+    let Some(body) = method.child_by_field_name("body") else {
+        return false;
+    };
+    let mut cursor = body.walk();
+    let statements: Vec<_> = body
+        .named_children(&mut cursor)
+        .filter(|node| node.kind() != "comment")
+        .collect();
+    statements.len() == 1
+        && statements[0].kind() == "throw_statement"
+        && (file.text(statements[0]).contains("UnsupportedOperation")
+            || file.text(statements[0]).contains("NotImplemented"))
 }
 
 fn finding_for_type(project: &Project<'_>, index: usize) -> Option<Finding> {
