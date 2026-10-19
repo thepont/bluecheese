@@ -80,6 +80,33 @@ path aliases, full TypeScript overload/generic inference or runtime mutation.
 Unknown receivers and ambiguous symbols are omitted. The heuristic still
 measures static coupling, not whether a shared responsibility is misplaced.
 
+## Cross-language duplication
+
+`-s dup-code` retains the existing Java detector and adds a comparison of whole
+function bodies across Java, Rust, JavaScript and TypeScript. TS and TSX count
+as one language. The additional comparison requires at least three supported
+statements ending in a returned value. It normalises parameter/local binding
+names and declaration syntax, while retaining operators, constants, operand
+order and reference identity.
+
+Only straight-line declarations, simple assignments, scalar expressions and
+returns are supported. Calls, loops, branches, field access and other unknown
+syntax reject the whole body. This additional comparison only reports pairs
+from different languages; it is not a JavaScript-only clone detector.
+Findings include partner paths and declaration lines. Structural similarity
+does not prove equivalent overflow, coercion or runtime behaviour.
+
+The [mixed fixture](../tests/fixtures/multilingual/README.md) demonstrates both
+JS-to-TS coupling and four-language duplication in one directory:
+
+```sh
+cargo run -- -f tests/fixtures/multilingual -s shotgun
+cargo run -- -f tests/fixtures/multilingual -s dup-code
+```
+
+These are controlled examples, not independently confirmed defects in a public
+application. Java-only duplicate and shotgun parity remain checked separately.
+
 ## Debug probes
 
 `java-probes/` contains two small probes used to reverse-engineer the exact

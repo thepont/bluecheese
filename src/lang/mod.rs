@@ -7,15 +7,15 @@
 //!
 //! A file is handled by exactly one adapter, chosen by extension. A directory
 //! holding several languages is therefore partitioned naturally: each file is
-//! analysed by the model that claims it. Nothing is ever resolved *between*
-//! adapters, which keeps a mixed project from inventing relationships that do
-//! not exist in either language. JavaScript and TypeScript deliberately share
-//! an ES-module resolver because their modules can import one another.
+//! analysed by the model that claims it. Call resolution stays inside compatible
+//! language families: JavaScript and TypeScript share an ES-module resolver,
+//! while Java and Rust do not acquire call edges just from matching names.
 
 pub mod coupling;
 pub mod ecmascript;
 pub mod java;
 pub mod rust;
+pub mod structure;
 
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, HashMap};

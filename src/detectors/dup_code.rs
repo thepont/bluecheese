@@ -46,6 +46,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             }
         }
     }
+    findings.extend(super::cross_language_duplicates::detect(files));
     findings
 }
 
