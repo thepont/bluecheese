@@ -46,6 +46,18 @@ const DETECTORS: &[(&str, Detector)] = &[
     ("spec-gen", detectors::spec_gen::detect),
 ];
 
+const fn detector_labels() -> [&'static str; DETECTORS.len()] {
+    let mut labels = [""; DETECTORS.len()];
+    let mut index = 0;
+    while index < DETECTORS.len() {
+        labels[index] = DETECTORS[index].0;
+        index += 1;
+    }
+    labels
+}
+
+const PORTED_SMELLS: [&str; DETECTORS.len()] = detector_labels();
+
 /// Run a single detector by its smell label.
 ///
 /// Fails when the smell is one the book names but no detector has been ported
@@ -82,30 +94,7 @@ fn refused(smell: &str) -> anyhow::Error {
 
 /// The smell labels [`detect`] accepts, for diagnostics.
 pub fn ported_smells() -> &'static [&'static str] {
-    &[
-        "data-clumps",
-        "alt-classes",
-        "lazy-class",
-        "prim-obsession",
-        "feature-envy",
-        "incomp-lib-class",
-        "temp-field",
-        "parallel-hierarchy",
-        "divergent-change",
-        "data-class",
-        "middle-man",
-        "large-class",
-        "intimacy",
-        "refused-bequest",
-        "dup-code",
-        "long-method",
-        "long-params",
-        "comments",
-        "shotgun",
-        "message-chains",
-        "switch-stmts",
-        "spec-gen",
-    ]
+    &PORTED_SMELLS
 }
 
 #[cfg(test)]
