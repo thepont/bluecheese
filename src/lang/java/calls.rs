@@ -8,7 +8,7 @@ use tree_sitter::Node;
 
 use crate::lang::coupling::{self, Callable, MethodCoupling};
 use crate::lang::{LanguageId, SourceFile, model_for};
-use crate::walk::descendants;
+use crate::walk::{ancestor_while, descendants};
 
 struct Type<'a> {
     file: &'a SourceFile,
@@ -544,33 +544,25 @@ fn is_type(node: Node<'_>) -> bool {
 }
 
 fn nearest_type(node: Node<'_>) -> Option<Node<'_>> {
-    let mut parent = node.parent();
-    while let Some(n) = parent {
-        if is_type(n) {
-            return Some(n);
-        }
-        parent = n.parent();
-    }
-    None
+    ancestor_while(node, |_| false, is_type)
 }
 
 fn binding_scope(node: Node<'_>) -> Option<Node<'_>> {
-    let mut parent = node.parent();
-    while let Some(n) = parent {
-        if matches!(
-            n.kind(),
-            "block"
-                | "method_declaration"
-                | "for_statement"
-                | "enhanced_for_statement"
-                | "catch_clause"
-                | "lambda_expression"
-        ) {
-            return Some(n);
-        }
-        parent = n.parent();
-    }
-    None
+    ancestor_while(
+        node,
+        |_| false,
+        |parent| {
+            matches!(
+                parent.kind(),
+                "block"
+                    | "method_declaration"
+                    | "for_statement"
+                    | "enhanced_for_statement"
+                    | "catch_clause"
+                    | "lambda_expression"
+            )
+        },
+    )
 }
 
 fn declares(file: &SourceFile, node: Node<'_>, name: &str) -> bool {
