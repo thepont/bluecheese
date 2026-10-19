@@ -98,6 +98,11 @@ pub trait LanguageModel {
     /// Top-level types declared in the file.
     fn types<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>>;
 
+    /// Owners included in comparisons between methods of the same type.
+    fn method_comparison_owners<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
+        self.types(file)
+    }
+
     /// Simple name of a type declaration.
     fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str>;
 

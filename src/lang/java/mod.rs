@@ -49,6 +49,13 @@ impl LanguageModel for JavaModel {
         types::all_types(file)
     }
 
+    fn method_comparison_owners<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
+        self.types(file)
+            .into_iter()
+            .filter(|ty| ty.kind() == "class_declaration")
+            .collect()
+    }
+
     fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str> {
         types::simple_name(file, ty)
     }

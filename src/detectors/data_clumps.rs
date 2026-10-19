@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use crate::finding::Finding;
-use crate::lang::{model_for, LanguageId, SourceFile};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -24,24 +24,8 @@ fn detect_file(file: &SourceFile) -> Vec<Finding> {
 fn type_findings(file: &SourceFile) -> Vec<Finding> {
     let model = model_for(file.language);
     model
-        .types(file)
+        .method_comparison_owners(file)
         .into_iter()
-        .filter(|ty| match file.language {
-            LanguageId::Java => ty.kind() == "class_declaration",
-            LanguageId::Rust => matches!(
-                ty.kind(),
-                "source_file" | "struct_item" | "enum_item" | "trait_item" | "union_item"
-            ),
-            LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
-                ty.kind(),
-                "program"
-                    | "class_declaration"
-                    | "class"
-                    | "abstract_class_declaration"
-                    | "interface_declaration"
-                    | "object"
-            ),
-        })
         .filter_map(|ty| type_finding(file, ty))
         .collect()
 }

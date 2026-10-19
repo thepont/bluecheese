@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::finding::Finding;
-use crate::lang::{model_for, LanguageId, SourceFile};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -14,10 +14,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     let mut findings = Vec::new();
     for file in files {
         let model = model_for(file.language);
-        for ty in model.types(file) {
-            if !is_type_to_compare(file.language, ty.kind()) {
-                continue;
-            }
+        for ty in model.method_comparison_owners(file) {
             let Some(class_name) = model.type_name(file, ty) else {
                 continue;
             };
@@ -65,25 +62,6 @@ fn statement_fingerprints(file: &SourceFile, method: Node<'_>) -> BTreeSet<Strin
         .filter(|node| is_statement(file.language, *node))
         .map(|node| normalize(file.text(node)))
         .collect()
-}
-
-fn is_type_to_compare(language: LanguageId, kind: &str) -> bool {
-    match language {
-        LanguageId::Java => kind == "class_declaration",
-        LanguageId::Rust => matches!(
-            kind,
-            "source_file" | "struct_item" | "enum_item" | "trait_item" | "union_item"
-        ),
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
-            kind,
-            "program"
-                | "class_declaration"
-                | "class"
-                | "abstract_class_declaration"
-                | "interface_declaration"
-                | "object"
-        ),
-    }
 }
 
 fn is_statement(language: LanguageId, node: Node<'_>) -> bool {
