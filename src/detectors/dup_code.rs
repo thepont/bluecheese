@@ -18,13 +18,17 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             let Some(class_name) = model.type_name(file, ty) else {
                 continue;
             };
-            let methods = model.methods(file, ty);
+            let methods: Vec<_> = model
+                .methods(file, ty)
+                .into_iter()
+                .map(|method| MethodFingerprint::new(file, method))
+                .collect();
             let mut duplicate_lines = BTreeSet::new();
             for left in 0..methods.len() {
                 for right in left + 1..methods.len() {
-                    if duplicate_pair(file, methods[left], methods[right]) {
-                        duplicate_lines.insert(model.decl_line(methods[left]));
-                        duplicate_lines.insert(model.decl_line(methods[right]));
+                    if methods[left].duplicates(&methods[right]) {
+                        duplicate_lines.insert(methods[left].line);
+                        duplicate_lines.insert(methods[right].line);
                     }
                 }
             }
@@ -44,16 +48,29 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     findings
 }
 
-fn duplicate_pair(file: &SourceFile, left: Node<'_>, right: Node<'_>) -> bool {
-    let left_statements = statement_fingerprints(file, left);
-    let right_statements = statement_fingerprints(file, right);
-    if left_statements.intersection(&right_statements).count() >= MIN_SHARED_STATEMENTS {
-        return true;
+struct MethodFingerprint {
+    line: usize,
+    statements: BTreeSet<String>,
+    arithmetic: BTreeSet<String>,
+}
+
+impl MethodFingerprint {
+    fn new(file: &SourceFile, method: Node<'_>) -> Self {
+        Self {
+            line: model_for(file.language).decl_line(method),
+            statements: statement_fingerprints(file, method),
+            arithmetic: arithmetic_fingerprints(file, method),
+        }
     }
-    arithmetic_fingerprints(file, left)
-        .intersection(&arithmetic_fingerprints(file, right))
-        .next()
-        .is_some()
+
+    fn duplicates(&self, other: &Self) -> bool {
+        self.statements.intersection(&other.statements).count() >= MIN_SHARED_STATEMENTS
+            || self
+                .arithmetic
+                .intersection(&other.arithmetic)
+                .next()
+                .is_some()
+    }
 }
 
 fn statement_fingerprints(file: &SourceFile, method: Node<'_>) -> BTreeSet<String> {
