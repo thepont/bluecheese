@@ -3,9 +3,12 @@
 //! These exist because a partial analysis is indistinguishable from a clean one
 //! unless the loader accounts for what it did not read.
 
-use std::path::{Path, PathBuf};
+mod common;
+
+use std::path::PathBuf;
 
 use bluecheese::lang::{LanguageId, load_project};
+use common::TempTree;
 
 fn fixtures() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
@@ -27,36 +30,6 @@ fn accounts_for_files_no_adapter_understands() {
     // A file inside a pruned directory is never seen, so it is not reported as
     // skipped either: it was not considered, rather than considered and refused.
     assert_eq!(project.skipped.len(), 1, "skipped: {:?}", project.skipped);
-}
-
-/// A throwaway directory tree, so a `.gitignore` can be exercised without
-/// committing files git itself would refuse to track.
-struct TempTree(PathBuf);
-
-impl TempTree {
-    fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("bluecheese-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).expect("create temp tree");
-        Self(dir)
-    }
-
-    fn write(&self, rel: &str, contents: &str) -> &Self {
-        let path = self.0.join(rel);
-        std::fs::create_dir_all(path.parent().expect("has a parent")).expect("create directory");
-        std::fs::write(path, contents).expect("write file");
-        self
-    }
-
-    fn path(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Drop for TempTree {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
-    }
 }
 
 #[test]
