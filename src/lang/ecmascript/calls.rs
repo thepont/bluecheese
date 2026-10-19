@@ -74,6 +74,14 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
 }
 
 impl<'a> Project<'a> {
+    fn module(&self, file_index: usize, depth: usize) -> ModuleResolver<'_, 'a> {
+        ModuleResolver {
+            project: self,
+            file_index,
+            depth,
+        }
+    }
+
     fn new(files: &'a [SourceFile]) -> Self {
         let files: Vec<_> = files
             .iter()
@@ -223,7 +231,7 @@ impl<'a> Project<'a> {
             });
         }
         self.local_symbol(file, name)
-            .or_else(|| self.imported(file, name, context.depth + 1))
+            .or_else(|| self.module(file, context.depth + 1).imported(name))
     }
 
     fn local_symbol(&self, file: usize, name: &str) -> Option<Target> {
@@ -263,7 +271,7 @@ impl<'a> Project<'a> {
         }
         let target = self
             .local_symbol(file, name)
-            .or_else(|| self.imported(file, name, depth + 1))?;
+            .or_else(|| self.module(file, depth + 1).imported(name))?;
         if let Target::Class(owner) = target {
             Some(owner)
         } else {
@@ -276,7 +284,7 @@ impl<'a> Project<'a> {
         let name = file.text(node.child_by_field_name("property")?);
         let receiver = self.expression(context.deeper(), node.child_by_field_name("object")?)?;
         if let Target::Namespace(module) = receiver {
-            return self.exported(module, name, context.depth + 1);
+            return self.module(module, context.depth + 1).exported(name);
         }
         if let Target::Class(owner) = receiver {
             return self
@@ -375,12 +383,29 @@ impl<'a> Project<'a> {
         }
         None
     }
+}
 
-    fn imported(&self, file_index: usize, name: &str, depth: usize) -> Option<Target> {
-        if depth > 24 {
+#[derive(Clone, Copy)]
+struct ModuleResolver<'query, 'source> {
+    project: &'query Project<'source>,
+    file_index: usize,
+    depth: usize,
+}
+
+impl ModuleResolver<'_, '_> {
+    fn in_module(self, file_index: usize) -> Self {
+        Self {
+            file_index,
+            depth: self.depth + 1,
+            ..self
+        }
+    }
+
+    fn imported(&self, name: &str) -> Option<Target> {
+        if self.depth > 24 {
             return None;
         }
-        let file = self.files[file_index];
+        let file = self.project.files[self.file_index];
         for import in children(file.root())
             .into_iter()
             .filter(|node| node.kind() == "import_statement")
@@ -388,8 +413,7 @@ impl<'a> Project<'a> {
             let Some(source) = import.child_by_field_name("source") else {
                 continue;
             };
-            let Some(module) = self.module_index(file_index, string_value(file.text(source))?)
-            else {
+            let Some(module) = self.module_index(string_value(file.text(source))?) else {
                 continue;
             };
             for specifier in descendants(import) {
@@ -397,7 +421,7 @@ impl<'a> Project<'a> {
                     let original = specifier.child_by_field_name("name")?;
                     let local = specifier.child_by_field_name("alias").unwrap_or(original);
                     if file.text(local) == name {
-                        return self.exported(module, file.text(original), depth + 1);
+                        return self.in_module(module).exported(file.text(original));
                     }
                 }
                 if specifier.kind() == "namespace_import"
@@ -410,18 +434,18 @@ impl<'a> Project<'a> {
                         .iter()
                         .any(|n| n.kind() == "identifier" && file.text(*n) == name)
                 {
-                    return self.exported(module, "default", depth + 1);
+                    return self.in_module(module).exported("default");
                 }
             }
         }
         None
     }
 
-    fn exported(&self, file_index: usize, name: &str, depth: usize) -> Option<Target> {
-        if depth > 24 {
+    fn exported(&self, name: &str) -> Option<Target> {
+        if self.depth > 24 {
             return None;
         }
-        let file = self.files[file_index];
+        let file = self.project.files[self.file_index];
         for export in children(file.root())
             .into_iter()
             .filter(|node| node.kind() == "export_statement")
@@ -433,14 +457,15 @@ impl<'a> Project<'a> {
                         .child_by_field_name("name")
                         .map(|n| file.text(n));
                     if default || declared_name == Some(name) {
-                        return declared_name.and_then(|n| self.local_symbol(file_index, n));
+                        return declared_name
+                            .and_then(|n| self.project.local_symbol(self.file_index, n));
                     }
                     if descendants(declaration).iter().any(|n| {
                         n.kind() == "variable_declarator"
                             && n.child_by_field_name("name")
                                 .is_some_and(|n| file.text(n) == name)
                     }) {
-                        return self.local_symbol(file_index, name);
+                        return self.project.local_symbol(self.file_index, name);
                     }
                 }
             }
@@ -451,18 +476,20 @@ impl<'a> Project<'a> {
                 let original = specifier.child_by_field_name("name")?;
                 let alias = specifier.child_by_field_name("alias").unwrap_or(original);
                 if file.text(alias) == name {
-                    return self.local_symbol(file_index, file.text(original));
+                    return self
+                        .project
+                        .local_symbol(self.file_index, file.text(original));
                 }
             }
         }
         None
     }
 
-    fn module_index(&self, from: usize, specifier: &str) -> Option<usize> {
+    fn module_index(&self, specifier: &str) -> Option<usize> {
         if !specifier.starts_with('.') || specifier.contains('\\') {
             return None;
         }
-        let parent = Path::new(&self.files[from].rel).parent()?;
+        let parent = Path::new(&self.project.files[self.file_index].rel).parent()?;
         let mut parts = Vec::new();
         for component in parent.join(specifier).components() {
             if component == Component::ParentDir {
@@ -472,12 +499,13 @@ impl<'a> Project<'a> {
             }
         }
         let base = parts.join("/");
-        if let Some(index) = self.files.iter().position(|file| file.rel == base) {
+        if let Some(index) = self.project.files.iter().position(|file| file.rel == base) {
             return Some(index);
         }
         for (runtime, source) in [(".mjs", ".mts"), (".cjs", ".cts")] {
             if let Some(stem) = base.strip_suffix(runtime) {
                 return self
+                    .project
                     .files
                     .iter()
                     .position(|file| file.rel == format!("{stem}{source}"));
@@ -485,6 +513,7 @@ impl<'a> Project<'a> {
         }
         let base = base.strip_suffix(".js").unwrap_or(&base);
         let candidates: Vec<_> = self
+            .project
             .files
             .iter()
             .enumerate()
