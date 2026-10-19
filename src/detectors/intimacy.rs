@@ -83,6 +83,10 @@ struct NonJavaType<'a> {
 }
 
 fn non_java_findings(files: &[SourceFile]) -> Vec<Finding> {
+    NonJavaAnalysis::new(files).findings()
+}
+
+fn non_java_types(files: &[SourceFile]) -> Vec<NonJavaType<'_>> {
     let mut types = Vec::new();
     for file in files
         .iter()
@@ -104,51 +108,78 @@ fn non_java_findings(files: &[SourceFile]) -> Vec<Finding> {
             });
         }
     }
-    let known: BTreeSet<_> = types.iter().map(|ty| ty.name.clone()).collect();
-    let mut findings = Vec::new();
-    for owner in &types {
+    types
+}
+
+struct NonJavaAnalysis<'a> {
+    types: Vec<NonJavaType<'a>>,
+    known: BTreeSet<String>,
+}
+
+impl<'a> NonJavaAnalysis<'a> {
+    fn new(files: &'a [SourceFile]) -> Self {
+        let types = non_java_types(files);
+        let known = types.iter().map(|ty| ty.name.clone()).collect();
+        Self { types, known }
+    }
+
+    fn findings(&self) -> Vec<Finding> {
+        self.types
+            .iter()
+            .filter_map(|owner| self.finding(owner))
+            .collect()
+    }
+
+    fn finding(&self, owner: &NonJavaType<'_>) -> Option<Finding> {
         let model = model_for(owner.file.language);
         let mut lines = Vec::new();
         for method in model.methods(owner.file, owner.node) {
             let vars = non_java_variable_types(owner, method);
             for access in descendants(method) {
-                let Some((receiver, field)) = model.field_access_parts(access) else {
-                    continue;
-                };
-                if matches!(receiver.kind(), "this")
-                    || owner.file.text(receiver) == "this"
-                    || owner.file.text(receiver) == "self"
-                {
-                    continue;
-                }
-                let Some(target_type) = expression_type(owner.file, receiver, &vars) else {
-                    continue;
-                };
-                let target_name = simple_type_name(&target_type);
-                if target_name == owner.name || !known.contains(&target_name) {
-                    continue;
-                }
-                if types.iter().any(|ty| {
-                    ty.name == target_name && ty.fields.contains_key(owner.file.text(field))
-                }) {
+                if self.is_external_access(owner, &vars, access) {
                     lines.push(owner.file.line(access));
                 }
             }
         }
         lines.sort_unstable();
         lines.dedup();
-        if !lines.is_empty() {
-            findings.push(Finding {
-                smell_name: SMELL_NAME.to_owned(),
-                file_path: owner.file.rel.clone(),
-                class_name: owner.name.clone(),
-                line_numbers: lines,
-                relative_file_path: owner.file.rel.clone(),
-                additional_info: String::new(),
-            });
-        }
+        (!lines.is_empty()).then(|| Finding {
+            smell_name: SMELL_NAME.to_owned(),
+            file_path: owner.file.rel.clone(),
+            class_name: owner.name.clone(),
+            line_numbers: lines,
+            relative_file_path: owner.file.rel.clone(),
+            additional_info: String::new(),
+        })
     }
-    findings
+
+    fn is_external_access(
+        &self,
+        owner: &NonJavaType<'_>,
+        vars: &BTreeMap<String, String>,
+        access: Node<'_>,
+    ) -> bool {
+        let model = model_for(owner.file.language);
+        let Some((receiver, field)) = model.field_access_parts(access) else {
+            return false;
+        };
+        if matches!(receiver.kind(), "this")
+            || owner.file.text(receiver) == "this"
+            || owner.file.text(receiver) == "self"
+        {
+            return false;
+        }
+        let Some(target_type) = expression_type(owner.file, receiver, vars) else {
+            return false;
+        };
+        let target_name = simple_type_name(&target_type);
+        if target_name == owner.name || !self.known.contains(&target_name) {
+            return false;
+        }
+        self.types
+            .iter()
+            .any(|ty| ty.name == target_name && ty.fields.contains_key(owner.file.text(field)))
+    }
 }
 
 fn non_java_field_types(file: &SourceFile, ty: Node<'_>) -> BTreeMap<String, String> {
