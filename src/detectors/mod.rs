@@ -7,6 +7,7 @@ pub mod alt_classes;
 pub mod data_class;
 pub mod data_clumps;
 pub mod feature_envy;
+pub mod parallel_hierarchy;
 pub mod large_class;
 pub mod lazy_class;
 pub mod primitive_obsession;
