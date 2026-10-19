@@ -192,10 +192,18 @@ impl LanguageModel for RustModel {
 }
 
 /// Functions directly inside an `impl` or trait body.
+///
+/// A trait may declare a method without a body, and tree-sitter gives that a
+/// different kind from a function definition. Both are methods of the trait: a
+/// measure that only counted the ones with bodies would make a trait of
+/// signatures look like a trait with no methods at all, which is not what the
+/// Java adapter does with an interface's abstract methods. Nothing can be
+/// measured in a bodyless method, and the detectors skip it for that reason, not
+/// this one.
 fn functions_in<'a>(body: Node<'a>) -> Vec<Node<'a>> {
     let mut cursor = body.walk();
     body.named_children(&mut cursor)
-        .filter(|c| c.kind() == "function_item")
+        .filter(|c| matches!(c.kind(), "function_item" | "function_signature_item"))
         .collect()
 }
 
