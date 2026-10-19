@@ -31,10 +31,9 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
 
 fn findings(group: Vec<Function>) -> Vec<Finding> {
     group.iter().map(|function| {
-        let partners: Vec<_> = group.iter().filter(|other| other.language != function.language)
-            .map(|other| format!("{}:{} ({:?})", other.file_path, other.line, other.language)).collect();
+        let partners = function.cross_language_partners(&group);
         Finding { smell_name: super::dup_code::SMELL_NAME.into(), file_path: function.file_path.clone(),
             relative_file_path: function.file_path.clone(), class_name: function.class_name.clone(), line_numbers: vec![function.line],
-            additional_info: format!("Cross-language structural duplicate: {}. Review numeric and runtime semantics.", partners.join(", ")) }
+            additional_info: format!("Cross-language structural duplicate: {partners}. Review numeric and runtime semantics.") }
     }).collect()
 }

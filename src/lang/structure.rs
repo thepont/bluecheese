@@ -35,6 +35,17 @@ pub struct Function {
     pub language: LanguageId,
 }
 
+impl Function {
+    pub fn cross_language_partners(&self, group: &[Self]) -> String {
+        group
+            .iter()
+            .filter(|other| other.language != self.language)
+            .map(|other| format!("{}:{} ({:?})", other.file_path, other.line, other.language))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
 pub fn functions(files: &[SourceFile]) -> Vec<Function> {
     let mut functions = Vec::new();
     for file in files {
