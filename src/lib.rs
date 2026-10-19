@@ -34,6 +34,8 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         Ok(detectors::message_chains::detect(files))
     } else if smell == "switch-stmts" {
         Ok(detectors::switch_stmts::detect(files))
+    } else if smell == "spec-gen" {
+        Ok(detectors::spec_gen::detect(files))
     } else {
         Err(refused(smell))
     }
@@ -68,6 +70,7 @@ pub fn ported_smells() -> &'static [&'static str] {
         "comments",
         "message-chains",
         "switch-stmts",
+        "spec-gen",
     ]
 }
 
