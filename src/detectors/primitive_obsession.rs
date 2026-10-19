@@ -93,11 +93,6 @@ fn is_field_kind(language: LanguageId, kind: &str) -> bool {
 }
 
 fn field_type_text<'a>(file: &'a SourceFile, field: Node<'a>) -> Option<&'a str> {
-    if file.language == LanguageId::Java {
-        if field.kind() == "field_declaration" {
-            return field.child_by_field_name("type").map(|ty| file.text(ty));
-        }
-    }
     field.child_by_field_name("type").map(|ty| file.text(ty))
 }
 
