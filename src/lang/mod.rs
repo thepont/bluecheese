@@ -90,6 +90,25 @@ pub trait LanguageModel {
     /// type declaration (Rust puts them in `impl` blocks elsewhere in the file).
     fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>>;
 
+    /// Constructors belonging to `ty`. A constructor is not a method, and the
+    /// reference tool reads them separately, so this is a separate
+    /// relationship and not a filter over [`LanguageModel::methods`]. A
+    /// language without constructors returns nothing.
+    fn constructors<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>>;
+
+    /// How many parameters a caller must supply to this method or constructor.
+    ///
+    /// An implicit receiver (`this`, or Rust's `self`) is not one of them: it is
+    /// not something the caller writes, and a Java method and its Rust
+    /// equivalent would otherwise never agree on a count.
+    fn parameters(&self, node: Node<'_>) -> usize;
+
+    /// Whether this method only restates a signature it inherited rather than
+    /// declaring one of its own. The reference tool leaves overrides out of
+    /// Long Parameter List: their parameter list is fixed by the declaration
+    /// they override, so the smell, and the fix, belong there.
+    fn is_override(&self, file: &SourceFile, node: Node<'_>) -> bool;
+
     /// The body of a method, if it has one.
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>>;
 

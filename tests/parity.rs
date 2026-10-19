@@ -65,6 +65,36 @@ fn assert_parity(corpus: &str, golden_name: &str, smell: &str, java_smell: &str)
 }
 
 #[test]
+fn long_parameter_list_matches_java_on_smellbench() {
+    assert_parity(
+        "smellbench",
+        "smellbench.json",
+        "long-params",
+        "Long Parameter List",
+    );
+}
+
+#[test]
+fn long_parameter_list_matches_java_on_the_smelly_corpus() {
+    assert_parity(
+        "smelly",
+        "smelly.json",
+        "long-params",
+        "Long Parameter List",
+    );
+}
+
+#[test]
+fn long_parameter_list_matches_java_on_the_refactored_corpus() {
+    assert_parity(
+        "refactored",
+        "refactored.json",
+        "long-params",
+        "Long Parameter List",
+    );
+}
+
+#[test]
 fn long_method_matches_java_on_smellbench() {
     assert_parity(
         "smellbench",

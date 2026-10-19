@@ -24,6 +24,7 @@ use lang::SourceFile;
 pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
     match smell {
         "long-method" => Ok(detectors::long_method::detect(files)),
+        "long-params" => Ok(detectors::long_params::detect(files)),
         other => Err(refused(other)),
     }
 }
@@ -49,7 +50,7 @@ fn refused(smell: &str) -> anyhow::Error {
 
 /// The smell labels [`detect`] accepts, for diagnostics.
 pub fn ported_smells() -> &'static [&'static str] {
-    &["long-method"]
+    &["long-method", "long-params"]
 }
 
 #[cfg(test)]

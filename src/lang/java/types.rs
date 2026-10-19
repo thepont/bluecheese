@@ -4,6 +4,7 @@
 use tree_sitter::Node;
 
 use crate::lang::SourceFile;
+use crate::walk::ancestor_while;
 
 /// Spoon `CtType` implementations that appear in `getAllTypes()`.
 pub const TYPE_KINDS: &[&str] = &[
@@ -89,4 +90,70 @@ fn collect_declarations<'a>(body: Node<'a>, kinds: &[&str], out: &mut Vec<Node<'
             collect_declarations(child, kinds, out);
         }
     }
+}
+
+/// Constructors declared directly in `ty` (`CtType.getConstructors()`).
+///
+/// Spoon only asks a `CtClass` for constructors, and in Java only a class, enum
+/// or record can declare one at all, so reading every type body for them asks
+/// the same question: an interface and an annotation type have nothing to find.
+///
+/// A record's compact constructor — the bodyless `public Point { ... }` — is a
+/// constructor of the record, and Spoon reads it with the record's components as
+/// its parameters. A record that declares no constructor at all has none to
+/// read: Spoon's implicit canonical constructor is not in the model with a
+/// position, and the reference tool does not report one.
+pub fn constructors<'a>(ty: Node<'a>) -> Vec<Node<'a>> {
+    let mut out = Vec::new();
+    let described = body(ty).expect("a type declaration has a body");
+    collect_declarations(
+        described,
+        &["constructor_declaration", "compact_constructor_declaration"],
+        &mut out,
+    );
+    out
+}
+
+/// Parameters a caller must supply (`CtExecutable.getParameters().size()`).
+///
+/// A compact constructor declares no parameter list of its own: Java gives it
+/// the record's components, and Spoon reports it as a constructor of that arity.
+pub fn parameters(node: Node<'_>) -> usize {
+    let described = if node.kind() == "compact_constructor_declaration" {
+        ancestor_while(node, |_| false, |n| n.kind() == "record_declaration")
+            .expect("a compact constructor is declared in a record")
+    } else {
+        node
+    };
+
+    let params = described
+        .child_by_field_name("parameters")
+        .expect("a declaration with a parameter list has one");
+    let mut cursor = params.walk();
+    params.named_children(&mut cursor).count()
+}
+
+/// Whether a method is annotated `@Override` (`CtMethod.getAnnotations()`,
+/// compared by simple name).
+///
+/// The annotation may be nested in the method's modifiers, and may be written
+/// with a qualified name, which Spoon reduces to its simple name.
+pub fn is_override(file: &SourceFile, node: Node<'_>) -> bool {
+    // `modifiers` is an unnamed child of a declaration in this grammar, not a
+    // field, so it is found the same way `decl_line` finds it.
+    let mut cursor = node.walk();
+    let Some(modifiers) = node
+        .children(&mut cursor)
+        .find(|child| child.kind() == "modifiers")
+    else {
+        return false;
+    };
+
+    let mut cursor = modifiers.walk();
+    modifiers.children(&mut cursor).any(|modifier| {
+        matches!(modifier.kind(), "annotation" | "marker_annotation")
+            && modifier
+                .child_by_field_name("name")
+                .is_some_and(|name| file.text(name).rsplit('.').next() == Some("Override"))
+    })
 }

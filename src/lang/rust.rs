@@ -18,7 +18,7 @@
 use tree_sitter::{Language, Node};
 
 use crate::lang::{LanguageId, LanguageModel, SourceFile};
-use crate::walk::descendants;
+use crate::walk::{ancestor_while, descendants};
 
 /// Item kinds that declare a type.
 const TYPE_KINDS: &[&str] = &["struct_item", "enum_item", "trait_item", "union_item"];
@@ -124,6 +124,36 @@ impl LanguageModel for RustModel {
         }
 
         out
+    }
+
+    fn constructors<'a>(&self, _ty: Node<'a>) -> Vec<Node<'a>> {
+        // Rust has no constructors: `fn new` is an ordinary function returning
+        // the type, and nothing in the grammar marks it as special. A type
+        // therefore has none, and the constructor threshold never applies.
+        Vec::new()
+    }
+
+    /// Declared parameters, less the receiver. `&self` is not something a
+    /// caller writes at the call site, and Java's implicit `this` is not
+    /// counted either, so leaving it in would make the two adapters disagree
+    /// about a method that looks the same to a reader.
+    fn parameters(&self, node: Node<'_>) -> usize {
+        let params = node
+            .child_by_field_name("parameters")
+            .expect("a function declaration has a parameter list");
+        let mut cursor = params.walk();
+        params
+            .named_children(&mut cursor)
+            .filter(|child| child.kind() != "self_parameter")
+            .count()
+    }
+
+    /// A function written inside `impl Trait for Type` restates the trait's
+    /// signature, which is what `@Override` marks in Java. A default method
+    /// declared in the trait itself is not: it is the declaration.
+    fn is_override(&self, _file: &SourceFile, node: Node<'_>) -> bool {
+        ancestor_while(node, |_| false, |ancestor| ancestor.kind() == "impl_item")
+            .is_some_and(|imp| imp.child_by_field_name("trait").is_some())
     }
 
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>> {

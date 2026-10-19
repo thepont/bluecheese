@@ -41,6 +41,18 @@ impl LanguageModel for JavaModel {
         types::methods(ty)
     }
 
+    fn constructors<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>> {
+        types::constructors(ty)
+    }
+
+    fn parameters(&self, node: Node<'_>) -> usize {
+        types::parameters(node)
+    }
+
+    fn is_override(&self, file: &SourceFile, node: Node<'_>) -> bool {
+        types::is_override(file, node)
+    }
+
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>> {
         types::body(node)
     }

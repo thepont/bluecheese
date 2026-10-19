@@ -250,22 +250,41 @@ fn an_impl_without_a_body_yields_no_methods() {
 /// one badly named file.
 ///
 /// It is pinned because the failure mode — a file that is read, understood, and
-/// contributes nothing — looks exactly like clean code.
+/// contributes nothing — looks exactly like clean code. Both detectors that
+/// attribute a finding to a type are run over it, since the skip happens before
+/// either has a chance to find anything.
 #[cfg(unix)]
 #[test]
 fn a_rust_file_whose_name_is_not_utf8_reports_nothing() {
     let tree = TempTree::new("rust-unreadable");
-    tree.write("named.rs", "pub fn named() -> i32 {\n    1\n}\n")
-        .write_unreadable_name(b"\xff\xfe.rs", "pub fn odd() -> i32 {\n    1\n}\n");
+    tree.write(
+        "named.rs",
+        "pub fn named(a: i32, b: i32, c: i32, d: i32) -> i32 {\n    a + b\n}\n",
+    )
+    .write_unreadable_name(
+        b"\xff\xfe.rs",
+        "pub fn odd(a: i32, b: i32, c: i32, d: i32) -> i32 {\n    a + b\n}\n",
+    );
 
     let files = load_project(tree.path()).expect("load the tree").files;
     assert_eq!(files.len(), 2, "both files are read and parsed");
 
-    let findings = bluecheese::detect(&files, "long-method").expect("run the detector");
-    assert!(
-        findings
-            .iter()
-            .all(|finding| finding.relative_file_path == "named.rs"),
-        "only the file with a readable name can be attributed: {findings:#?}"
+    for smell in bluecheese::ported_smells() {
+        let findings = bluecheese::detect(&files, smell).expect("run a ported detector");
+        assert!(
+            findings
+                .iter()
+                .all(|finding| finding.relative_file_path == "named.rs"),
+            "only the file with a readable name can be attributed ({smell}): {findings:#?}"
+        );
+    }
+
+    // And the readable one really is reported, so the check above is not passing
+    // because nothing was found anywhere: four parameters is over the limit.
+    let findings = bluecheese::detect(&files, "long-params").expect("run the detector");
+    assert_eq!(
+        findings.len(),
+        1,
+        "the readable file's four-parameter function is a finding: {findings:#?}"
     );
 }
