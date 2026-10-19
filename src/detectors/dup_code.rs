@@ -64,11 +64,21 @@ struct MethodFingerprint {
 
 impl MethodFingerprint {
     fn new(file: &SourceFile, method: Node<'_>) -> Self {
-        Self {
+        let model = model_for(file.language);
+        let mut fingerprint = Self {
             line: model_for(file.language).decl_line(method),
-            statements: statement_fingerprints(file, method),
-            arithmetic: arithmetic_fingerprints(file, method),
+            statements: BTreeSet::new(),
+            arithmetic: BTreeSet::new(),
+        };
+        for node in descendants(method) {
+            if model.is_statement(node) {
+                fingerprint.statements.insert(normalize(file.text(node)));
+            }
+            if is_arithmetic(node) {
+                fingerprint.arithmetic.insert(normalize(file.text(node)));
+            }
         }
+        fingerprint
     }
 
     fn duplicates(&self, other: &Self) -> bool {
@@ -81,26 +91,13 @@ impl MethodFingerprint {
     }
 }
 
-fn statement_fingerprints(file: &SourceFile, method: Node<'_>) -> BTreeSet<String> {
-    let model = model_for(file.language);
-    descendants(method)
-        .into_iter()
-        .filter(|node| model.is_statement(*node))
-        .map(|node| normalize(file.text(node)))
-        .collect()
-}
-
-fn arithmetic_fingerprints(file: &SourceFile, method: Node<'_>) -> BTreeSet<String> {
-    descendants(method)
-        .into_iter()
-        .filter(|node| node.kind() == "binary_expression")
-        .filter(|node| {
-            let mut cursor = node.walk();
-            node.children(&mut cursor)
-                .any(|child| matches!(file.text(child), "+" | "-" | "*" | "/" | "%"))
-        })
-        .map(|node| normalize(file.text(node)))
-        .collect()
+fn is_arithmetic(node: Node<'_>) -> bool {
+    if node.kind() != "binary_expression" {
+        return false;
+    }
+    let mut cursor = node.walk();
+    node.children(&mut cursor)
+        .any(|child| matches!(child.kind(), "+" | "-" | "*" | "/" | "%"))
 }
 
 fn normalize(text: &str) -> String {
