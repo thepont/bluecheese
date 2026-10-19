@@ -52,6 +52,34 @@ reference report. That does not imply full-project equivalence or diagnostic
 accuracy. See [the public-example notebook](shotgun-surgery-examples.md) for
 the broader comparison, known disagreements and false-positive controls.
 
+## JavaScript and TypeScript
+
+The Rust CLI also parses JavaScript (`.js`, `.jsx`, `.mjs`, `.cjs`), TypeScript
+(`.ts`, `.mts`, `.cts`) and TSX (`.tsx`). For example:
+
+```sh
+bluecheese -f ./src -s shotgun
+```
+
+One scan can include Java, Rust, JavaScript and TypeScript files. The shotgun
+adapter resolves project-local relative ES imports across JS/TS, including
+named aliases, default imports and namespace imports. It reads class methods,
+named object-literal methods, named functions and assigned arrow functions.
+Receivers can come from `new`, TypeScript annotations, field initializers or
+direct constructor field initialization. Interface-contract methods are
+excluded. Calling classes, object owners and source modules count as separate
+owners; multiple functions in one module alone do not meet the two-owner rule.
+
+These are characterisation tests, not parity against a JS/TS reference tool.
+Long Method and Long Parameter List also use the syntax adapters. The other
+existing language-specific detectors retain their documented scope.
+
+This resolver does not run source code or load npm packages. It does not
+resolve arbitrary `require()`, dynamic imports, re-export chains, tsconfig
+path aliases, full TypeScript overload/generic inference or runtime mutation.
+Unknown receivers and ambiguous symbols are omitted. The heuristic still
+measures static coupling, not whether a shared responsibility is misplaced.
+
 ## Debug probes
 
 `java-probes/` contains two small probes used to reverse-engineer the exact

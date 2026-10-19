@@ -9,9 +9,11 @@
 //! holding several languages is therefore partitioned naturally: each file is
 //! analysed by the model that claims it. Nothing is ever resolved *between*
 //! adapters, which keeps a mixed project from inventing relationships that do
-//! not exist in either language.
+//! not exist in either language. JavaScript and TypeScript deliberately share
+//! an ES-module resolver because their modules can import one another.
 
 pub mod coupling;
+pub mod ecmascript;
 pub mod java;
 pub mod rust;
 
@@ -27,6 +29,9 @@ use tree_sitter::{Language, Node, Parser, Tree};
 pub enum LanguageId {
     Java,
     Rust,
+    JavaScript,
+    TypeScript,
+    Tsx,
 }
 
 /// A parsed source file, tagged with the adapter that parsed it.
@@ -101,7 +106,7 @@ pub trait LanguageModel {
     /// reference tool reads them separately, so this is a separate
     /// relationship and not a filter over [`LanguageModel::methods`]. A
     /// language without constructors returns nothing.
-    fn constructors<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>>;
+    fn constructors<'a>(&self, file: &SourceFile, ty: Node<'a>) -> Vec<Node<'a>>;
 
     /// How many parameters a caller must supply to this method or constructor.
     ///
@@ -130,8 +135,14 @@ pub trait LanguageModel {
 }
 
 /// All adapters the tool knows about.
-fn models() -> [&'static dyn LanguageModel; 2] {
-    [&java::JAVA, &rust::RUST]
+fn models() -> [&'static dyn LanguageModel; 5] {
+    [
+        &java::JAVA,
+        &rust::RUST,
+        &ecmascript::JAVASCRIPT,
+        &ecmascript::TYPESCRIPT,
+        &ecmascript::TSX,
+    ]
 }
 
 pub fn model_for(id: LanguageId) -> &'static dyn LanguageModel {

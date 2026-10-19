@@ -46,7 +46,7 @@ impl LanguageModel for JavaModel {
         types::methods(ty)
     }
 
-    fn constructors<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn constructors<'a>(&self, _file: &SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
         types::constructors(ty)
     }
 

@@ -39,7 +39,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
                 }
             }
 
-            for constructor in model.constructors(ty) {
+            for constructor in model.constructors(file, ty) {
                 if model.parameters(constructor) > MAX_CONSTRUCTOR_PARAMS {
                     lines.push(model.decl_line(constructor));
                 }
