@@ -1,4 +1,4 @@
-//! Best-effort Incomplete Library Class heuristic for Java.
+//! Best-effort Incomplete Library Class heuristics for Java, Rust and TypeScript.
 //!
 //! Without library documentation or usage intent, missing API surface cannot
 //! be established from source alone. This detector reports a narrower proxy:
@@ -8,7 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
+use crate::lang::{LanguageId, LanguageModel, SourceFile, java, rust};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -18,12 +18,15 @@ const MIN_EXTENSIONS: usize = 2;
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
-        .flat_map(file_findings)
+        .flat_map(|file| match file.language {
+            LanguageId::Java => java_findings(file),
+            LanguageId::Rust => rust_findings(file),
+            _ => Vec::new(),
+        })
         .collect()
 }
 
-fn file_findings(file: &SourceFile) -> Vec<Finding> {
+fn java_findings(file: &SourceFile) -> Vec<Finding> {
     let imported = imported_types(file);
     let local = java::JAVA
         .types(file)
@@ -66,6 +69,99 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             })
         })
         .collect()
+}
+
+fn rust_findings(file: &SourceFile) -> Vec<Finding> {
+    let imported = rust_imported_types(file);
+    let declarations = rust::RUST.types(file);
+    let local_types = declarations
+        .iter()
+        .filter_map(|ty| rust::RUST.type_name(file, *ty).map(str::to_owned))
+        .collect::<BTreeSet<_>>();
+    let local_traits = declarations
+        .iter()
+        .filter(|ty| ty.kind() == "trait_item")
+        .filter_map(|ty| rust::RUST.type_name(file, *ty).map(str::to_owned))
+        .collect::<BTreeSet<_>>();
+
+    descendants(file.root())
+        .into_iter()
+        .filter(|node| node.kind() == "impl_item")
+        .filter_map(|implementation| {
+            let trait_node = implementation.child_by_field_name("trait")?;
+            let target_node = implementation.child_by_field_name("type")?;
+            let trait_name = simple_rust_type(file.text(trait_node))?;
+            let target_name = simple_rust_type(file.text(target_node))?;
+            if !local_traits.contains(&trait_name)
+                || !imported.contains(&target_name)
+                || local_types.contains(&target_name)
+            {
+                return None;
+            }
+            let body = implementation.child_by_field_name("body")?;
+            let methods = direct_rust_functions(body)
+                .into_iter()
+                .filter(|method| rust_extension_method(file, *method))
+                .count();
+            (methods >= MIN_EXTENSIONS).then(|| Finding {
+                smell_name: SMELL_NAME.to_owned(),
+                file_path: file.rel.clone(),
+                class_name: trait_name.clone(),
+                line_numbers: vec![implementation.start_position().row + 1],
+                relative_file_path: file.rel.clone(),
+                additional_info: format!(
+                    "{} extension trait methods add behavior to imported type {}",
+                    methods, target_name
+                ),
+            })
+        })
+        .collect()
+}
+
+fn rust_imported_types(file: &SourceFile) -> BTreeSet<String> {
+    descendants(file.root())
+        .into_iter()
+        .filter(|node| node.kind() == "use_declaration")
+        .filter_map(|node| node.child_by_field_name("argument"))
+        .filter_map(|argument| {
+            let path = file.text(argument).trim();
+            if path.contains('*') || path.contains(',') {
+                return None;
+            }
+            path.rsplit("::")
+                .next()
+                .map(|leaf| leaf.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
+                .filter(|leaf| !leaf.is_empty())
+                .map(str::to_owned)
+        })
+        .collect()
+}
+
+fn simple_rust_type(text: &str) -> Option<String> {
+    let base = text.split('<').next()?.trim();
+    base.rsplit("::")
+        .next()
+        .map(|name| name.trim().to_owned())
+        .filter(|name| !name.is_empty())
+}
+
+fn direct_rust_functions(body: Node<'_>) -> Vec<Node<'_>> {
+    let mut cursor = body.walk();
+    body.named_children(&mut cursor)
+        .filter(|node| node.kind() == "function_item")
+        .collect()
+}
+
+fn rust_extension_method(file: &SourceFile, method: Node<'_>) -> bool {
+    let Some(body) = method.child_by_field_name("body") else {
+        return false;
+    };
+    descendants(body).into_iter().any(|node| {
+        node.kind() == "call_expression"
+            && node
+                .child_by_field_name("function")
+                .is_some_and(|function| file.text(function).trim_start().starts_with("self."))
+    })
 }
 
 fn imported_types(file: &SourceFile) -> BTreeSet<String> {

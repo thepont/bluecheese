@@ -44,3 +44,57 @@ fn ignores_one_off_helpers_and_helpers_for_local_types() {
     assert!(one_off.is_empty());
     assert!(local_type.is_empty());
 }
+
+#[test]
+fn reports_rust_extension_traits_for_an_imported_type() {
+    let file = parse(
+        "date_helpers.rs",
+        "use chrono::DateTime;\n\
+         trait DateTimeExt {\n\
+             fn is_weekend(&self) -> bool;\n\
+             fn next_business_day(&self) -> DateTime;\n\
+         }\n\
+         impl DateTimeExt for DateTime {\n\
+             fn is_weekend(&self) -> bool { self.weekday().number_from_monday() > 5 }\n\
+             fn next_business_day(&self) -> DateTime { self.add_days(1) }\n\
+         }",
+    );
+
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].class_name, "DateTimeExt");
+    assert!(findings[0].additional_info.contains("DateTime"));
+}
+
+#[test]
+fn ignores_rust_local_type_extensions_and_single_method_traits() {
+    let local = parse(
+        "date_helpers.rs",
+        "struct DateTime;\n\
+         trait DateTimeExt { fn is_weekend(&self) -> bool; fn next_day(&self) -> Self; }\n\
+         impl DateTimeExt for DateTime {\n\
+             fn is_weekend(&self) -> bool { self.weekday() }\n\
+             fn next_day(&self) -> Self { self.add_days(1) }\n\
+         }",
+    );
+    let single = parse(
+        "date_helpers.rs",
+        "use chrono::DateTime;\n\
+         trait DateTimeExt { fn is_weekend(&self) -> bool; }\n\
+         impl DateTimeExt for DateTime {\n\
+             fn is_weekend(&self) -> bool { self.weekday() }\n\
+         }",
+    );
+
+    assert!(
+        bluecheese::detect(&[local], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        bluecheese::detect(&[single], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}
