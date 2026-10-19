@@ -1,7 +1,7 @@
 //! Port of StaticNose's strict Data Class rule.
 
 use crate::finding::Finding;
-use crate::lang::{model_for, LanguageId, SourceFile};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Data Class";
@@ -190,9 +190,17 @@ fn is_non_java_accessor(file: &SourceFile, method: Node<'_>, fields: &[String]) 
     if !(function_name.starts_with("set_") || (!is_rust && function_name.starts_with("set"))) {
         return false;
     }
-    let Some(parameters) = method.child_by_field_name("parameters") else {
+    let Some(parameter_name) = single_accessor_parameter(file, method) else {
         return false;
     };
+    let assignment = statement_text.trim_end_matches(';');
+    fields
+        .iter()
+        .any(|field| assignment == format!("{receiver_name}.{field}={parameter_name}"))
+}
+
+fn single_accessor_parameter(file: &SourceFile, method: Node<'_>) -> Option<String> {
+    let parameters = method.child_by_field_name("parameters")?;
     let mut cursor = parameters.walk();
     let parameter_names: Vec<_> = parameters
         .named_children(&mut cursor)
@@ -205,13 +213,9 @@ fn is_non_java_accessor(file: &SourceFile, method: Node<'_>, fields: &[String]) 
         })
         .map(|parameter| file.text(parameter).to_owned())
         .collect();
-    if parameter_names.len() != 1 {
-        return false;
-    }
-    let assignment = statement_text.trim_end_matches(';');
-    fields
-        .iter()
-        .any(|field| assignment == format!("{receiver_name}.{field}={}", parameter_names[0]))
+    let mut names = parameter_names.into_iter();
+    let name = names.next()?;
+    names.next().is_none().then_some(name)
 }
 
 fn fields(ty: Node<'_>) -> Vec<Node<'_>> {
