@@ -271,7 +271,7 @@ pub fn load_project_with(root: &Path, scope: &Scope) -> Result<Project> {
     let mut files = Vec::new();
     let mut skipped: BTreeMap<String, usize> = BTreeMap::new();
 
-    for path in candidate_paths(root, scope)? {
+    for path in scope.candidate_paths(root)? {
         let Some(model) = model_for_path(&path) else {
             *skipped.entry(extension_of(&path)).or_default() += 1;
             continue;
@@ -290,43 +290,45 @@ pub fn load_project_with(root: &Path, scope: &Scope) -> Result<Project> {
     Ok(Project { files, skipped })
 }
 
-/// Everything under `root` that policy does not prune, sorted for determinism.
-///
-/// Which files an adapter actually claims is decided later, in
-/// [`load_project`]: this step only answers "what counts as this project's
-/// source at all?".
-///
-/// The walker's standard filters are on, so hidden files and anything matched by
-/// a `.gitignore` or `.ignore` file are excluded. That is the whole mechanism: a
-/// project's own declaration of what is not its source beats any guess of ours.
-/// An explicit [`Scope`] then overrides it, in both directions.
-fn candidate_paths(root: &Path, scope: &Scope) -> Result<Vec<PathBuf>> {
-    let mut overrides = ignore::overrides::OverrideBuilder::new(root);
-    for pattern in &scope.exclude {
-        // Overrides are inverted relative to gitignore: a plain glob whitelists
-        // a path and `!` drops it. The sign therefore flips here, and only here.
-        overrides
-            .add(&format!("!{pattern}"))
-            .with_context(|| format!("invalid exclude pattern '{pattern}'"))?;
-    }
-    for pattern in &scope.include {
-        overrides
-            .add(pattern)
-            .with_context(|| format!("invalid include pattern '{pattern}'"))?;
-    }
+impl Scope {
+    /// Everything under `root` that policy does not prune, sorted for determinism.
+    ///
+    /// Which files an adapter actually claims is decided later, in
+    /// [`load_project`]: this step only answers "what counts as this project's
+    /// source at all?".
+    ///
+    /// The walker's standard filters are on, so hidden files and anything matched by
+    /// a `.gitignore` or `.ignore` file are excluded. That is the whole mechanism: a
+    /// project's own declaration of what is not its source beats any guess of ours.
+    /// An explicit [`Scope`] then overrides it, in both directions.
+    fn candidate_paths(&self, root: &Path) -> Result<Vec<PathBuf>> {
+        let mut overrides = ignore::overrides::OverrideBuilder::new(root);
+        for pattern in &self.exclude {
+            // Overrides are inverted relative to gitignore: a plain glob whitelists
+            // a path and `!` drops it. The sign therefore flips here, and only here.
+            overrides
+                .add(&format!("!{pattern}"))
+                .with_context(|| format!("invalid exclude pattern '{pattern}'"))?;
+        }
+        for pattern in &self.include {
+            overrides
+                .add(pattern)
+                .with_context(|| format!("invalid include pattern '{pattern}'"))?;
+        }
 
-    let walker = ignore::WalkBuilder::new(root)
-        .overrides(overrides.build()?)
-        .filter_entry(|entry| !is_pruned(entry))
-        .build();
+        let walker = ignore::WalkBuilder::new(root)
+            .overrides(overrides.build()?)
+            .filter_entry(|entry| !is_pruned(entry))
+            .build();
 
-    let mut paths: Vec<PathBuf> = walker
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_type().is_some_and(|kind| kind.is_file()))
-        .map(|entry| entry.into_path())
-        .collect();
-    paths.sort();
-    Ok(paths)
+        let mut paths: Vec<PathBuf> = walker
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_type().is_some_and(|kind| kind.is_file()))
+            .map(|entry| entry.into_path())
+            .collect();
+        paths.sort();
+        Ok(paths)
+    }
 }
 
 /// Whether to skip descending into `entry`.
