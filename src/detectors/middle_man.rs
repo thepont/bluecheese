@@ -19,11 +19,16 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
         .iter()
         .flat_map(|file| {
             let project_types = project_type_names(files, file.language);
-            if file.language == LanguageId::Java {
-                file_findings(file, &project_types)
+            let analysis = Analysis {
+                file,
+                project_types: &project_types,
+            };
+            let stats: StatsReader = if file.language == LanguageId::Java {
+                java_stats
             } else {
-                non_java_file_findings(file, &project_types)
-            }
+                non_java_stats
+            };
+            file_findings(&analysis, stats)
         })
         .collect()
 }
@@ -53,48 +58,45 @@ fn compatible_language(left: LanguageId, right: LanguageId) -> bool {
     }
 }
 
-fn non_java_file_findings(file: &SourceFile, project_types: &BTreeSet<String>) -> Vec<Finding> {
-    let analysis = Analysis {
-        file,
-        project_types,
-    };
-    let model = model_for(file.language);
-    model
-        .types(file)
-        .into_iter()
-        .filter_map(|ty| {
-            let name = model.type_name(file, ty)?;
-            let fields = non_java_field_types(file, ty);
-            if fields.is_empty() {
-                return None;
-            }
-            let methods = model.methods(file, ty);
-            if methods.is_empty() {
-                return None;
-            }
-            let delegate_count = methods
-                .iter()
-                .filter(|method| non_java_pure_delegate(&analysis, **method, &fields))
-                .count();
-            let referenced = fields
-                .values()
-                .filter(|target| project_types.contains(&simple_name(target)))
-                .map(|target| simple_name(target))
-                .collect::<BTreeSet<_>>()
-                .len();
-            if delegate_count < 2 || delegate_count * 2 < methods.len() || referenced == 0 {
-                return None;
-            }
-            Some(Finding {
-                smell_name: SMELL_NAME.to_string(),
-                file_path: file.rel.clone(),
-                class_name: name.to_owned(),
-                line_numbers: vec![model.decl_line(ty)],
-                relative_file_path: file.rel.clone(),
-                additional_info: String::new(),
-            })
-        })
-        .collect()
+struct DelegationStats {
+    methods: usize,
+    delegates: usize,
+    targets: usize,
+}
+
+impl DelegationStats {
+    fn is_middle_man(&self) -> bool {
+        self.delegates >= 2 && self.delegates * 2 >= self.methods && self.targets > 0
+    }
+}
+
+type StatsReader = fn(&Analysis<'_>, Node<'_>) -> Option<DelegationStats>;
+
+fn non_java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationStats> {
+    let file = analysis.file;
+    let fields = non_java_field_types(file, ty);
+    if fields.is_empty() {
+        return None;
+    }
+    let methods = model_for(file.language).methods(file, ty);
+    if methods.is_empty() {
+        return None;
+    }
+    let delegates = methods
+        .iter()
+        .filter(|method| non_java_pure_delegate(analysis, **method, &fields))
+        .count();
+    let targets = fields
+        .values()
+        .filter(|target| analysis.project_types.contains(&simple_name(target)))
+        .map(|target| simple_name(target))
+        .collect::<BTreeSet<_>>()
+        .len();
+    Some(DelegationStats {
+        methods: methods.len(),
+        delegates,
+        targets,
+    })
 }
 
 fn non_java_field_types(
@@ -255,30 +257,16 @@ fn simple_name(name: &str) -> String {
         .to_owned()
 }
 
-fn file_findings(file: &SourceFile, project_types: &BTreeSet<String>) -> Vec<Finding> {
-    let model = model_for(LanguageId::Java);
-    let analysis = Analysis {
-        file,
-        project_types,
-    };
+fn file_findings(analysis: &Analysis<'_>, read_stats: StatsReader) -> Vec<Finding> {
+    let file = analysis.file;
+    let model = model_for(file.language);
     model
         .types(file)
         .into_iter()
         .filter_map(|ty| {
             let name = model.type_name(file, ty)?;
-            let methods = model.methods(file, ty);
-            if methods.is_empty() {
-                return None;
-            }
-            let delegate_count = methods
-                .iter()
-                .filter(|method| is_pure_delegate(&analysis, **method, ty))
-                .count();
-            let fan_out = referenced_project_types(&analysis, ty);
-            if delegate_count < 2 || delegate_count * 2 < methods.len() || fan_out == 0 {
-                return None;
-            }
-            Some(Finding {
+            let stats = read_stats(analysis, ty)?;
+            stats.is_middle_man().then(|| Finding {
                 smell_name: SMELL_NAME.to_string(),
                 file_path: file.rel.clone(),
                 class_name: name.to_string(),
@@ -288,6 +276,22 @@ fn file_findings(file: &SourceFile, project_types: &BTreeSet<String>) -> Vec<Fin
             })
         })
         .collect()
+}
+
+fn java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationStats> {
+    let methods = model_for(LanguageId::Java).methods(analysis.file, ty);
+    if methods.is_empty() {
+        return None;
+    }
+    let delegates = methods
+        .iter()
+        .filter(|method| is_pure_delegate(analysis, **method, ty))
+        .count();
+    Some(DelegationStats {
+        methods: methods.len(),
+        delegates,
+        targets: referenced_project_types(analysis, ty),
+    })
 }
 
 fn referenced_project_types(analysis: &Analysis<'_>, ty: Node<'_>) -> usize {
