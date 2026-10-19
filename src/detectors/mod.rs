@@ -8,6 +8,7 @@ pub mod data_class;
 pub mod data_clumps;
 pub mod divergent_change;
 pub mod feature_envy;
+pub mod incomplete_library_class;
 pub mod parallel_hierarchy;
 pub mod large_class;
 pub mod lazy_class;

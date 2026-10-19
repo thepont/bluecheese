@@ -139,6 +139,31 @@ fn feature_envy_can_be_requested_from_the_cli() {
 }
 
 #[test]
+fn incomplete_library_class_can_be_requested_from_the_cli() {
+    let tree = TempTree::new("incomplete-library-class-cli");
+    tree.write(
+        "calendar.java",
+        "import vendor.Calendar;\n\
+         class CalendarExtensions {\n\
+             static boolean isWeekend(Calendar calendar) { return calendar.getDay() > 5; }\n\
+             static Calendar nextBusinessDay(Calendar calendar) { return calendar.plusDays(1); }\n\
+         }",
+    );
+
+    let output = run_smell(tree.path(), "incomp-lib-class", &[]);
+
+    assert!(
+        output.status.success(),
+        "stderr was: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).expect("JSON findings");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].class_name, "CalendarExtensions");
+    assert_eq!(findings[0].smell_name, "Incomplete Library Class");
+}
+
+#[test]
 fn switch_statements_can_be_requested_from_the_cli() {
     let output = run_smell(&fixtures().join("smelly"), "switch-stmts", &[]);
 
