@@ -252,9 +252,7 @@ fn typescript_findings(file: &SourceFile) -> Vec<Finding> {
                     let name = interface
                         .child_by_field_name("name")
                         .map(|n| file.text(n))?;
-                    let Some(bindings) = imports.get(&module_name) else {
-                        return None;
-                    };
+                    let bindings = imports.get(&module_name)?;
                     let local_name = bindings
                         .iter()
                         .find(|(imported, local)| {
