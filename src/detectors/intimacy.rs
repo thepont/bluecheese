@@ -412,7 +412,12 @@ impl<'a> Analyzer<'a> {
         let Some(field) = access.child_by_field_name("field") else {
             return false;
         };
-        let target_type = self.expression_type(context, target, 0);
+        let target_type = JavaExpressionReader {
+            analysis: self,
+            context,
+            depth: 0,
+        }
+        .expression_type(target);
         let Some(target_index) =
             target_type.and_then(|name| self.resolve_type(context.owner, &name))
         else {
@@ -443,130 +448,6 @@ impl<'a> Analyzer<'a> {
                             .is_some_and(|name| target_decl.file.text(name) == ty.file.text(field))
                     })
             })
-    }
-
-    fn expression_type(
-        &self,
-        context: &AccessContext,
-        expression: Node<'a>,
-        depth: usize,
-    ) -> Option<String> {
-        if depth > 6 {
-            return None;
-        }
-        let file = self.types[context.owner].file;
-        if expression.kind() == "this" || expression.kind() == "super" {
-            return Some(self.types[context.owner].name.clone());
-        }
-        if expression.kind() == "identifier" {
-            let text = file.text(expression);
-            return context
-                .vars
-                .get(text)
-                .cloned()
-                .or_else(|| self.by_name.contains_key(text).then(|| text.to_owned()));
-        }
-        if expression.kind() == "field_access" {
-            return self.field_access_type(context, expression, depth);
-        }
-        if expression.kind() == "object_creation_expression" {
-            return expression
-                .child_by_field_name("type")
-                .map(|node| file.text(node).to_owned());
-        }
-        if expression.kind() == "method_invocation" {
-            return self.invocation_type(context, expression, depth);
-        }
-        None
-    }
-
-    fn field_access_type(
-        &self,
-        context: &AccessContext,
-        expression: Node<'a>,
-        depth: usize,
-    ) -> Option<String> {
-        let file = self.types[context.owner].file;
-        let field = expression.child_by_field_name("field")?;
-        let target = expression.child_by_field_name("object")?;
-        let target_type = self.expression_type(context, target, depth + 1)?;
-        let target_index = self.resolve_type(context.owner, &target_type)?;
-        let target_decl = &self.types[target_index];
-        self.field_declarations(target_index)
-            .into_iter()
-            .find_map(|decl| {
-                let field_type = decl.child_by_field_name("type")?;
-                let mut cursor = decl.walk();
-                let found = decl
-                    .named_children(&mut cursor)
-                    .filter(|node| node.kind() == "variable_declarator")
-                    .any(|variable| {
-                        variable
-                            .child_by_field_name("name")
-                            .is_some_and(|name| target_decl.file.text(name) == file.text(field))
-                    });
-                found.then(|| target_decl.file.text(field_type).to_owned())
-            })
-    }
-
-    fn invocation_type(
-        &self,
-        context: &AccessContext,
-        expression: Node<'a>,
-        depth: usize,
-    ) -> Option<String> {
-        let file = self.types[context.owner].file;
-        let name = expression
-            .child_by_field_name("name")
-            .map(|node| file.text(node))?;
-        if let Some(generic_type) = self.generic_invocation_type(context, name, expression) {
-            return Some(generic_type);
-        }
-        let target_type = expression
-            .child_by_field_name("object")
-            .and_then(|target| self.expression_type(context, target, depth + 1))
-            .unwrap_or_else(|| self.types[context.owner].name.clone());
-        let target_index = self.resolve_type(context.owner, &target_type)?;
-        model_for(LanguageId::Java)
-            .methods(self.types[target_index].file, self.types[target_index].node)
-            .into_iter()
-            .find_map(|candidate| {
-                let candidate_name = candidate.child_by_field_name("name")?;
-                (self.types[target_index].file.text(candidate_name) == name)
-                    .then(|| {
-                        candidate
-                            .child_by_field_name("type")
-                            .map(|ty| self.types[target_index].file.text(ty).to_owned())
-                    })
-                    .flatten()
-            })
-    }
-
-    fn generic_invocation_type(
-        &self,
-        context: &AccessContext,
-        name: &str,
-        expression: Node<'a>,
-    ) -> Option<String> {
-        if name == "get" {
-            let receiver = expression.child_by_field_name("object")?;
-            return context
-                .vars
-                .get(self.types[context.owner].file.text(receiver))?
-                .split(',')
-                .nth(1)
-                .map(|value| value.trim().trim_end_matches('>').to_owned());
-        }
-        if name == "getValue" {
-            return context
-                .vars
-                .values()
-                .find(|value| value.contains("Map.Entry<"))?
-                .split(',')
-                .nth(1)
-                .map(|value| value.trim().trim_end_matches('>').to_owned());
-        }
-        None
     }
 
     fn resolve_type(&self, owner: usize, type_name: &str) -> Option<usize> {
@@ -621,6 +502,137 @@ impl<'a> Analyzer<'a> {
         };
         self.types[left].file.path == self.types[right].file.path
             && top_level(self.types[left].node).id() == top_level(self.types[right].node).id()
+    }
+}
+
+#[derive(Clone, Copy)]
+struct JavaExpressionReader<'analysis, 'source> {
+    analysis: &'analysis Analyzer<'source>,
+    context: &'analysis AccessContext,
+    depth: usize,
+}
+
+impl<'a> JavaExpressionReader<'_, 'a> {
+    fn deeper(self) -> Self {
+        Self {
+            depth: self.depth + 1,
+            ..self
+        }
+    }
+
+    fn expression_type(&self, expression: Node<'a>) -> Option<String> {
+        if self.depth > 6 {
+            return None;
+        }
+        let file = self.analysis.types[self.context.owner].file;
+        if expression.kind() == "this" || expression.kind() == "super" {
+            return Some(self.analysis.types[self.context.owner].name.clone());
+        }
+        if expression.kind() == "identifier" {
+            let text = file.text(expression);
+            return self.context.vars.get(text).cloned().or_else(|| {
+                self.analysis
+                    .by_name
+                    .contains_key(text)
+                    .then(|| text.to_owned())
+            });
+        }
+        if expression.kind() == "field_access" {
+            return self.field_access_type(expression);
+        }
+        if expression.kind() == "object_creation_expression" {
+            return expression
+                .child_by_field_name("type")
+                .map(|node| file.text(node).to_owned());
+        }
+        if expression.kind() == "method_invocation" {
+            return self.invocation_type(expression);
+        }
+        None
+    }
+
+    fn field_access_type(&self, expression: Node<'a>) -> Option<String> {
+        let file = self.analysis.types[self.context.owner].file;
+        let field = expression.child_by_field_name("field")?;
+        let target = expression.child_by_field_name("object")?;
+        let target_type = self.deeper().expression_type(target)?;
+        let target_index = self
+            .analysis
+            .resolve_type(self.context.owner, &target_type)?;
+        let target_decl = &self.analysis.types[target_index];
+        self.analysis
+            .field_declarations(target_index)
+            .into_iter()
+            .find_map(|decl| {
+                let field_type = decl.child_by_field_name("type")?;
+                let mut cursor = decl.walk();
+                let found = decl
+                    .named_children(&mut cursor)
+                    .filter(|node| node.kind() == "variable_declarator")
+                    .any(|variable| {
+                        variable
+                            .child_by_field_name("name")
+                            .is_some_and(|name| target_decl.file.text(name) == file.text(field))
+                    });
+                found.then(|| target_decl.file.text(field_type).to_owned())
+            })
+    }
+
+    fn invocation_type(&self, expression: Node<'a>) -> Option<String> {
+        let file = self.analysis.types[self.context.owner].file;
+        let name = expression
+            .child_by_field_name("name")
+            .map(|node| file.text(node))?;
+        if let Some(generic_type) = self.generic_invocation_type(name, expression) {
+            return Some(generic_type);
+        }
+        let target_type = expression
+            .child_by_field_name("object")
+            .and_then(|target| self.deeper().expression_type(target))
+            .unwrap_or_else(|| self.analysis.types[self.context.owner].name.clone());
+        let target_index = self
+            .analysis
+            .resolve_type(self.context.owner, &target_type)?;
+        model_for(LanguageId::Java)
+            .methods(
+                self.analysis.types[target_index].file,
+                self.analysis.types[target_index].node,
+            )
+            .into_iter()
+            .find_map(|candidate| {
+                let candidate_name = candidate.child_by_field_name("name")?;
+                (self.analysis.types[target_index].file.text(candidate_name) == name)
+                    .then(|| {
+                        candidate
+                            .child_by_field_name("type")
+                            .map(|ty| self.analysis.types[target_index].file.text(ty).to_owned())
+                    })
+                    .flatten()
+            })
+    }
+
+    fn generic_invocation_type(&self, name: &str, expression: Node<'a>) -> Option<String> {
+        if name == "get" {
+            let receiver = expression.child_by_field_name("object")?;
+            return self
+                .context
+                .vars
+                .get(self.analysis.types[self.context.owner].file.text(receiver))?
+                .split(',')
+                .nth(1)
+                .map(|value| value.trim().trim_end_matches('>').to_owned());
+        }
+        if name == "getValue" {
+            return self
+                .context
+                .vars
+                .values()
+                .find(|value| value.contains("Map.Entry<"))?
+                .split(',')
+                .nth(1)
+                .map(|value| value.trim().trim_end_matches('>').to_owned());
+        }
+        None
     }
 }
 
