@@ -1,8 +1,9 @@
 //! Best-effort Temporary Field heuristic for Java.
 //!
-//! A class field is a candidate when every reference found in its methods is
-//! nested inside an `if` branch. This identifies state used only for a
-//! conditional workflow; it does not reason about runtime call sequences.
+//! A class field is a candidate when every read found in its methods is nested
+//! inside an `if` consequence. Writes alone do not count as uses. This identifies
+//! state used only for one conditional workflow; runtime call sequences are not
+//! inferred.
 
 use std::collections::BTreeSet;
 
@@ -28,11 +29,26 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .filter(|ty| ty.kind() == "class_declaration")
         .filter_map(|ty| {
             let methods = java::JAVA.methods(file, ty);
-            let lines = fields(file, ty)
-                .into_iter()
-                .filter(|(_, name)| references_only_in_branches(file, name, &methods))
-                .map(|(field, _)| file.line(field))
+            let constructors = java::JAVA.constructors(file, ty);
+            let declared_fields = fields(file, ty);
+            let mut lines = declared_fields
+                .iter()
+                .filter(|(field, name, primitive)| {
+                    is_nullable_guarded(file, *field, name, &methods)
+                        || (*primitive
+                            && references_only_in_branches(file, name, &methods)
+                            && !has_unconditional_write(file, name, &methods)
+                            && !is_created_as_branch_local_object(file, name, &methods))
+                })
+                .map(|(field, _, _)| file.line(*field))
                 .collect::<BTreeSet<_>>();
+            if lines.is_empty() && constructors.len() >= 2 {
+                lines.extend(
+                    rarely_used_fields(&file, &declared_fields, &methods)
+                        .into_iter()
+                        .map(|field| file.line(field)),
+                );
+            }
             (!lines.is_empty()).then(|| Finding {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
@@ -48,7 +64,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .collect()
 }
 
-fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<(Node<'a>, String)> {
+fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<(Node<'a>, String, bool)> {
     let Some(body) = class.child_by_field_name("body") else {
         return Vec::new();
     };
@@ -60,10 +76,29 @@ fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<(Node<'a>, String)> {
             declaration
                 .named_children(&mut cursor)
                 .filter(|child| child.kind() == "variable_declarator")
-                .filter_map(|field| field.child_by_field_name("name").map(|name| (field, name)))
+                .filter_map(|field| {
+                    let (Some(name), Some(ty)) = (
+                        field.child_by_field_name("name"),
+                        declaration.child_by_field_name("type"),
+                    ) else {
+                        return None;
+                    };
+                    Some((field, name, ty))
+                })
                 .collect::<Vec<_>>()
         })
-        .map(|(field, name)| (field, file.text(name).to_owned()))
+        .map(|(field, name, ty)| {
+            let spelling = file.text(ty).trim();
+            let base = spelling.trim_end_matches("[]");
+            (
+                field,
+                file.text(name).to_owned(),
+                matches!(
+                    base,
+                    "byte" | "short" | "int" | "long" | "float" | "double" | "char" | "boolean"
+                ),
+            )
+        })
         .collect()
 }
 
@@ -77,8 +112,11 @@ fn references_only_in_branches(file: &SourceFile, name: &str, methods: &[Node<'_
             .into_iter()
             .filter(|node| node.kind() == "identifier" && file.text(*node) == name)
         {
+            if is_write_target(reference) {
+                continue;
+            }
             saw_reference = true;
-            if !inside_if_branch(reference, *method) {
+            if !inside_if_consequence(reference, *method) {
                 return false;
             }
         }
@@ -86,14 +124,140 @@ fn references_only_in_branches(file: &SourceFile, name: &str, methods: &[Node<'_
     saw_reference
 }
 
-fn inside_if_branch(mut node: Node<'_>, method: Node<'_>) -> bool {
+fn has_unconditional_write(file: &SourceFile, name: &str, methods: &[Node<'_>]) -> bool {
+    methods.iter().any(|method| {
+        descendants(*method).into_iter().any(|node| {
+            node.kind() == "identifier"
+                && file.text(node) == name
+                && is_write_target(node)
+                && !inside_if_consequence(node, *method)
+        })
+    })
+}
+
+fn is_created_as_branch_local_object(file: &SourceFile, name: &str, methods: &[Node<'_>]) -> bool {
+    methods.iter().any(|method| {
+        descendants(*method).into_iter().any(|node| {
+            if node.kind() != "identifier" || file.text(node) != name || !is_write_target(node) {
+                return false;
+            }
+            let Some(assignment) = assignment_for(node) else {
+                return false;
+            };
+            let Some(value) = assignment.child_by_field_name("right") else {
+                return false;
+            };
+            inside_if_consequence(node, *method)
+                && descendants(value)
+                    .into_iter()
+                    .any(|child| child.kind() == "object_creation_expression")
+        })
+    })
+}
+
+fn is_nullable_guarded(
+    file: &SourceFile,
+    field: Node<'_>,
+    name: &str,
+    methods: &[Node<'_>],
+) -> bool {
+    if field.child_by_field_name("value").is_some() {
+        return false;
+    }
+    methods.iter().any(|method| {
+        descendants(*method)
+            .into_iter()
+            .filter(|node| node.kind() == "if_statement")
+            .any(|branch| {
+                let (Some(condition), Some(consequence)) = (
+                    branch.child_by_field_name("condition"),
+                    branch.child_by_field_name("consequence"),
+                ) else {
+                    return false;
+                };
+                let condition_nodes = descendants(condition);
+                condition_nodes
+                    .iter()
+                    .any(|node| node.kind() == "identifier" && file.text(*node) == name)
+                    && condition_nodes
+                        .iter()
+                        .any(|node| matches!(node.kind(), "null_literal" | "null"))
+                    && descendants(consequence)
+                        .iter()
+                        .any(|node| node.kind() == "identifier" && file.text(*node) == name)
+            })
+    })
+}
+
+fn rarely_used_fields<'a>(
+    file: &SourceFile,
+    fields: &[(Node<'a>, String, bool)],
+    methods: &[Node<'a>],
+) -> Vec<Node<'a>> {
+    let use_counts = fields
+        .iter()
+        .map(|(_, name, _)| {
+            let methods_using_field = methods
+                .iter()
+                .filter(|method| {
+                    descendants(**method)
+                        .into_iter()
+                        .any(|node| node.kind() == "identifier" && file.text(node) == name)
+                })
+                .count();
+            (name.as_str(), methods_using_field)
+        })
+        .collect::<Vec<_>>();
+    let common = use_counts
+        .iter()
+        .map(|(_, count)| *count)
+        .max()
+        .unwrap_or(0);
+    if common < 2 {
+        return Vec::new();
+    }
+    fields
+        .iter()
+        .filter(|(_, name, primitive)| {
+            *primitive
+                && use_counts
+                    .iter()
+                    .find(|(field_name, _)| *field_name == name)
+                    .is_some_and(|(_, count)| *count > 0 && *count < common)
+        })
+        .map(|(field, _, _)| *field)
+        .collect()
+}
+
+fn is_write_target(node: Node<'_>) -> bool {
+    assignment_for(node).is_some()
+}
+
+fn assignment_for(node: Node<'_>) -> Option<Node<'_>> {
+    let field = if node
+        .parent()
+        .is_some_and(|parent| parent.kind() == "field_access")
+    {
+        node.parent().expect("checked above")
+    } else {
+        node
+    };
+    field.parent().filter(|parent| {
+        parent.kind() == "assignment_expression"
+            && parent.child_by_field_name("left").is_some_and(|left| {
+                left.start_byte() <= field.start_byte() && left.end_byte() >= field.end_byte()
+            })
+    })
+}
+
+fn inside_if_consequence(mut node: Node<'_>, method: Node<'_>) -> bool {
     while let Some(parent) = node.parent() {
         if parent.kind() == "if_statement"
-            && !parent
-                .child_by_field_name("condition")
-                .is_some_and(|condition| {
-                    condition.start_byte() <= node.start_byte()
-                        && condition.end_byte() >= node.end_byte()
+            && parent
+                .child_by_field_name("consequence")
+                .is_some_and(|consequence| {
+                    consequence.start_byte() <= node.start_byte()
+                        && consequence.end_byte() >= node.end_byte()
                 })
         {
             return true;
