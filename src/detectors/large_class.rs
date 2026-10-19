@@ -108,13 +108,16 @@ fn non_java_tcc(file: &SourceFile, fields: &BTreeSet<String>, methods: &[Node<'_
     if methods.len() < 2 {
         return 1.0;
     }
+    let model = model_for(file.language);
     let usages: Vec<_> = methods
         .iter()
         .map(|method| {
             descendants(*method)
                 .into_iter()
-                .filter(|node| node.kind() == "identifier" && fields.contains(file.text(*node)))
-                .map(|node| file.text(node).to_owned())
+                .filter_map(|node| model.field_access_parts(node))
+                .filter(|(receiver, _)| matches!(receiver.kind(), "self" | "this"))
+                .map(|(_, field)| file.text(field).trim_start_matches('#').to_owned())
+                .filter(|name| fields.contains(name))
                 .collect::<BTreeSet<_>>()
         })
         .collect();
