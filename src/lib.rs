@@ -26,6 +26,8 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         Ok(detectors::long_method::detect(files))
     } else if smell == "long-params" {
         Ok(detectors::long_params::detect(files))
+    } else if smell == "switch-stmts" {
+        Ok(detectors::switch_stmts::detect(files))
     } else {
         Err(refused(smell))
     }
@@ -53,7 +55,7 @@ fn refused(smell: &str) -> anyhow::Error {
 
 /// The smell labels [`detect`] accepts, for diagnostics.
 pub fn ported_smells() -> &'static [&'static str] {
-    &["long-method", "long-params"]
+    &["long-method", "long-params", "switch-stmts"]
 }
 
 #[cfg(test)]

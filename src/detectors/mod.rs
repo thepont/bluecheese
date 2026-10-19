@@ -3,3 +3,4 @@
 
 pub mod long_method;
 pub mod long_params;
+pub mod switch_stmts;

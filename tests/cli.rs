@@ -135,6 +135,23 @@ fn an_unported_smell_is_refused_by_name() {
 }
 
 #[test]
+fn switch_statements_can_be_requested_from_the_cli() {
+    let output = run_smell(&fixtures().join("smelly"), "switch-stmts", &[]);
+
+    assert!(
+        output.status.success(),
+        "stderr was: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).expect("JSON findings");
+    assert!(findings.iter().any(|finding| {
+        finding.smell_name == "Switch Statements"
+            && finding.relative_file_path == "SwitchOnKind.java"
+            && finding.line_numbers == [24]
+    }));
+}
+
+#[test]
 fn a_label_that_is_not_a_smell_at_all_says_so() {
     // This is the mistake a person makes from memory, so it must not be
     // answered as if the smell were merely unported: `dead-code` was a detector

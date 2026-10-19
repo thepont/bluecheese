@@ -170,3 +170,17 @@ fn the_clean_control_stays_clean() {
     assert!(finding_keys_in("smelly", "clean.rs", "long-method").is_empty());
     assert!(finding_keys_in("smelly", "clean.rs", "long-params").is_empty());
 }
+
+#[test]
+fn a_match_expression_is_reported_as_a_switch_statement() {
+    let expected = [(
+        "switch_on_kind.rs".to_string(),
+        "SwitchOnKind".to_string(),
+        vec![26],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "switch_on_kind.rs", "switch-stmts"),
+        expected.into_iter().collect()
+    );
+    assert!(finding_keys_in("refactored", "switch_on_kind.rs", "switch-stmts").is_empty());
+}
