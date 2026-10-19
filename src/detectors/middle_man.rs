@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::finding::Finding;
-use crate::lang::{model_for, LanguageId, SourceFile};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -136,15 +136,14 @@ fn non_java_field_types(
                 file.text(name).trim_start_matches('#').to_owned(),
                 file.text(field_type).to_owned(),
             );
-        } else if let Some(value) = field.child_by_field_name("value") {
-            if value.kind() == "new_expression" {
-                if let Some(constructor) = value.child_by_field_name("constructor") {
-                    fields.insert(
-                        file.text(name).to_owned(),
-                        file.text(constructor).to_owned(),
-                    );
-                }
-            }
+        } else if let Some(value) = field.child_by_field_name("value")
+            && value.kind() == "new_expression"
+            && let Some(constructor) = value.child_by_field_name("constructor")
+        {
+            fields.insert(
+                file.text(name).to_owned(),
+                file.text(constructor).to_owned(),
+            );
         }
     }
     for constructor in model_for(file.language).constructors(file, ty) {
@@ -336,8 +335,8 @@ fn is_pure_delegate(analysis: &Analysis<'_>, method: Node<'_>, owner: Node<'_>) 
                 return false;
             }
         } else if statement.kind() == "return_statement" {
-            if let Some(expression) = first_named(statement) {
-                if !matches!(
+            if let Some(expression) = first_named(statement)
+                && !matches!(
                     expression.kind(),
                     "identifier"
                         | "decimal_integer_literal"
@@ -345,9 +344,9 @@ fn is_pure_delegate(analysis: &Analysis<'_>, method: Node<'_>, owner: Node<'_>) 
                         | "true"
                         | "false"
                         | "null_literal"
-                ) {
-                    return false;
-                }
+                )
+            {
+                return false;
             }
         } else {
             return false;
