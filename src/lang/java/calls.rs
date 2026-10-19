@@ -6,17 +6,9 @@ use std::collections::{BTreeSet, HashSet};
 
 use tree_sitter::Node;
 
+use crate::lang::coupling::{self, Callable, MethodCoupling};
 use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
-
-pub struct MethodCoupling {
-    pub file_path: String,
-    pub class_name: String,
-    pub line: usize,
-    pub callers: usize,
-    pub calling_classes: usize,
-    pub fan_out: usize,
-}
 
 struct Type<'a> {
     file: &'a SourceFile,
@@ -60,8 +52,7 @@ impl CallSite<'_> {
 /// participate in resolution but are not emitted as reportable methods.
 pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
     let project = Project::new(files);
-    let mut incoming = vec![BTreeSet::new(); project.methods.len()];
-    let mut outgoing = vec![BTreeSet::new(); project.methods.len()];
+    let mut edges = Vec::new();
     for (caller, method) in project.methods.iter().enumerate() {
         if method.node.child_by_field_name("body").is_none() {
             continue;
@@ -78,38 +69,26 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
             let Some(target) = project.resolve_call(site, call) else {
                 continue;
             };
-            if project.methods[target].owner != method.owner {
-                incoming[target].insert(caller);
-                outgoing[caller].insert(target);
-            }
+            edges.push((caller, target));
         }
     }
-    project
+    let methods: Vec<_> = project
         .methods
         .iter()
-        .enumerate()
-        .filter_map(|(index, method)| {
+        .map(|method| {
             let ty = &project.types[method.owner];
-            if ty.node.kind() == "interface_declaration"
-                || method.node.child_by_field_name("body").is_none()
-                || project.interface_contract(method)
-            {
-                return None;
-            }
-            let classes: BTreeSet<_> = incoming[index]
-                .iter()
-                .map(|caller| project.methods[*caller].owner)
-                .collect();
-            Some(MethodCoupling {
+            Callable {
+                owner: method.owner,
                 file_path: ty.file.rel.clone(),
                 class_name: ty.name.clone(),
                 line: model_for(LanguageId::Java).decl_line(method.node),
-                callers: incoming[index].len(),
-                calling_classes: classes.len(),
-                fan_out: outgoing[index].len(),
-            })
+                reportable: ty.node.kind() != "interface_declaration"
+                    && method.node.child_by_field_name("body").is_some()
+                    && !project.interface_contract(method),
+            }
         })
-        .collect()
+        .collect();
+    coupling::count(&methods, &edges)
 }
 
 impl<'a> Project<'a> {

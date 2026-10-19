@@ -11,6 +11,7 @@
 //! adapters, which keeps a mixed project from inventing relationships that do
 //! not exist in either language.
 
+pub mod coupling;
 pub mod java;
 pub mod rust;
 
@@ -70,6 +71,12 @@ pub struct Project {
 /// The vocabulary is deliberately small: it is what the ported detectors
 /// actually need, and it grows only when a detector needs a new concept.
 pub trait LanguageModel {
+    /// Adapter-resolved coupling. Languages without a resolver return no
+    /// relationships; adapters must never invent cross-language call edges.
+    fn method_coupling(&self, _files: &[SourceFile]) -> Vec<coupling::MethodCoupling> {
+        Vec::new()
+    }
+
     fn id(&self) -> LanguageId;
 
     /// File extensions this adapter claims, without the leading dot.

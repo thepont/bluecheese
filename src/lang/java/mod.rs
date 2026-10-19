@@ -18,6 +18,10 @@ pub struct JavaModel;
 pub static JAVA: JavaModel = JavaModel;
 
 impl LanguageModel for JavaModel {
+    fn method_coupling(&self, files: &[SourceFile]) -> Vec<crate::lang::coupling::MethodCoupling> {
+        calls::coupling(files)
+    }
+
     fn id(&self) -> LanguageId {
         LanguageId::Java
     }

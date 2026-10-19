@@ -2,12 +2,12 @@
 //! satisfy these thresholds even after responsibilities have been centralised.
 
 use crate::finding::Finding;
-use crate::lang::{SourceFile, java::calls};
+use crate::lang::{SourceFile, coupling};
 
 pub const SMELL_NAME: &str = "Shotgun Surgery";
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
-    calls::coupling(files)
+    coupling::analyse(files)
         .into_iter()
         .filter(|method| method.callers >= 2 && method.calling_classes >= 2)
         .map(|method| Finding {
