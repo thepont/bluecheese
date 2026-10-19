@@ -4,6 +4,7 @@
 //! than guessed, and `tests/parity.rs` holds them to Spoon's own output. See
 //! `reference/README.md` for the semantics and how they were discovered.
 
+pub mod calls;
 mod metrics;
 mod types;
 

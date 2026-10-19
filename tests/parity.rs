@@ -222,3 +222,28 @@ fn comments_match_java_on_the_smelly_corpus() {
 fn comments_match_java_on_the_refactored_corpus() {
     assert_parity("refactored", "refactored.json", "comments", "Comments");
 }
+
+#[test]
+fn shotgun_matches_java_on_smellbench() {
+    assert_parity(
+        "smellbench",
+        "smellbench.json",
+        "shotgun",
+        "Shotgun Surgery",
+    );
+}
+
+#[test]
+fn shotgun_matches_java_on_the_smelly_corpus() {
+    assert_parity("smelly", "smelly.json", "shotgun", "Shotgun Surgery");
+}
+
+#[test]
+fn shotgun_matches_java_on_the_refactored_corpus() {
+    assert_parity(
+        "refactored",
+        "refactored.json",
+        "shotgun",
+        "Shotgun Surgery",
+    );
+}

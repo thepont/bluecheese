@@ -29,6 +29,29 @@ docker run --rm -v /tmp/StaticNose:/app -w /app maven:3.9-eclipse-temurin-25 \
 # -> datasets/smellbench-dataset/staticnose-report/report-<timestamp>.json
 ```
 
+## Shotgun Surgery port
+
+`bluecheese -f <source> -s shotgun` implements StaticNose's default static
+coupling rule for Java: at least two distinct calling methods in at least two
+external classes; interface-contract methods are excluded. It reports the
+callee's declaration and CM, CC and Fan-Out metrics. This is a source snapshot
+analysis, with no Git-history input and no Rust call-resolution support.
+
+Reference inspected and built: StaticNose
+`de3c2ef15c2c9fc6973eb78280e77e1ea30b5be5`,
+`src/main/java/edu/northeastern/smells/ShotgunSurgeryDetector.java`.
+The Java adapter owns source-only call resolution. It handles project types,
+imports, fields, scoped locals, typed overloads, inheritance and nested named
+classes; ambiguous targets are omitted. It is not Spoon or a complete Java
+type checker: classpath interfaces, generic inference, arrays/varargs, static
+imports and anonymous classes are not fully resolved. Default thresholds are
+ported; the Java tool's configurable thresholds are not exposed here.
+
+All 38 SmellBench findings and metrics match the saved and freshly regenerated
+reference report. That does not imply full-project equivalence or diagnostic
+accuracy. See [the public-example notebook](shotgun-surgery-examples.md) for
+the broader comparison, known disagreements and false-positive controls.
+
 ## Debug probes
 
 `java-probes/` contains two small probes used to reverse-engineer the exact

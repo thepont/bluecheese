@@ -30,6 +30,8 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         Ok(detectors::long_method::detect(files))
     } else if smell == "long-params" {
         Ok(detectors::long_params::detect(files))
+    } else if smell == "shotgun" {
+        Ok(detectors::shotgun::detect(files))
     } else if smell == "comments" {
         Ok(detectors::comments::detect(files))
     } else if smell == "message-chains" {
@@ -71,6 +73,7 @@ pub fn ported_smells() -> &'static [&'static str] {
         "long-method",
         "long-params",
         "comments",
+        "shotgun",
         "message-chains",
         "switch-stmts",
         "spec-gen",
