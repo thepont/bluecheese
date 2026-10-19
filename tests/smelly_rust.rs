@@ -116,8 +116,57 @@ fn a_long_function_in_a_nested_module_is_invisible() {
 }
 
 #[test]
+fn four_parameters_is_one_too_many_and_the_receiver_is_not_a_parameter() {
+    // `three` takes the receiver plus three, and is under the limit because the
+    // receiver is not something a caller writes; `four` takes one more and is
+    // over it. Nothing stops `free_four`, which belongs to no type and is
+    // reported under the pseudo-type named after the file.
+    let expected = [
+        (
+            "long_params.rs".to_string(),
+            "LongParams".to_string(),
+            vec![21],
+        ),
+        (
+            "long_params.rs".to_string(),
+            "long_params".to_string(),
+            vec![26],
+        ),
+    ];
+    assert_eq!(
+        finding_keys_in("smelly", "long_params.rs", "long-params"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
+fn a_trait_implementation_restates_a_signature_it_did_not_choose() {
+    // The Rust half of `OverrideParams.java`: `impl FourArgs for Args` cannot
+    // choose the parameter list, so line 22 is left out; the trait's own
+    // declaration at line 12 and its default method at line 14 are both its own,
+    // and `own` at line 28 chose its own list.
+    let expected = [
+        (
+            "override_params.rs".to_string(),
+            "FourArgs".to_string(),
+            vec![12, 14],
+        ),
+        (
+            "override_params.rs".to_string(),
+            "Args".to_string(),
+            vec![28],
+        ),
+    ];
+    assert_eq!(
+        finding_keys_in("smelly", "override_params.rs", "long-params"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
 fn the_clean_control_stays_clean() {
     // Short in every shape the adapter has to map: an impl method, a trait
     // default method, a free function and a match.
     assert!(finding_keys_in("smelly", "clean.rs", "long-method").is_empty());
+    assert!(finding_keys_in("smelly", "clean.rs", "long-params").is_empty());
 }

@@ -34,8 +34,10 @@ several others are traps: code that looks reportable and must not be.
 Where a Java fixture's shape has a Rust counterpart, it is a file of its own
 rather than a translation of it: `LongBySize.java` and `long_by_size.rs`,
 `EnumLong.java` and `enum_long.rs`, `LongConstructor.java` and `long_new.rs`,
-`NestedLong.java` and `nested_module.rs`. The pairs named after the refactorings
-they undo exist in both languages, and share their names.
+`NestedLong.java` and `nested_module.rs`, `LongParams.java` and
+`long_params.rs`, `OverrideParams.java` and `override_params.rs`. The pairs
+named after the refactorings they undo exist in both languages, and share their
+names.
 
 ## `refactored/`
 
@@ -77,6 +79,14 @@ docker run --rm -v /tmp/StaticNose:/app -v /tmp/spoon-in:/in \
 The Rust fixtures in `smelly/` are ignored by that run, as they are by the Java
 tool itself. Their half of the corpus is checked by `tests/smelly_rust.rs`, which
 is characterisation rather than parity, because there is no Rust reference.
+
+A capture is *merged* into these two goldens rather than replacing them. The
+order entries come out in is not stable — it is whatever order a Java map hands
+the findings over in — so a fresh capture of a grown corpus reorders every
+existing entry and buries the handful of new ones in the diff. Only findings
+whose `(smellName, relativeFilePath, className, lineNumbers)` is not already
+there are appended. `smellbench.json` is a third party's corpus and has never
+been added to, so it is still a straight dump.
 
 Regenerate it with the commands in `../../reference/README.md`, then normalise
 the paths (split each `filePath`/`relativeFilePath` on `smellbench-dataset/` and

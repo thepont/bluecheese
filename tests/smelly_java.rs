@@ -82,6 +82,80 @@ fn a_long_method_in_a_top_level_enum_is_reported() {
 }
 
 #[test]
+fn a_method_and_a_constructor_have_different_parameter_limits() {
+    // Two limits, and the constructor's is the higher one: three parameters is
+    // fine for a method and fine for a constructor, six is too many for either.
+    // Lines 24 and 12 are the compliant pair and must stay out.
+    //
+    // The order is the reference tool's: every method the type declares, then
+    // its constructors, which is not source order here.
+    let expected = [(
+        "LongParams.java".to_string(),
+        "LongParams".to_string(),
+        vec![28, 32, 20],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "LongParams.java", "long-params"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
+fn an_override_is_not_reported_where_the_declaration_it_restates_is() {
+    // Line 16 restates `FourArgs.four` and is left out; line 27 is that
+    // declaration, and line 20 is `own`, which chose its own parameter list.
+    let expected = [
+        (
+            "OverrideParams.java".to_string(),
+            "FourArgs".to_string(),
+            vec![27],
+        ),
+        (
+            "OverrideParams.java".to_string(),
+            "OverrideParams".to_string(),
+            vec![20],
+        ),
+    ];
+    assert_eq!(
+        finding_keys_in("smelly", "OverrideParams.java", "long-params"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
+fn an_enums_constructor_is_read_as_a_classs() {
+    // Spoon asks a CtClass for constructors, and an enum is one.
+    let expected = [(
+        "ParamsInEnum.java".to_string(),
+        "ParamsInEnum".to_string(),
+        vec![12],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "ParamsInEnum.java", "long-params"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
+fn a_records_compact_constructor_takes_the_records_components() {
+    // `RecordCtor` declares no parameters and is still reported: Java gives the
+    // compact constructor the record's six components. `ImplicitCtor` declares
+    // none either, and is not reported at all: Spoon's implicit canonical
+    // constructor is not in the model with a position, so there is nothing to
+    // measure. One of the two is a finding and the other is a trap.
+    let expected = [(
+        "RecordCtor.java".to_string(),
+        "RecordCtor".to_string(),
+        vec![12],
+    )];
+    assert_eq!(
+        finding_keys_in("smelly", "RecordCtor.java", "long-params"),
+        expected.into_iter().collect()
+    );
+}
+
+#[test]
 fn the_clean_control_stays_clean() {
     assert!(finding_keys_in("smelly", "Clean.java", "long-method").is_empty());
+    assert!(finding_keys_in("smelly", "Clean.java", "long-params").is_empty());
 }

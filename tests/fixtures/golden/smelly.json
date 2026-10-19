@@ -99,5 +99,140 @@
   ],
   "relativeFilePath": "SwitchOnKind.java",
   "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LongParams",
+  "filePath": "LongParams.java",
+  "lineNumbers": [
+   32,
+   24,
+   28
+  ],
+  "relativeFilePath": "LongParams.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OverrideParams",
+  "filePath": "OverrideParams.java",
+  "lineNumbers": [
+   16,
+   20
+  ],
+  "relativeFilePath": "OverrideParams.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LongParams",
+  "filePath": "LongParams.java",
+  "lineNumbers": [
+   28,
+   32,
+   20
+  ],
+  "relativeFilePath": "LongParams.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OverrideParams",
+  "filePath": "OverrideParams.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "OverrideParams.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FourArgs",
+  "filePath": "OverrideParams.java",
+  "lineNumbers": [
+   27
+  ],
+  "relativeFilePath": "OverrideParams.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ParamsInEnum",
+  "filePath": "ParamsInEnum.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "ParamsInEnum.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RecordCtor",
+  "filePath": "RecordCtor.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "RecordCtor.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RecordCtor",
+  "filePath": "RecordCtor.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "RecordCtor.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImplicitCtor",
+  "filePath": "RecordCtor.java",
+  "lineNumbers": [
+   16
+  ],
+  "relativeFilePath": "RecordCtor.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LongParams",
+  "filePath": "LongParams.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "LongParams.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RecordCtor",
+  "filePath": "RecordCtor.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "RecordCtor.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImplicitCtor",
+  "filePath": "RecordCtor.java",
+  "lineNumbers": [
+   16
+  ],
+  "relativeFilePath": "RecordCtor.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "LongParams",
+  "filePath": "LongParams.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "LongParams.java",
+  "smellName": "Lazy Class"
  }
 ]
