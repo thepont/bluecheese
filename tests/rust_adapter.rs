@@ -141,16 +141,23 @@ fn partitions_a_mixed_tree_by_language() {
         .filter(|(path, _, _)| path.ends_with(".java"))
         .collect();
 
-    // The Rust side is exactly the sample; the Java side is the full SmellBench
-    // set, which `parity.rs` already checks against the golden report.
-    assert_eq!(rust.len(), 1);
+    // Nothing crosses over: every finding is attributed to a file an adapter of
+    // the same language claimed, and the two sets together are all of them.
     assert!(
         rust.iter()
             .all(|(path, class, _)| path == "rust/sample.rs" && class == "Analyzer")
     );
-    assert_eq!(java.len(), 12);
     assert!(
-        java.iter()
-            .all(|(path, _, _)| path.starts_with("smellbench/"))
+        java.iter().all(|(path, _, _)| !path.starts_with("rust/")),
+        "a Rust file must not produce a Java finding"
+    );
+    assert_eq!(rust.len(), 1, "the Rust fixture holds exactly one long method");
+    assert_eq!(
+        &java
+            .union(&rust)
+            .cloned()
+            .collect::<BTreeSet<(String, String, Vec<usize>)>>(),
+        &keys(&findings),
+        "every finding is either Rust or Java; none is produced twice or dropped"
     );
 }
