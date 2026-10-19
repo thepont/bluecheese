@@ -96,6 +96,28 @@ fn changed_return_expression_is_not_a_clone() {
 }
 
 #[test]
+fn recursive_expression_shapes_preserve_the_depth_boundary() {
+    let binary = |levels| (0..levels).fold("input".to_owned(), |value, _| format!("({value} + 1)"));
+    for (expression, expected) in [
+        (format!("{}input{}", "(".repeat(48), ")".repeat(48)), 2),
+        (format!("{}input{}", "(".repeat(49), ")".repeat(49)), 0),
+        (format!("{}input", "! ".repeat(48)), 2),
+        (format!("{}input", "! ".repeat(49)), 0),
+        (binary(24), 2),
+        (binary(25), 0),
+    ] {
+        let source = format!(
+            "function calculate(input) {{ const first = {expression}; const second = first; return second; }}"
+        );
+        assert_eq!(
+            scan(&[("depth.js", &source), ("depth.ts", &source)]).len(),
+            expected,
+            "{expression}"
+        );
+    }
+}
+
+#[test]
 fn reports_partner_locations_without_comparing_source_comments() {
     let findings = scan(&[("Calculator.java", JAVA), ("calculator.ts", TS)]);
     assert_eq!(findings.len(), 2);
