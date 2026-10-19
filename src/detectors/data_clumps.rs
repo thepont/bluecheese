@@ -176,11 +176,9 @@ fn collect_argument_calls(
 
 fn repeated_executable_groups(calls: ExecutableCalls) -> BTreeMap<Vec<String>, Vec<usize>> {
     let mut repeated = BTreeMap::<Vec<String>, Vec<usize>>::new();
-    for ((_, variables), mut lines) in calls {
+    for ((_, variables), lines) in calls {
         if lines.len() >= 2 {
-            lines.sort_unstable();
-            lines.dedup();
-            repeated.insert(variables, lines);
+            repeated.insert(variables, ordered_lines(lines));
         }
     }
     repeated
@@ -194,13 +192,17 @@ fn repeated_type_groups(
         let has_constructor = calls.iter().any(|(_, constructor)| *constructor);
         let has_method_call = calls.iter().any(|(_, constructor)| !constructor);
         if has_constructor && has_method_call {
-            let mut lines: Vec<_> = calls.into_iter().map(|(line, _)| line).collect();
-            lines.sort_unstable();
-            lines.dedup();
-            repeated.insert(variables, lines);
+            let lines: Vec<_> = calls.into_iter().map(|(line, _)| line).collect();
+            repeated.insert(variables, ordered_lines(lines));
         }
     }
     repeated
+}
+
+fn ordered_lines(mut lines: Vec<usize>) -> Vec<usize> {
+    lines.sort_unstable();
+    lines.dedup();
+    lines
 }
 
 fn findings_for_groups(
