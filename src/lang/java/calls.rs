@@ -92,6 +92,10 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
 }
 
 impl<'a> Project<'a> {
+    fn type_resolver(&self) -> TypeResolver<'_, 'a> {
+        TypeResolver { types: &self.types }
+    }
+
     fn new(files: &'a [SourceFile]) -> Self {
         let mut types = Vec::new();
         for file in files
@@ -143,7 +147,7 @@ impl<'a> Project<'a> {
                         named_children(params)
                             .into_iter()
                             .filter_map(|p| p.child_by_field_name("type"))
-                            .map(|p| project.type_name(owner, ty.file.text(p)))
+                            .map(|p| project.type_resolver().type_name(owner, ty.file.text(p)))
                             .collect()
                     })
                     .unwrap_or_default();
@@ -158,6 +162,237 @@ impl<'a> Project<'a> {
         project
     }
 
+    fn interface_contract(&self, method: &Method<'_>) -> bool {
+        self.type_resolver()
+            .hierarchy(method.owner)
+            .into_iter()
+            .any(|owner| {
+                self.types[owner].node.kind() == "interface_declaration"
+                    && self.methods.iter().any(|other| {
+                        other.owner == owner
+                            && other.name == method.name
+                            && other.parameters == method.parameters
+                    })
+            })
+    }
+
+    fn resolve_call(&self, site: CallSite<'a>, call: Node<'a>) -> Option<usize> {
+        if site.depth > 24 {
+            return None;
+        }
+        let owner = site.owner;
+        let file = self.types[owner].file;
+        let name = file.text(call.child_by_field_name("name")?);
+        let receiver = if let Some(object) = call.child_by_field_name("object") {
+            self.expression_type(site.deeper(), object)?
+        } else {
+            self.types[owner].qualified.clone()
+        };
+        let receiver = self.type_resolver().type_index(&receiver)?;
+        let arguments = named_children(call.child_by_field_name("arguments")?);
+        let argument_types: Vec<_> = arguments
+            .into_iter()
+            .map(|arg| self.expression_type(site.deeper(), arg))
+            .collect();
+        let mut best = None;
+        let mut ambiguous = false;
+        let mut signatures = BTreeSet::new();
+        for target_owner in self.type_resolver().hierarchy(receiver) {
+            for (index, target) in self.methods.iter().enumerate().filter(|(_, m)| {
+                m.owner == target_owner
+                    && m.name == name
+                    && m.parameters.len() == argument_types.len()
+            }) {
+                if !signatures.insert(target.parameters.clone()) {
+                    continue;
+                }
+                let Some(score) = self.argument_score(&target.parameters, &argument_types) else {
+                    continue;
+                };
+                if best.is_some_and(|(_, previous)| score == previous) {
+                    ambiguous = true;
+                } else if best.is_none_or(|(_, previous)| score > previous) {
+                    best = Some((index, score));
+                    ambiguous = false;
+                }
+            }
+        }
+        if ambiguous {
+            None
+        } else {
+            best.map(|(index, _)| index)
+        }
+    }
+
+    fn argument_score(&self, parameters: &[String], arguments: &[Option<String>]) -> Option<usize> {
+        let mut score = 0;
+        for (parameter, argument) in parameters.iter().zip(arguments) {
+            let Some(argument) = argument else { continue };
+            if parameter == argument {
+                score += 2;
+            } else if self
+                .type_resolver()
+                .type_index(argument)
+                .is_some_and(|owner| {
+                    self.type_resolver()
+                        .hierarchy(owner)
+                        .iter()
+                        .any(|p| self.types[*p].qualified == *parameter)
+                })
+                || numeric_widening(argument, parameter)
+                || (argument == "null" && !is_primitive(parameter))
+            {
+                score += 1;
+            } else {
+                return None;
+            }
+        }
+        Some(score)
+    }
+
+    fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+        if site.depth > 24 {
+            return None;
+        }
+        let readers: &[(&str, ExpressionReader<'a>)] = &[
+            ("scoped_identifier", Self::qualified_expression_type),
+            ("this", Self::receiver_expression_type),
+            ("super", Self::receiver_expression_type),
+            ("identifier", Self::identifier_expression_type),
+            ("object_creation_expression", Self::declared_expression_type),
+            ("cast_expression", Self::declared_expression_type),
+            (
+                "parenthesized_expression",
+                Self::parenthesized_expression_type,
+            ),
+            ("field_access", Self::field_expression_type),
+            ("method_invocation", Self::call_expression_type),
+        ];
+        if let Some((_, read)) = readers.iter().find(|(kind, _)| *kind == expression.kind()) {
+            read(self, site, expression)
+        } else {
+            literal_type(self.types[site.owner].file, expression)
+        }
+    }
+
+    fn qualified_expression_type(
+        &self,
+        site: CallSite<'a>,
+        expression: Node<'a>,
+    ) -> Option<String> {
+        let name = self
+            .type_resolver()
+            .type_name(site.owner, self.types[site.owner].file.text(expression));
+        self.type_resolver().type_index(&name).map(|_| name)
+    }
+
+    fn receiver_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+        if expression.kind() == "this" {
+            Some(self.types[site.owner].qualified.clone())
+        } else {
+            self.type_resolver()
+                .parents(site.owner)
+                .first()
+                .map(|p| self.types[*p].qualified.clone())
+        }
+    }
+
+    fn identifier_expression_type(
+        &self,
+        site: CallSite<'a>,
+        expression: Node<'a>,
+    ) -> Option<String> {
+        self.variable_type(site.deeper(), expression)
+            .or_else(|| self.qualified_expression_type(site, expression))
+    }
+
+    fn declared_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+        expression.child_by_field_name("type").map(|n| {
+            self.type_resolver()
+                .type_name(site.owner, self.types[site.owner].file.text(n))
+        })
+    }
+
+    fn parenthesized_expression_type(
+        &self,
+        site: CallSite<'a>,
+        expression: Node<'a>,
+    ) -> Option<String> {
+        named_children(expression)
+            .first()
+            .and_then(|n| self.expression_type(site.deeper(), *n))
+    }
+
+    fn call_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+        let target = &self.methods[self.resolve_call(site.deeper(), expression)?];
+        let file = self.types[target.owner].file;
+        target
+            .node
+            .child_by_field_name("type")
+            .map(|n| self.type_resolver().type_name(target.owner, file.text(n)))
+    }
+
+    fn field_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+        let owner = site.owner;
+        let file = self.types[owner].file;
+        let qualified = self.type_resolver().type_name(owner, file.text(expression));
+        if self.type_resolver().type_index(&qualified).is_some() {
+            return Some(qualified);
+        }
+        let object = expression.child_by_field_name("object")?;
+        let receiver = self.expression_type(site.deeper(), object)?;
+        let target_owner = self.type_resolver().type_index(&receiver)?;
+        self.type_resolver().field_type(
+            target_owner,
+            file.text(expression.child_by_field_name("field")?),
+        )
+    }
+
+    fn variable_type(&self, site: CallSite<'a>, usage: Node<'a>) -> Option<String> {
+        let owner = site.owner;
+        let file = self.types[owner].file;
+        let name = file.text(usage);
+        let mut scope = usage.parent();
+        while let Some(block) = scope {
+            let candidate = descendants(block)
+                .into_iter()
+                .filter(|n| {
+                    matches!(
+                        n.kind(),
+                        "local_variable_declaration"
+                            | "formal_parameter"
+                            | "catch_formal_parameter"
+                            | "enhanced_for_statement"
+                    ) && n.start_byte() < usage.start_byte()
+                        && binding_scope(*n).is_some_and(|s| s.id() == block.id())
+                })
+                .filter(|n| declares(file, *n, name))
+                .max_by_key(|n| n.start_byte());
+            if let Some(binding) = candidate {
+                let declared = binding.child_by_field_name("type")?;
+                if file.text(declared) != "var" {
+                    return Some(self.type_resolver().type_name(owner, file.text(declared)));
+                }
+                return descendants(binding)
+                    .into_iter()
+                    .find(|n| n.kind() == "variable_declarator")
+                    .and_then(|n| n.child_by_field_name("value"))
+                    .and_then(|value| self.expression_type(site.deeper(), value));
+            }
+            if block.id() == site.method.id() {
+                break;
+            }
+            scope = block.parent();
+        }
+        self.type_resolver().field_type(owner, name)
+    }
+}
+
+struct TypeResolver<'index, 'source> {
+    types: &'index [Type<'source>],
+}
+
+impl<'a> TypeResolver<'_, 'a> {
     fn type_index(&self, name: &str) -> Option<usize> {
         let mut matches = self
             .types
@@ -242,219 +477,6 @@ impl<'a> Project<'a> {
             }
         }
         result
-    }
-
-    fn interface_contract(&self, method: &Method<'_>) -> bool {
-        self.hierarchy(method.owner).into_iter().any(|owner| {
-            self.types[owner].node.kind() == "interface_declaration"
-                && self.methods.iter().any(|other| {
-                    other.owner == owner
-                        && other.name == method.name
-                        && other.parameters == method.parameters
-                })
-        })
-    }
-
-    fn resolve_call(&self, site: CallSite<'a>, call: Node<'a>) -> Option<usize> {
-        if site.depth > 24 {
-            return None;
-        }
-        let owner = site.owner;
-        let file = self.types[owner].file;
-        let name = file.text(call.child_by_field_name("name")?);
-        let receiver = if let Some(object) = call.child_by_field_name("object") {
-            self.expression_type(site.deeper(), object)?
-        } else {
-            self.types[owner].qualified.clone()
-        };
-        let receiver = self.type_index(&receiver)?;
-        let arguments = named_children(call.child_by_field_name("arguments")?);
-        let argument_types: Vec<_> = arguments
-            .into_iter()
-            .map(|arg| self.expression_type(site.deeper(), arg))
-            .collect();
-        let mut best = None;
-        let mut ambiguous = false;
-        let mut signatures = BTreeSet::new();
-        for target_owner in self.hierarchy(receiver) {
-            for (index, target) in self.methods.iter().enumerate().filter(|(_, m)| {
-                m.owner == target_owner
-                    && m.name == name
-                    && m.parameters.len() == argument_types.len()
-            }) {
-                if !signatures.insert(target.parameters.clone()) {
-                    continue;
-                }
-                let Some(score) = self.argument_score(&target.parameters, &argument_types) else {
-                    continue;
-                };
-                if best.is_some_and(|(_, previous)| score == previous) {
-                    ambiguous = true;
-                } else if best.is_none_or(|(_, previous)| score > previous) {
-                    best = Some((index, score));
-                    ambiguous = false;
-                }
-            }
-        }
-        if ambiguous {
-            None
-        } else {
-            best.map(|(index, _)| index)
-        }
-    }
-
-    fn argument_score(&self, parameters: &[String], arguments: &[Option<String>]) -> Option<usize> {
-        let mut score = 0;
-        for (parameter, argument) in parameters.iter().zip(arguments) {
-            let Some(argument) = argument else { continue };
-            if parameter == argument {
-                score += 2;
-            } else if self.type_index(argument).is_some_and(|owner| {
-                self.hierarchy(owner)
-                    .iter()
-                    .any(|p| self.types[*p].qualified == *parameter)
-            }) || numeric_widening(argument, parameter)
-                || (argument == "null" && !is_primitive(parameter))
-            {
-                score += 1;
-            } else {
-                return None;
-            }
-        }
-        Some(score)
-    }
-
-    fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        if site.depth > 24 {
-            return None;
-        }
-        let readers: &[(&str, ExpressionReader<'a>)] = &[
-            ("scoped_identifier", Self::qualified_expression_type),
-            ("this", Self::receiver_expression_type),
-            ("super", Self::receiver_expression_type),
-            ("identifier", Self::identifier_expression_type),
-            ("object_creation_expression", Self::declared_expression_type),
-            ("cast_expression", Self::declared_expression_type),
-            (
-                "parenthesized_expression",
-                Self::parenthesized_expression_type,
-            ),
-            ("field_access", Self::field_expression_type),
-            ("method_invocation", Self::call_expression_type),
-        ];
-        if let Some((_, read)) = readers.iter().find(|(kind, _)| *kind == expression.kind()) {
-            read(self, site, expression)
-        } else {
-            literal_type(self.types[site.owner].file, expression)
-        }
-    }
-
-    fn qualified_expression_type(
-        &self,
-        site: CallSite<'a>,
-        expression: Node<'a>,
-    ) -> Option<String> {
-        let name = self.type_name(site.owner, self.types[site.owner].file.text(expression));
-        self.type_index(&name).map(|_| name)
-    }
-
-    fn receiver_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        if expression.kind() == "this" {
-            Some(self.types[site.owner].qualified.clone())
-        } else {
-            self.parents(site.owner)
-                .first()
-                .map(|p| self.types[*p].qualified.clone())
-        }
-    }
-
-    fn identifier_expression_type(
-        &self,
-        site: CallSite<'a>,
-        expression: Node<'a>,
-    ) -> Option<String> {
-        self.variable_type(site.deeper(), expression)
-            .or_else(|| self.qualified_expression_type(site, expression))
-    }
-
-    fn declared_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        expression
-            .child_by_field_name("type")
-            .map(|n| self.type_name(site.owner, self.types[site.owner].file.text(n)))
-    }
-
-    fn parenthesized_expression_type(
-        &self,
-        site: CallSite<'a>,
-        expression: Node<'a>,
-    ) -> Option<String> {
-        named_children(expression)
-            .first()
-            .and_then(|n| self.expression_type(site.deeper(), *n))
-    }
-
-    fn call_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        let target = &self.methods[self.resolve_call(site.deeper(), expression)?];
-        let file = self.types[target.owner].file;
-        target
-            .node
-            .child_by_field_name("type")
-            .map(|n| self.type_name(target.owner, file.text(n)))
-    }
-
-    fn field_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        let owner = site.owner;
-        let file = self.types[owner].file;
-        let qualified = self.type_name(owner, file.text(expression));
-        if self.type_index(&qualified).is_some() {
-            return Some(qualified);
-        }
-        let object = expression.child_by_field_name("object")?;
-        let receiver = self.expression_type(site.deeper(), object)?;
-        let target_owner = self.type_index(&receiver)?;
-        self.field_type(
-            target_owner,
-            file.text(expression.child_by_field_name("field")?),
-        )
-    }
-
-    fn variable_type(&self, site: CallSite<'a>, usage: Node<'a>) -> Option<String> {
-        let owner = site.owner;
-        let file = self.types[owner].file;
-        let name = file.text(usage);
-        let mut scope = usage.parent();
-        while let Some(block) = scope {
-            let candidate = descendants(block)
-                .into_iter()
-                .filter(|n| {
-                    matches!(
-                        n.kind(),
-                        "local_variable_declaration"
-                            | "formal_parameter"
-                            | "catch_formal_parameter"
-                            | "enhanced_for_statement"
-                    ) && n.start_byte() < usage.start_byte()
-                        && binding_scope(*n).is_some_and(|s| s.id() == block.id())
-                })
-                .filter(|n| declares(file, *n, name))
-                .max_by_key(|n| n.start_byte());
-            if let Some(binding) = candidate {
-                let declared = binding.child_by_field_name("type")?;
-                if file.text(declared) != "var" {
-                    return Some(self.type_name(owner, file.text(declared)));
-                }
-                return descendants(binding)
-                    .into_iter()
-                    .find(|n| n.kind() == "variable_declarator")
-                    .and_then(|n| n.child_by_field_name("value"))
-                    .and_then(|value| self.expression_type(site.deeper(), value));
-            }
-            if block.id() == site.method.id() {
-                break;
-            }
-            scope = block.parent();
-        }
-        self.field_type(owner, name)
     }
 
     fn field_type(&self, owner: usize, name: &str) -> Option<String> {
