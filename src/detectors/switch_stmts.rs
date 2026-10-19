@@ -150,4 +150,10 @@ fn is_enum_comparison(file: &SourceFile, branch: tree_sitter::Node<'_>) -> bool 
 fn is_switch(file: &SourceFile, kind: &str) -> bool {
     (file.language == crate::lang::LanguageId::Java && kind == "switch_expression")
         || (file.language == crate::lang::LanguageId::Rust && kind == "match_expression")
+        || (matches!(
+            file.language,
+            crate::lang::LanguageId::JavaScript
+                | crate::lang::LanguageId::TypeScript
+                | crate::lang::LanguageId::Tsx
+        ) && kind == "switch_statement")
 }
