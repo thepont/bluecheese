@@ -21,7 +21,8 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
         .flat_map(|file| match file.language {
             LanguageId::Java => java_findings(file),
             LanguageId::Rust => rust_findings(file),
-            _ => Vec::new(),
+            LanguageId::TypeScript | LanguageId::Tsx => typescript_findings(file),
+            LanguageId::JavaScript => javascript_findings(file),
         })
         .collect()
 }
@@ -162,6 +163,180 @@ fn rust_extension_method(file: &SourceFile, method: Node<'_>) -> bool {
                 .child_by_field_name("function")
                 .is_some_and(|function| file.text(function).trim_start().starts_with("self."))
     })
+}
+
+fn typescript_findings(file: &SourceFile) -> Vec<Finding> {
+    let imports = ecma_named_imports(file);
+    let runtime_patches = ecma_prototype_patches(file);
+    descendants(file.root())
+        .into_iter()
+        .filter(|node| node.kind() == "ambient_declaration")
+        .flat_map(|ambient| {
+            let Some(module) = descendants(ambient)
+                .into_iter()
+                .find(|node| node.kind() == "module")
+            else {
+                return Vec::new();
+            };
+            let Some(module_name) = module
+                .child_by_field_name("name")
+                .map(|name| unquote(file.text(name)).to_owned())
+            else {
+                return Vec::new();
+            };
+            descendants(module)
+                .into_iter()
+                .filter(|node| node.kind() == "interface_declaration")
+                .filter_map(|interface| {
+                    let name = interface
+                        .child_by_field_name("name")
+                        .map(|n| file.text(n))?;
+                    let Some(bindings) = imports.get(&module_name) else {
+                        return None;
+                    };
+                    let local_name = bindings
+                        .iter()
+                        .find(|(imported, local)| {
+                            imported == name && runtime_patches.contains_key(local)
+                        })
+                        .map(|(_, local)| local)?;
+                    let signatures = descendants(interface)
+                        .into_iter()
+                        .filter(|node| node.kind() == "method_signature")
+                        .count();
+                    let patches = runtime_patches.get(local_name)?;
+                    if signatures < MIN_EXTENSIONS || patches.len() < MIN_EXTENSIONS {
+                        return None;
+                    }
+                    Some(Finding {
+                        smell_name: SMELL_NAME.to_owned(),
+                        file_path: file.rel.clone(),
+                        class_name: name.to_owned(),
+                        line_numbers: patches.values().copied().collect(),
+                        relative_file_path: file.rel.clone(),
+                        additional_info: format!(
+                            "{} module-augmented methods and runtime patches for {} from {}",
+                            patches.len(),
+                            name,
+                            module_name
+                        ),
+                    })
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+fn javascript_findings(file: &SourceFile) -> Vec<Finding> {
+    let imports = ecma_named_imports(file);
+    let patches = ecma_prototype_patches(file);
+    let mut findings = Vec::new();
+    for (module, bindings) in imports {
+        for (name, local_name) in bindings {
+            let Some(methods) = patches.get(&local_name) else {
+                continue;
+            };
+            if methods.len() < MIN_EXTENSIONS {
+                continue;
+            }
+            findings.push(Finding {
+                smell_name: SMELL_NAME.to_owned(),
+                file_path: file.rel.clone(),
+                class_name: name.clone(),
+                line_numbers: methods.values().copied().collect(),
+                relative_file_path: file.rel.clone(),
+                additional_info: format!(
+                    "{} prototype methods patch imported type {} from {}",
+                    methods.len(),
+                    name,
+                    module
+                ),
+            });
+        }
+    }
+    findings
+}
+
+fn ecma_named_imports(file: &SourceFile) -> BTreeMap<String, Vec<(String, String)>> {
+    let mut imports = BTreeMap::<String, Vec<(String, String)>>::new();
+    for statement in descendants(file.root())
+        .into_iter()
+        .filter(|node| node.kind() == "import_statement")
+    {
+        let Some(source) = statement.child_by_field_name("source") else {
+            continue;
+        };
+        let module = unquote(file.text(source)).to_owned();
+        for specifier in descendants(statement)
+            .into_iter()
+            .filter(|node| node.kind() == "import_specifier")
+        {
+            let (Some(imported), Some(local)) = (
+                specifier.child_by_field_name("name"),
+                specifier
+                    .child_by_field_name("alias")
+                    .or_else(|| specifier.child_by_field_name("name")),
+            ) else {
+                continue;
+            };
+            imports
+                .entry(module.clone())
+                .or_default()
+                .push((file.text(imported).to_owned(), file.text(local).to_owned()));
+        }
+    }
+    imports
+}
+
+fn ecma_prototype_patches(file: &SourceFile) -> BTreeMap<String, BTreeMap<String, usize>> {
+    let mut patches = BTreeMap::<String, BTreeMap<String, usize>>::new();
+    for assignment in descendants(file.root())
+        .into_iter()
+        .filter(|node| node.kind() == "assignment_expression")
+    {
+        let (Some(left), Some(right)) = (
+            assignment.child_by_field_name("left"),
+            assignment.child_by_field_name("right"),
+        ) else {
+            continue;
+        };
+        if !matches!(right.kind(), "function_expression" | "arrow_function")
+            || left.kind() != "member_expression"
+        {
+            continue;
+        }
+        let (Some(method), Some(prototype)) = (
+            left.child_by_field_name("property"),
+            left.child_by_field_name("object"),
+        ) else {
+            continue;
+        };
+        if prototype.kind() != "member_expression"
+            || prototype
+                .child_by_field_name("property")
+                .is_none_or(|property| file.text(property) != "prototype")
+        {
+            continue;
+        }
+        let Some(receiver) = prototype.child_by_field_name("object") else {
+            continue;
+        };
+        if receiver.kind() != "identifier" {
+            continue;
+        }
+        patches
+            .entry(file.text(receiver).to_owned())
+            .or_default()
+            .entry(file.text(method).to_owned())
+            .or_insert(assignment.start_position().row + 1);
+    }
+    patches
+}
+
+fn unquote(text: &str) -> &str {
+    text.strip_prefix(['\'', '"', '`'])
+        .and_then(|text| text.strip_suffix(['\'', '"', '`']))
+        .unwrap_or(text)
 }
 
 fn imported_types(file: &SourceFile) -> BTreeSet<String> {

@@ -98,3 +98,58 @@ fn ignores_rust_local_type_extensions_and_single_method_traits() {
             .is_empty()
     );
 }
+
+#[test]
+fn reports_typescript_module_augmentations_with_runtime_patches() {
+    let file = parse(
+        "observable.ts",
+        "import { Observable as RxObservable } from 'rxjs';\n\
+         declare module 'rxjs' {\n\
+             interface Observable<T> {\n\
+                 map<U>(fn: (value: T) => U): Observable<U>;\n\
+                 filter(predicate: (value: T) => boolean): Observable<T>;\n\
+             }\n\
+         }\n\
+         RxObservable.prototype.map = function(fn) { return this; };\n\
+         RxObservable.prototype.filter = function(predicate) { return this; };",
+    );
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].class_name, "Observable");
+    assert!(findings[0].additional_info.contains("rxjs"));
+}
+
+#[test]
+fn ignores_typescript_declarations_without_multiple_runtime_patches() {
+    let file = parse(
+        "observable.ts",
+        "import { Observable } from 'rxjs';\n\
+         declare module 'rxjs' {\n\
+             interface Observable<T> { map<U>(fn: (value: T) => U): Observable<U>; }\n\
+         }\n\
+         Observable.prototype.map = function(fn) { return this; };",
+    );
+
+    assert!(
+        bluecheese::detect(&[file], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn reports_javascript_imports_with_repeated_prototype_patches() {
+    let file = parse(
+        "observable.js",
+        "import { Observable } from 'rxjs';\n\
+         Observable.prototype.map = function(fn) { return this; };\n\
+         Observable.prototype.filter = function(predicate) { return this; };",
+    );
+
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].class_name, "Observable");
+    assert!(findings[0].additional_info.contains("rxjs"));
+}

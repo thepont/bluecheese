@@ -164,6 +164,60 @@ fn incomplete_library_class_can_be_requested_from_the_cli() {
 }
 
 #[test]
+fn incomplete_library_class_finds_rust_and_ecmascript_extensions_from_the_cli() {
+    let tree = TempTree::new("incomplete-library-class-languages-cli");
+    tree.write(
+        "date_helpers.rs",
+        "use chrono::DateTime;\n\
+         trait DateTimeExt { fn first(&self); fn second(&self); }\n\
+         impl DateTimeExt for DateTime {\n\
+             fn first(&self) { self.day(); }\n\
+             fn second(&self) { self.month(); }\n\
+         }",
+    );
+    tree.write(
+        "observable.ts",
+        "import { Observable } from 'rxjs';\n\
+         declare module 'rxjs' {\n\
+             interface Observable<T> { map<U>(fn: (value: T) => U): Observable<U>; filter(predicate: (value: T) => boolean): Observable<T>; }\n\
+         }\n\
+         Observable.prototype.map = function(fn) { return this; };\n\
+         Observable.prototype.filter = function(predicate) { return this; };",
+    );
+    tree.write(
+        "observable.js",
+        "import { Stream } from 'stream-lib';\n\
+         Stream.prototype.map = function(fn) { return this; };\n\
+         Stream.prototype.filter = function(predicate) { return this; };",
+    );
+
+    let output = run_smell(tree.path(), "incomp-lib-class", &[]);
+
+    assert!(
+        output.status.success(),
+        "stderr was: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).expect("JSON findings");
+    assert_eq!(findings.len(), 3, "findings: {findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "DateTimeExt")
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "Observable")
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "Stream")
+    );
+}
+
+#[test]
 fn switch_statements_can_be_requested_from_the_cli() {
     let output = run_smell(&fixtures().join("smelly"), "switch-stmts", &[]);
 
