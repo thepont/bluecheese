@@ -1,0 +1,5336 @@
+[
+ {
+  "additionalInfo": "",
+  "className": "ImageBuffer",
+  "filePath": "main/java/comments/case8/CBE8.java",
+  "lineNumbers": [
+   57,
+   74
+  ],
+  "relativeFilePath": "main/java/comments/case8/CBE8.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageBufferVariation",
+  "filePath": "main/java/comments/case8/CGE8.java",
+  "lineNumbers": [
+   57,
+   74
+  ],
+  "relativeFilePath": "main/java/comments/case8/CGE8.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FlightBookingBad",
+  "filePath": "main/java/dataclumps/case1/DCBE1.java",
+  "lineNumbers": [
+   48,
+   40,
+   30
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCBE1.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CompareWeatherPatternsBad",
+  "filePath": "main/java/dataclumps/case2/DCBE2.java",
+  "lineNumbers": [
+   56,
+   44
+  ],
+  "relativeFilePath": "main/java/dataclumps/case2/DCBE2.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "InterestCalculatorBad",
+  "filePath": "main/java/dataclumps/case3/DCBE3.java",
+  "lineNumbers": [
+   55,
+   59
+  ],
+  "relativeFilePath": "main/java/dataclumps/case3/DCBE3.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagement",
+  "filePath": "main/java/dataclumps/case4/DCBE4.java",
+  "lineNumbers": [
+   18,
+   38,
+   28
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCBE4.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MongoDBConnectorVariation",
+  "filePath": "main/java/dataclumps/case5/DCBE5.java",
+  "lineNumbers": [
+   16,
+   38,
+   28
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCBE5.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CreditCardGood",
+  "filePath": "main/java/longmethod/case1/LMGE1.java",
+  "lineNumbers": [
+   87,
+   106
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMGE1.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LawsOfMotionGood",
+  "filePath": "main/java/longmethod/case2/LMGE2.java",
+  "lineNumbers": [
+   35,
+   43,
+   13,
+   47
+  ],
+  "relativeFilePath": "main/java/longmethod/case2/LMGE2.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AttendanceManagerGood",
+  "filePath": "main/java/messagechains/case2/MCGE2.java",
+  "lineNumbers": [
+   34,
+   20,
+   29
+  ],
+  "relativeFilePath": "main/java/messagechains/case2/MCGE2.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CheckProcessor",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   80,
+   92
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CheckProcessorGood",
+  "filePath": "main/java/shotgun/case3/SSGE3.java",
+  "lineNumbers": [
+   104,
+   92
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSGE3.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "Variables: mass, time",
+  "className": "LMGE2",
+  "filePath": "main/java/longmethod/case2/LMGE2.java",
+  "lineNumbers": [
+   17,
+   19,
+   20
+  ],
+  "relativeFilePath": "main/java/longmethod/case2/LMGE2.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "Variables: host, password, port, username",
+  "className": "DCBE5",
+  "filePath": "main/java/dataclumps/case5/DCBE5.java",
+  "lineNumbers": [
+   40,
+   47
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCBE5.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "Variables: principal, rate, time",
+  "className": "DCBE3",
+  "filePath": "main/java/dataclumps/case3/DCBE3.java",
+  "lineNumbers": [
+   45,
+   51
+  ],
+  "relativeFilePath": "main/java/dataclumps/case3/DCBE3.java",
+  "smellName": "Data Clumps"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   241
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PawnGood",
+  "filePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "lineNumbers": [
+   153
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColor",
+  "filePath": "main/java/comments/case4/CBE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case4/CBE4.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColorVariation",
+  "filePath": "main/java/comments/case4/CGE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case4/CGE4.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "macOSSystem",
+  "filePath": "main/java/comments/case5/CBE5.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case5/CBE5.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "macOSSystemVariation",
+  "filePath": "main/java/comments/case5/CGE5.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case5/CGE5.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "iOSSystem",
+  "filePath": "main/java/comments/case6/CBE6.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case6/CBE6.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "iOSSystemVariation",
+  "filePath": "main/java/comments/case6/CGE6.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case6/CGE6.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FlightBookingBad",
+  "filePath": "main/java/dataclumps/case1/DCBE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCBE1.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonBad",
+  "filePath": "main/java/largeclass/case1/LCBE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCBE1.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Employee",
+  "filePath": "main/java/largeclass/case3/LCBE3.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCBE3.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFriday",
+  "filePath": "main/java/longparams/case4/LPLBE4.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLBE4.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFridayVariation",
+  "filePath": "main/java/longparams/case4/LPLGE4.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLGE4.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "HealthRecordBad",
+  "filePath": "main/java/primobsession/case1/POBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POBE1.java",
+  "smellName": "Large Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   275
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PawnGood",
+  "filePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "lineNumbers": [
+   177
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageModel",
+  "filePath": "main/java/comments/case8/CBE8.java",
+  "lineNumbers": [
+   133
+  ],
+  "relativeFilePath": "main/java/comments/case8/CBE8.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartService",
+  "filePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "lineNumbers": [
+   75,
+   125
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SignalProcessor",
+  "filePath": "main/java/featureenvy/case2/FEBE2.java",
+  "lineNumbers": [
+   114
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEBE2.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RemoteControllerVariation",
+  "filePath": "main/java/featureenvy/case2/FEGE2.java",
+  "lineNumbers": [
+   50
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEGE2.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CreditCardBad",
+  "filePath": "main/java/longmethod/case1/LMBE1.java",
+  "lineNumbers": [
+   87
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMBE1.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TextAnalyzer",
+  "filePath": "main/java/longmethod/case3/LMBE3.java",
+  "lineNumbers": [
+   16
+  ],
+  "relativeFilePath": "main/java/longmethod/case3/LMBE3.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AirportTerminal",
+  "filePath": "main/java/longmethod/case4/LMBE4.java",
+  "lineNumbers": [
+   64
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMBE4.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CosmeticLab",
+  "filePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "lineNumbers": [
+   39
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PolynomialSolver",
+  "filePath": "main/java/tempfield/case3/TFBE3.java",
+  "lineNumbers": [
+   62
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFBE3.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CubicSolver",
+  "filePath": "main/java/tempfield/case3/TFGE3.java",
+  "lineNumbers": [
+   18
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFGE3.java",
+  "smellName": "Long Method"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FlightBookingBad",
+  "filePath": "main/java/dataclumps/case1/DCBE1.java",
+  "lineNumbers": [
+   30,
+   40,
+   48,
+   17
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCBE1.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagement",
+  "filePath": "main/java/dataclumps/case4/DCBE4.java",
+  "lineNumbers": [
+   14,
+   48
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCBE4.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagementVariation",
+  "filePath": "main/java/dataclumps/case4/DCGE4.java",
+  "lineNumbers": [
+   28
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCGE4.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MongoDBConnectorVariation",
+  "filePath": "main/java/dataclumps/case5/DCBE5.java",
+  "lineNumbers": [
+   38,
+   16,
+   28
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCBE5.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonBad",
+  "filePath": "main/java/largeclass/case1/LCBE1.java",
+  "lineNumbers": [
+   28
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCBE1.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Employee",
+  "filePath": "main/java/largeclass/case3/LCBE3.java",
+  "lineNumbers": [
+   19,
+   34,
+   51
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCBE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EmployeeVariation",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   18
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SecurityEmployeeVariation",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   55
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Manager",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   95
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Employee",
+  "filePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "lineNumbers": [
+   15
+  ],
+  "relativeFilePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Security",
+  "filePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "lineNumbers": [
+   79
+  ],
+  "relativeFilePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EmployeeVariation",
+  "filePath": "main/java/lazyclass/case4/LZCGE4.java",
+  "lineNumbers": [
+   16,
+   27
+  ],
+  "relativeFilePath": "main/java/lazyclass/case4/LZCGE4.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonBad",
+  "filePath": "main/java/longparams/case1/LPLBE1.java",
+  "lineNumbers": [
+   43
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLBE1.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShoppingCartBad",
+  "filePath": "main/java/longparams/case2/LPLBE2.java",
+  "lineNumbers": [
+   72
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLBE2.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TriangleBad",
+  "filePath": "main/java/longparams/case3/LPLBE3.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/longparams/case3/LPLBE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFriday",
+  "filePath": "main/java/longparams/case4/LPLBE4.java",
+  "lineNumbers": [
+   47
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLBE4.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shipment",
+  "filePath": "main/java/longparams/case5/LPLBE5.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/longparams/case5/LPLBE5.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shipment",
+  "filePath": "main/java/longparams/case6/LPLBE6.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/longparams/case6/LPLBE6.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LegoPart",
+  "filePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "lineNumbers": [
+   49
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LegoPartGood",
+  "filePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "lineNumbers": [
+   76
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "smellName": "Long Parameter List"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "King",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   73
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Knight",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   157
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   242
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   419
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   499
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SimplePersona",
+  "filePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "lineNumbers": [
+   24
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SimpleAvatar",
+  "filePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SimplePersonaGood",
+  "filePath": "main/java/altclasses/case3/ACDIGE3.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderBad",
+  "filePath": "main/java/comments/case1/CBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case1/CBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderGood",
+  "filePath": "main/java/comments/case1/CGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case1/CGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "UserAddressBad",
+  "filePath": "main/java/comments/case3/CBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case3/CBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColor",
+  "filePath": "main/java/comments/case4/CBE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case4/CBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColorVariation",
+  "filePath": "main/java/comments/case4/CGE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case4/CGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "macOSSystem",
+  "filePath": "main/java/comments/case5/CBE5.java",
+  "lineNumbers": [
+   3,
+   6,
+   7,
+   8,
+   10,
+   11,
+   12
+  ],
+  "relativeFilePath": "main/java/comments/case5/CBE5.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "macOSSystemVariation",
+  "filePath": "main/java/comments/case5/CGE5.java",
+  "lineNumbers": [
+   3,
+   6,
+   7,
+   8,
+   10,
+   11,
+   12
+  ],
+  "relativeFilePath": "main/java/comments/case5/CGE5.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "iOSSystem",
+  "filePath": "main/java/comments/case6/CBE6.java",
+  "lineNumbers": [
+   3,
+   6,
+   7,
+   8,
+   10,
+   11,
+   12
+  ],
+  "relativeFilePath": "main/java/comments/case6/CBE6.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "iOSSystemVariation",
+  "filePath": "main/java/comments/case6/CGE6.java",
+  "lineNumbers": [
+   3,
+   6,
+   7,
+   8,
+   10,
+   11,
+   12
+  ],
+  "relativeFilePath": "main/java/comments/case6/CGE6.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SmartThermostat",
+  "filePath": "main/java/comments/case7/CBE7.java",
+  "lineNumbers": [
+   3,
+   6,
+   7,
+   10,
+   11
+  ],
+  "relativeFilePath": "main/java/comments/case7/CBE7.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SmartThermostatVariation",
+  "filePath": "main/java/comments/case7/CGE7.java",
+  "lineNumbers": [
+   3,
+   6,
+   7,
+   10,
+   11
+  ],
+  "relativeFilePath": "main/java/comments/case7/CGE7.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageBuffer",
+  "filePath": "main/java/comments/case8/CBE8.java",
+  "lineNumbers": [
+   11,
+   13,
+   14
+  ],
+  "relativeFilePath": "main/java/comments/case8/CBE8.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageBufferVariation",
+  "filePath": "main/java/comments/case8/CGE8.java",
+  "lineNumbers": [
+   11,
+   13,
+   14
+  ],
+  "relativeFilePath": "main/java/comments/case8/CGE8.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Plane",
+  "filePath": "main/java/dataclass/case2/DCLSBE2.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dataclass/case2/DCLSBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PlaneVariation",
+  "filePath": "main/java/dataclass/case2/DCLSGE2.java",
+  "lineNumbers": [
+   5,
+   6,
+   7
+  ],
+  "relativeFilePath": "main/java/dataclass/case2/DCLSGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Task",
+  "filePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TaskVariation",
+  "filePath": "main/java/dataclass/case3/DCLSGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FlightBookingBad",
+  "filePath": "main/java/dataclumps/case1/DCBE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AbstractLoanValuesBad",
+  "filePath": "main/java/dataclumps/case3/DCBE3.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/dataclumps/case3/DCBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagement",
+  "filePath": "main/java/dataclumps/case4/DCBE4.java",
+  "lineNumbers": [
+   52
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagementVariation",
+  "filePath": "main/java/dataclumps/case4/DCGE4.java",
+  "lineNumbers": [
+   62
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MongoDBConnectionVariables",
+  "filePath": "main/java/dataclumps/case5/DCGE5.java",
+  "lineNumbers": [
+   9,
+   10,
+   11
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCGE5.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PhysicsEngineBad",
+  "filePath": "main/java/deadcode/case1/DEDCBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/deadcode/case1/DEDCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PhysicsEngineGood",
+  "filePath": "main/java/deadcode/case1/DEDCGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/deadcode/case1/DEDCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SquareMatrixOperationsBad",
+  "filePath": "main/java/divergentchange/case1/DVCHBE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/divergentchange/case1/DVCHBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SquareMatrixOperationsGood",
+  "filePath": "main/java/divergentchange/case1/DVCHGE1.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/divergentchange/case1/DVCHGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shape",
+  "filePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShapeVariation",
+  "filePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "lineNumbers": [
+   13
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartServiceVariationImpl",
+  "filePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Connector",
+  "filePath": "main/java/divergentchange/case3/DVCHBE3.java",
+  "lineNumbers": [
+   4
+  ],
+  "relativeFilePath": "main/java/divergentchange/case3/DVCHBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "HTTPConnectorVariation",
+  "filePath": "main/java/divergentchange/case3/DVCHGE3.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "main/java/divergentchange/case3/DVCHGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FTPConnectorVariation",
+  "filePath": "main/java/divergentchange/case3/DVCHGE3.java",
+  "lineNumbers": [
+   36
+  ],
+  "relativeFilePath": "main/java/divergentchange/case3/DVCHGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountBad",
+  "filePath": "main/java/dupcode/case1/DUPCBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dupcode/case1/DUPCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountGood",
+  "filePath": "main/java/dupcode/case1/DUPCGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dupcode/case1/DUPCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AnalyticEventVariation",
+  "filePath": "main/java/dupcode/case2/DUPCBE2.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/dupcode/case2/DUPCBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AnalyticEvent",
+  "filePath": "main/java/dupcode/case2/DUPCGE2.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/dupcode/case2/DUPCGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rectangle2DSpaceBad",
+  "filePath": "main/java/featureenvy/case1/FEBE1.java",
+  "lineNumbers": [
+   17
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Coordinates2DGood",
+  "filePath": "main/java/featureenvy/case1/FEGE1.java",
+  "lineNumbers": [
+   4,
+   5
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rectangle2DSpaceGood",
+  "filePath": "main/java/featureenvy/case1/FEGE1.java",
+  "lineNumbers": [
+   28
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RemoteController",
+  "filePath": "main/java/featureenvy/case2/FEBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SignalProcessor",
+  "filePath": "main/java/featureenvy/case2/FEBE2.java",
+  "lineNumbers": [
+   71
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RemoteControllerVariation",
+  "filePath": "main/java/featureenvy/case2/FEGE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SignalProcessorVariation",
+  "filePath": "main/java/featureenvy/case2/FEGE2.java",
+  "lineNumbers": [
+   92
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SubjectMarksBad",
+  "filePath": "main/java/intimacy/case1/IIBE1.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/intimacy/case1/IIBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SubjectMarksGood",
+  "filePath": "main/java/intimacy/case1/IIGE1.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/intimacy/case1/IIGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Americano",
+  "filePath": "main/java/intimacy/case2/IIBE2.java",
+  "lineNumbers": [
+   77
+  ],
+  "relativeFilePath": "main/java/intimacy/case2/IIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Latte",
+  "filePath": "main/java/intimacy/case2/IIBE2.java",
+  "lineNumbers": [
+   103
+  ],
+  "relativeFilePath": "main/java/intimacy/case2/IIBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AmericanoVariation",
+  "filePath": "main/java/intimacy/case2/IIGE2.java",
+  "lineNumbers": [
+   79
+  ],
+  "relativeFilePath": "main/java/intimacy/case2/IIGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Book",
+  "filePath": "main/java/intimacy/case3/IIBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/intimacy/case3/IIBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BookVariation",
+  "filePath": "main/java/intimacy/case3/IIGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/intimacy/case3/IIGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonBad",
+  "filePath": "main/java/largeclass/case1/LCBE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AddressGood",
+  "filePath": "main/java/largeclass/case1/LCGE1.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountGood",
+  "filePath": "main/java/largeclass/case1/LCGE1.java",
+  "lineNumbers": [
+   45
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonBad",
+  "filePath": "main/java/largeclass/case2/LCBE2.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/largeclass/case2/LCBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Employee",
+  "filePath": "main/java/largeclass/case3/LCBE3.java",
+  "lineNumbers": [
+   16,
+   10
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EmployeeVariation",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MatrixOperationBad",
+  "filePath": "main/java/lazyclass/case1/LZCBE1.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "main/java/lazyclass/case1/LZCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MatrixOperationGood",
+  "filePath": "main/java/lazyclass/case1/LZCGE1.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/lazyclass/case1/LZCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBBad",
+  "filePath": "main/java/lazyclass/case3/LZCBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/lazyclass/case3/LZCBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Employee",
+  "filePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EmployeeVariation",
+  "filePath": "main/java/lazyclass/case4/LZCGE4.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/lazyclass/case4/LZCGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CardDetailsBad",
+  "filePath": "main/java/longmethod/case1/LMBE1.java",
+  "lineNumbers": [
+   23,
+   27
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CreditCardBad",
+  "filePath": "main/java/longmethod/case1/LMBE1.java",
+  "lineNumbers": [
+   72,
+   73
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CardDetailsGood",
+  "filePath": "main/java/longmethod/case1/LMGE1.java",
+  "lineNumbers": [
+   23,
+   27
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CreditCardGood",
+  "filePath": "main/java/longmethod/case1/LMGE1.java",
+  "lineNumbers": [
+   72,
+   73
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TextAnalyzer",
+  "filePath": "main/java/longmethod/case3/LMBE3.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/longmethod/case3/LMBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TextAnalyzerVariation",
+  "filePath": "main/java/longmethod/case3/LMGE3.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/longmethod/case3/LMGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Passenger",
+  "filePath": "main/java/longmethod/case4/LMBE4.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AirportTerminal",
+  "filePath": "main/java/longmethod/case4/LMBE4.java",
+  "lineNumbers": [
+   50
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PassengerVariation",
+  "filePath": "main/java/longmethod/case4/LMGE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AirportTerminalVariation",
+  "filePath": "main/java/longmethod/case4/LMGE4.java",
+  "lineNumbers": [
+   51
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountBad",
+  "filePath": "main/java/longparams/case1/LPLBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AddressBad",
+  "filePath": "main/java/longparams/case1/LPLBE1.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountGood",
+  "filePath": "main/java/longparams/case1/LPLGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AddressGood",
+  "filePath": "main/java/longparams/case1/LPLGE1.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "StorePricingBad",
+  "filePath": "main/java/longparams/case2/LPLBE2.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "StorePricingGood",
+  "filePath": "main/java/longparams/case2/LPLGE2.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFriday",
+  "filePath": "main/java/longparams/case4/LPLBE4.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFridayVariation",
+  "filePath": "main/java/longparams/case4/LPLGE4.java",
+  "lineNumbers": [
+   5,
+   10
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AddressBad",
+  "filePath": "main/java/messagechains/case1/MCBE1.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderBad",
+  "filePath": "main/java/messagechains/case1/MCBE1.java",
+  "lineNumbers": [
+   42
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AddressGood",
+  "filePath": "main/java/messagechains/case1/MCGE1.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderGood",
+  "filePath": "main/java/messagechains/case1/MCGE1.java",
+  "lineNumbers": [
+   42
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Order",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderGood",
+  "filePath": "main/java/messagechains/case3/MCGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Product",
+  "filePath": "main/java/middleman/case2/MMBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/middleman/case2/MMBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ProductGood",
+  "filePath": "main/java/middleman/case2/MMGE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/middleman/case2/MMGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shape",
+  "filePath": "main/java/middleman/case3/MMIE1.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "main/java/middleman/case3/MMIE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AbstractVehicle",
+  "filePath": "main/java/parallelhierarchy/case1/PIHGE1.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case1/PIHGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "HealthRecordBad",
+  "filePath": "main/java/primobsession/case1/POBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MedicalBioDataGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AddressGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   53
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TeachingStaffBad",
+  "filePath": "main/java/primobsession/case2/POBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/primobsession/case2/POBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TeachingStaffGood",
+  "filePath": "main/java/primobsession/case2/POGE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/primobsession/case2/POGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LoginModel",
+  "filePath": "main/java/primobsession/case3/POBE3.java",
+  "lineNumbers": [
+   6,
+   8
+  ],
+  "relativeFilePath": "main/java/primobsession/case3/POBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TutorialModalManagerGood",
+  "filePath": "main/java/primobsession/case3/POGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/primobsession/case3/POGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LoginModelGood",
+  "filePath": "main/java/primobsession/case3/POGE3.java",
+  "lineNumbers": [
+   49,
+   47
+  ],
+  "relativeFilePath": "main/java/primobsession/case3/POGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShippingVolumeCheck",
+  "filePath": "main/java/primobsession/case4/POBE4.java",
+  "lineNumbers": [
+   3,
+   7,
+   8
+  ],
+  "relativeFilePath": "main/java/primobsession/case4/POBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CardboardBox",
+  "filePath": "main/java/primobsession/case4/POGE4.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/primobsession/case4/POGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShippingVolumeCheckGood",
+  "filePath": "main/java/primobsession/case4/POGE4.java",
+  "lineNumbers": [
+   21
+  ],
+  "relativeFilePath": "main/java/primobsession/case4/POGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShippingVolumeCheck",
+  "filePath": "main/java/primobsession/case5/POBE5.java",
+  "lineNumbers": [
+   3,
+   5
+  ],
+  "relativeFilePath": "main/java/primobsession/case5/POBE5.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ComputerBad",
+  "filePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ComputerGood",
+  "filePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BuildingBrick",
+  "filePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LegoPart",
+  "filePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "lineNumbers": [
+   44,
+   46
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlockGood",
+  "filePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LegoPartGood",
+  "filePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "lineNumbers": [
+   71,
+   73
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Car",
+  "filePath": "main/java/refusedbequest/case4/RBBE4.java",
+  "lineNumbers": [
+   16,
+   15
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case4/RBBE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CarGood",
+  "filePath": "main/java/refusedbequest/case4/RBGE4.java",
+  "lineNumbers": [
+   17,
+   18
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case4/RBGE4.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SubjectsGradingBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   4
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SubjectsGradingGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   4
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WaterSensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   88
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SmokeSensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   141
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BatteryGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   52,
+   53,
+   54
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccount",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   7,
+   10
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountGood",
+  "filePath": "main/java/shotgun/case3/SSGE3.java",
+  "lineNumbers": [
+   18,
+   15
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "HotelBad",
+  "filePath": "main/java/specgen/case1/SGBE1.java",
+  "lineNumbers": [
+   8,
+   12
+  ],
+  "relativeFilePath": "main/java/specgen/case1/SGBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "HotelGood",
+  "filePath": "main/java/specgen/case1/SGGE1.java",
+  "lineNumbers": [
+   3,
+   7
+  ],
+  "relativeFilePath": "main/java/specgen/case1/SGGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CustomerDriver",
+  "filePath": "main/java/specgen/case2/SGBE2.java",
+  "lineNumbers": [
+   112,
+   117
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGBE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BronzeMembershipInterface",
+  "filePath": "main/java/specgen/case2/SGGE2.java",
+  "lineNumbers": [
+   25
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CustomerDriverGood",
+  "filePath": "main/java/specgen/case2/SGGE2.java",
+  "lineNumbers": [
+   74,
+   79
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGGE2.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LoanBad",
+  "filePath": "main/java/tempfield/case1/TFBE1.java",
+  "lineNumbers": [
+   3,
+   6
+  ],
+  "relativeFilePath": "main/java/tempfield/case1/TFBE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LoanGood",
+  "filePath": "main/java/tempfield/case1/TFGE1.java",
+  "lineNumbers": [
+   3,
+   6
+  ],
+  "relativeFilePath": "main/java/tempfield/case1/TFGE1.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PolynomialSolver",
+  "filePath": "main/java/tempfield/case3/TFBE3.java",
+  "lineNumbers": [
+   3,
+   4,
+   5
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFBE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CubicSolver",
+  "filePath": "main/java/tempfield/case3/TFGE3.java",
+  "lineNumbers": [
+   3,
+   5
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "QuadraticSolver",
+  "filePath": "main/java/tempfield/case3/TFGE3.java",
+  "lineNumbers": [
+   48,
+   50
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LinearSolver",
+  "filePath": "main/java/tempfield/case3/TFGE3.java",
+  "lineNumbers": [
+   85,
+   86
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFGE3.java",
+  "smellName": "Primitive Obsession"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LionBad",
+  "filePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RabbitBad",
+  "filePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "KingGood",
+  "filePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "lineNumbers": [
+   84
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "KnightGood",
+  "filePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "lineNumbers": [
+   118
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PawnGood",
+  "filePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "lineNumbers": [
+   153
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RookGood",
+  "filePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "lineNumbers": [
+   262
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SimplePersona",
+  "filePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "lineNumbers": [
+   24
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SimpleAvatar",
+  "filePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SimplePersonaGood",
+  "filePath": "main/java/altclasses/case3/ACDIGE3.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderBad",
+  "filePath": "main/java/comments/case1/CBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case1/CBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderGood",
+  "filePath": "main/java/comments/case1/CGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case1/CGE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MatrixBad",
+  "filePath": "main/java/comments/case2/CBE2.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/comments/case2/CBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColor",
+  "filePath": "main/java/comments/case4/CBE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case4/CBE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ColorPalette",
+  "filePath": "main/java/comments/case4/CBE4.java",
+  "lineNumbers": [
+   59
+  ],
+  "relativeFilePath": "main/java/comments/case4/CBE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColorVariation",
+  "filePath": "main/java/comments/case4/CGE4.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case4/CGE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ColorPaletteVariation",
+  "filePath": "main/java/comments/case4/CGE4.java",
+  "lineNumbers": [
+   59
+  ],
+  "relativeFilePath": "main/java/comments/case4/CGE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageModel",
+  "filePath": "main/java/comments/case8/CBE8.java",
+  "lineNumbers": [
+   104
+  ],
+  "relativeFilePath": "main/java/comments/case8/CBE8.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageModelVariation",
+  "filePath": "main/java/comments/case8/CGE8.java",
+  "lineNumbers": [
+   104
+  ],
+  "relativeFilePath": "main/java/comments/case8/CGE8.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MongoDBConnectorVariation",
+  "filePath": "main/java/dataclumps/case5/DCBE5.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCBE5.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MongoDBConnectionVariables",
+  "filePath": "main/java/dataclumps/case5/DCGE5.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCGE5.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MongoDBConnector",
+  "filePath": "main/java/dataclumps/case5/DCGE5.java",
+  "lineNumbers": [
+   41
+  ],
+  "relativeFilePath": "main/java/dataclumps/case5/DCGE5.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shape",
+  "filePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartService",
+  "filePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "lineNumbers": [
+   54
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShapeVariation",
+  "filePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "lineNumbers": [
+   13
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartServiceVariationImpl",
+  "filePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rectangle2DSpaceBad",
+  "filePath": "main/java/featureenvy/case1/FEBE1.java",
+  "lineNumbers": [
+   16
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rectangle2DSpaceGood",
+  "filePath": "main/java/featureenvy/case1/FEGE1.java",
+  "lineNumbers": [
+   27
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEGE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RemoteController",
+  "filePath": "main/java/featureenvy/case2/FEBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SignalProcessor",
+  "filePath": "main/java/featureenvy/case2/FEBE2.java",
+  "lineNumbers": [
+   71
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CafeMocha",
+  "filePath": "main/java/intimacy/case2/IIBE2.java",
+  "lineNumbers": [
+   129
+  ],
+  "relativeFilePath": "main/java/intimacy/case2/IIBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AmericanoVariation",
+  "filePath": "main/java/intimacy/case2/IIGE2.java",
+  "lineNumbers": [
+   78
+  ],
+  "relativeFilePath": "main/java/intimacy/case2/IIGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BookVariation",
+  "filePath": "main/java/intimacy/case3/IIGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/intimacy/case3/IIGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonBad",
+  "filePath": "main/java/largeclass/case1/LCBE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccountGood",
+  "filePath": "main/java/largeclass/case1/LCGE1.java",
+  "lineNumbers": [
+   45
+  ],
+  "relativeFilePath": "main/java/largeclass/case1/LCGE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Cat",
+  "filePath": "main/java/lazyclass/case5/LZCBE5.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/lazyclass/case5/LZCBE5.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CatVariation",
+  "filePath": "main/java/lazyclass/case5/LZCGE5.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/lazyclass/case5/LZCGE5.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TransactionBad",
+  "filePath": "main/java/longmethod/case1/LMBE1.java",
+  "lineNumbers": [
+   41
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TransactionGood",
+  "filePath": "main/java/longmethod/case1/LMGE1.java",
+  "lineNumbers": [
+   41
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMGE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TextAnalyzerVariation",
+  "filePath": "main/java/longmethod/case3/LMGE3.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/longmethod/case3/LMGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShoppingCartGood",
+  "filePath": "main/java/longparams/case2/LPLGE2.java",
+  "lineNumbers": [
+   58
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFriday",
+  "filePath": "main/java/longparams/case4/LPLBE4.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLBE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Schedule",
+  "filePath": "main/java/messagechains/case2/MCBE2.java",
+  "lineNumbers": [
+   57
+  ],
+  "relativeFilePath": "main/java/messagechains/case2/MCBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ScheduleGood",
+  "filePath": "main/java/messagechains/case2/MCGE2.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/messagechains/case2/MCGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Warehouse",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   34
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WarehouseGood",
+  "filePath": "main/java/messagechains/case3/MCGE3.java",
+  "lineNumbers": [
+   34
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ProductGood",
+  "filePath": "main/java/middleman/case2/MMGE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/middleman/case2/MMGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shape",
+  "filePath": "main/java/middleman/case3/MMIE1.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "main/java/middleman/case3/MMIE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartServiceImpl",
+  "filePath": "main/java/middleman/case3/MMIE1.java",
+  "lineNumbers": [
+   66
+  ],
+  "relativeFilePath": "main/java/middleman/case3/MMIE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AbstractVehicleBad",
+  "filePath": "main/java/parallelhierarchy/case1/PIHBE1.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case1/PIHBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Vampire",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Ghoul",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   34
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "VampireWeapon",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "GhoulWeapon",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   95
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "VampireGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "GhoulGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   34
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BasicWeaponGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TeachingStaffBad",
+  "filePath": "main/java/primobsession/case2/POBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/primobsession/case2/POBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TeachingStaffGood",
+  "filePath": "main/java/primobsession/case2/POGE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/primobsession/case2/POGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TutorialModalManagerGood",
+  "filePath": "main/java/primobsession/case3/POGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/primobsession/case3/POGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShippingVolumeCheck",
+  "filePath": "main/java/primobsession/case4/POBE4.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/primobsession/case4/POBE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShippingVolumeCheck",
+  "filePath": "main/java/primobsession/case5/POBE5.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/primobsession/case5/POBE5.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ComputerBad",
+  "filePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ComputerGood",
+  "filePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Bicycle",
+  "filePath": "main/java/refusedbequest/case4/RBBE4.java",
+  "lineNumbers": [
+   67
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case4/RBBE4.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WaterSensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   87
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SmokeSensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   140
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SensorData",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   195
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BatteryGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   52
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SensorDataGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   195
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BankAccount",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "DirectDepositProcessor",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   48
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "DirectDepositProcessorGood",
+  "filePath": "main/java/shotgun/case3/SSGE3.java",
+  "lineNumbers": [
+   59
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSGE3.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BronzeMembershipInterface",
+  "filePath": "main/java/specgen/case2/SGGE2.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGGE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "UserRouteBad",
+  "filePath": "main/java/switchstmts/case2/SWSBE2.java",
+  "lineNumbers": [
+   11
+  ],
+  "relativeFilePath": "main/java/switchstmts/case2/SWSBE2.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LoanBad",
+  "filePath": "main/java/tempfield/case1/TFBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/tempfield/case1/TFBE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LoanGood",
+  "filePath": "main/java/tempfield/case1/TFGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/tempfield/case1/TFGE1.java",
+  "smellName": "Divergent Change"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.IDiscreteSensorGood'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 2). Structural Coupling: 100%.",
+  "className": "shotgun.case2.ISensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.ISensor'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 1). Structural Coupling: 100%.",
+  "className": "shotgun.case2.ISensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.SensorGood'. Shape Match (NOC: 2 vs 3, DIT: 1 vs 2). Structural Coupling: 67%.",
+  "className": "shotgun.case2.ISensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'refusedbequest.case4.Vehicle'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 1). Structural Coupling: 50%.",
+  "className": "refusedbequest.case4.VehicleGood",
+  "filePath": "main/java/refusedbequest/case4/RBGE4.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case4/RBGE4.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case2.UIFactory'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 1). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case2.AbstractAlertButton",
+  "filePath": "main/java/parallelhierarchy/case2/PIHBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case2/PIHBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case2.AbstractAlertDialog'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 2). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case2.AbstractAlertButton",
+  "filePath": "main/java/parallelhierarchy/case2/PIHBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case2/PIHBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.Sensor'. Shape Match (NOC: 2 vs 3, DIT: 2 vs 2). Structural Coupling: 67%.",
+  "className": "shotgun.case2.IDiscreteSensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.IDiscreteSensor'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 2). Structural Coupling: 100%.",
+  "className": "shotgun.case2.IDiscreteSensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.SensorGood'. Shape Match (NOC: 2 vs 3, DIT: 2 vs 2). Structural Coupling: 67%.",
+  "className": "shotgun.case2.IDiscreteSensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.IDiscreteSensor'. Shape Match (NOC: 3 vs 2, DIT: 2 vs 2). Structural Coupling: 67%.",
+  "className": "shotgun.case2.Sensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.ISensor'. Shape Match (NOC: 3 vs 2, DIT: 2 vs 1). Structural Coupling: 67%.",
+  "className": "shotgun.case2.Sensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.SensorGood'. Shape Match (NOC: 3 vs 3, DIT: 2 vs 2). Structural Coupling: 100%.",
+  "className": "shotgun.case2.Sensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.ISensor'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 1). Structural Coupling: 100%.",
+  "className": "shotgun.case2.IDiscreteSensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'shotgun.case2.SensorGood'. Shape Match (NOC: 2 vs 3, DIT: 2 vs 2). Structural Coupling: 67%.",
+  "className": "shotgun.case2.IDiscreteSensor",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case2.AbstractAlertDialog'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 2). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case2.UIFactory",
+  "filePath": "main/java/parallelhierarchy/case2/PIHBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case2/PIHBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case1.AbstractVehicleBad'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 2). Structural Coupling: 50%.",
+  "className": "parallelhierarchy.case1.AbstractVehicle",
+  "filePath": "main/java/parallelhierarchy/case1/PIHGE1.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case1/PIHGE1.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case1.AbstractVehicleFactoryBad'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 2). Structural Coupling: 50%.",
+  "className": "parallelhierarchy.case1.AbstractVehicle",
+  "filePath": "main/java/parallelhierarchy/case1/PIHGE1.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case1/PIHGE1.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case1.AbstractVehicleFactoryBad'. Shape Match (NOC: 2 vs 2, DIT: 2 vs 2). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case1.AbstractVehicleBad",
+  "filePath": "main/java/parallelhierarchy/case1/PIHBE1.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case1/PIHBE1.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'refusedbequest.case2.NoteTakerGood'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 1). Structural Coupling: 100%.",
+  "className": "refusedbequest.case2.NoteTakerBad",
+  "filePath": "main/java/refusedbequest/case2/RBBE2.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case2/RBBE2.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case3.Enemy'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 1). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case3.EnemyGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case3.Weapon'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 1). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case3.EnemyGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Parallel Hierarchy detected with 'parallelhierarchy.case3.Weapon'. Shape Match (NOC: 2 vs 2, DIT: 1 vs 1). Structural Coupling: 100%.",
+  "className": "parallelhierarchy.case3.Enemy",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   1
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Parallel Inheritance Hierarchies"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "SubjectsGradingGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "BankAccount",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   38
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "SubjectsGradingGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=0]",
+  "className": "SensorDataGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   201
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=8, CC=8, Fan-Out=0]",
+  "className": "CosmeticSampleGood",
+  "filePath": "main/java/switchstmts/case3/SWSGE3.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSGE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "Warehouse",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   49
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   437
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=0]",
+  "className": "BatteryGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   69
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Knight",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   178
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=0]",
+  "className": "SensorData",
+  "filePath": "main/java/shotgun/case2/SSBE2.java",
+  "lineNumbers": [
+   201
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "BlockGood",
+  "filePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "lineNumbers": [
+   26
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   435
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   27
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "BankAccount",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   34
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]",
+  "className": "BankAccount",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   42
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Knight",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   177
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=9, CC=9, Fan-Out=0]",
+  "className": "CosmeticSampleGood",
+  "filePath": "main/java/switchstmts/case3/SWSGE3.java",
+  "lineNumbers": [
+   15
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSGE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]",
+  "className": "EmployeeVariation",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   49
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "King",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   92
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   272
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=0]",
+  "className": "BatteryGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   77
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=0]",
+  "className": "ShapeVariation",
+  "filePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "lineNumbers": [
+   25
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHGE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "King",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   93
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   517
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Knight",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   179
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   273
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "SubjectsGradingBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   271
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   518
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "SubjectsGradingBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "BlockGood",
+  "filePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "lineNumbers": [
+   30
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBGE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   436
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   28
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=2, CC=2, Fan-Out=0]",
+  "className": "BankAccount",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   26
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   516
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=0]",
+  "className": "Shape",
+  "filePath": "main/java/middleman/case3/MMIE1.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/middleman/case3/MMIE1.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=0]",
+  "className": "King",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   91
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Shotgun Surgery"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   46,
+   51,
+   56,
+   61,
+   66
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "King",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   115,
+   123,
+   131,
+   139,
+   147
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Knight",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   208,
+   200,
+   216,
+   224,
+   232
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Pawn",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   302,
+   347,
+   332,
+   362,
+   377,
+   392
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   465,
+   457,
+   473,
+   481,
+   489
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   546,
+   538,
+   554,
+   562,
+   570
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ColorPalette",
+  "filePath": "main/java/comments/case4/CBE4.java",
+  "lineNumbers": [
+   71
+  ],
+  "relativeFilePath": "main/java/comments/case4/CBE4.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ColorPaletteVariation",
+  "filePath": "main/java/comments/case4/CGE4.java",
+  "lineNumbers": [
+   71
+  ],
+  "relativeFilePath": "main/java/comments/case4/CGE4.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageModel",
+  "filePath": "main/java/comments/case8/CBE8.java",
+  "lineNumbers": [
+   133
+  ],
+  "relativeFilePath": "main/java/comments/case8/CBE8.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageModelVariation",
+  "filePath": "main/java/comments/case8/CGE8.java",
+  "lineNumbers": [
+   132
+  ],
+  "relativeFilePath": "main/java/comments/case8/CGE8.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PartStudio",
+  "filePath": "main/java/dataclass/case2/DCLSBE2.java",
+  "lineNumbers": [
+   56
+  ],
+  "relativeFilePath": "main/java/dataclass/case2/DCLSBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TaskList",
+  "filePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "lineNumbers": [
+   25,
+   19,
+   34
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TaskVariationList",
+  "filePath": "main/java/dataclass/case3/DCLSGE3.java",
+  "lineNumbers": [
+   42
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CompareWeatherPatternsGood",
+  "filePath": "main/java/dataclumps/case2/DCGE2.java",
+  "lineNumbers": [
+   57,
+   43
+  ],
+  "relativeFilePath": "main/java/dataclumps/case2/DCGE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagement",
+  "filePath": "main/java/dataclumps/case4/DCBE4.java",
+  "lineNumbers": [
+   18,
+   38,
+   28
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCBE4.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagementVariation",
+  "filePath": "main/java/dataclumps/case4/DCGE4.java",
+  "lineNumbers": [
+   32,
+   52,
+   42
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCGE4.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Shipment",
+  "filePath": "main/java/deadcode/case3/DEDCBE3.java",
+  "lineNumbers": [
+   17,
+   9
+  ],
+  "relativeFilePath": "main/java/deadcode/case3/DEDCBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShipmentVariation",
+  "filePath": "main/java/deadcode/case3/DEDCGE3.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/deadcode/case3/DEDCGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartService",
+  "filePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "lineNumbers": [
+   75,
+   125,
+   100
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Rectangle2DSpaceBad",
+  "filePath": "main/java/featureenvy/case1/FEBE1.java",
+  "lineNumbers": [
+   48,
+   41
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEBE1.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SignalProcessor",
+  "filePath": "main/java/featureenvy/case2/FEBE2.java",
+  "lineNumbers": [
+   114
+  ],
+  "relativeFilePath": "main/java/featureenvy/case2/FEBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RecordPlayer",
+  "filePath": "main/java/featureenvy/case3/FEBE3.java",
+  "lineNumbers": [
+   97,
+   65,
+   59,
+   88,
+   70,
+   79
+  ],
+  "relativeFilePath": "main/java/featureenvy/case3/FEBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RecordPlayerGood",
+  "filePath": "main/java/featureenvy/case3/FEGE3.java",
+  "lineNumbers": [
+   97,
+   88,
+   70,
+   79
+  ],
+  "relativeFilePath": "main/java/featureenvy/case3/FEGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Library",
+  "filePath": "main/java/intimacy/case3/IIBE3.java",
+  "lineNumbers": [
+   43
+  ],
+  "relativeFilePath": "main/java/intimacy/case3/IIBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AirportTerminal",
+  "filePath": "main/java/longmethod/case4/LMBE4.java",
+  "lineNumbers": [
+   64
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMBE4.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "AirportTerminalVariation",
+  "filePath": "main/java/longmethod/case4/LMGE4.java",
+  "lineNumbers": [
+   76,
+   85,
+   65
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMGE4.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShoppingCartGood",
+  "filePath": "main/java/longparams/case2/LPLGE2.java",
+  "lineNumbers": [
+   74
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLGE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShipmentVariation",
+  "filePath": "main/java/longparams/case5/LPLGE5.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/longparams/case5/LPLGE5.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShipmentVariation",
+  "filePath": "main/java/longparams/case6/LPLGE6.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/longparams/case6/LPLGE6.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderHistoryBad",
+  "filePath": "main/java/messagechains/case1/MCBE1.java",
+  "lineNumbers": [
+   92
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCBE1.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PersonGood",
+  "filePath": "main/java/messagechains/case1/MCGE1.java",
+  "lineNumbers": [
+   37
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCGE1.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Distributor",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   86
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Vehicle",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   119
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "DistributorGood",
+  "filePath": "main/java/messagechains/case3/MCGE3.java",
+  "lineNumbers": [
+   82,
+   90
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "VehicleGood",
+  "filePath": "main/java/messagechains/case3/MCGE3.java",
+  "lineNumbers": [
+   119
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ProductHandler",
+  "filePath": "main/java/middleman/case2/MMBE2.java",
+  "lineNumbers": [
+   48,
+   52,
+   44,
+   60
+  ],
+  "relativeFilePath": "main/java/middleman/case2/MMBE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Vampire",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Ghoul",
+  "filePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "VampireGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "GhoulGood",
+  "filePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/parallelhierarchy/case3/PIHGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PatientGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   92
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SensorGood",
+  "filePath": "main/java/shotgun/case2/SSGE2.java",
+  "lineNumbers": [
+   47
+  ],
+  "relativeFilePath": "main/java/shotgun/case2/SSGE2.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "DirectDepositProcessor",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   57
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CheckProcessor",
+  "filePath": "main/java/shotgun/case3/SSBE3.java",
+  "lineNumbers": [
+   92,
+   80
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "DirectDepositProcessorGood",
+  "filePath": "main/java/shotgun/case3/SSGE3.java",
+  "lineNumbers": [
+   68
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CheckProcessorGood",
+  "filePath": "main/java/shotgun/case3/SSGE3.java",
+  "lineNumbers": [
+   92
+  ],
+  "relativeFilePath": "main/java/shotgun/case3/SSGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CosmeticLab",
+  "filePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "lineNumbers": [
+   39
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CosmeticLabGood",
+  "filePath": "main/java/switchstmts/case3/SWSGE3.java",
+  "lineNumbers": [
+   48
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSGE3.java",
+  "smellName": "Feature Envy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TaskList",
+  "filePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "lineNumbers": [
+   21,
+   21,
+   21,
+   27,
+   28,
+   29,
+   36,
+   37
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "smellName": "Inappropriate Intimacy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TeacherBad",
+  "filePath": "main/java/intimacy/case1/IIBE1.java",
+  "lineNumbers": [
+   60
+  ],
+  "relativeFilePath": "main/java/intimacy/case1/IIBE1.java",
+  "smellName": "Inappropriate Intimacy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CafeMocha",
+  "filePath": "main/java/intimacy/case2/IIBE2.java",
+  "lineNumbers": [
+   136,
+   137,
+   138
+  ],
+  "relativeFilePath": "main/java/intimacy/case2/IIBE2.java",
+  "smellName": "Inappropriate Intimacy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Library",
+  "filePath": "main/java/intimacy/case3/IIBE3.java",
+  "lineNumbers": [
+   40,
+   45,
+   46,
+   46
+  ],
+  "relativeFilePath": "main/java/intimacy/case3/IIBE3.java",
+  "smellName": "Inappropriate Intimacy"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderHistoryBad",
+  "filePath": "main/java/messagechains/case1/MCBE1.java",
+  "lineNumbers": [
+   96
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCBE1.java",
+  "smellName": "Message Chains"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PayrollSystem",
+  "filePath": "main/java/messagechains/case2/MCBE2.java",
+  "lineNumbers": [
+   95
+  ],
+  "relativeFilePath": "main/java/messagechains/case2/MCBE2.java",
+  "smellName": "Message Chains"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Vehicle",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   120
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Message Chains"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CustomerGood",
+  "filePath": "main/java/dataclumps/case1/DCGE1.java",
+  "lineNumbers": [
+   25
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCGE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BookingReferenceGood",
+  "filePath": "main/java/dataclumps/case1/DCGE1.java",
+  "lineNumbers": [
+   49
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCGE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "FactoryBad",
+  "filePath": "main/java/middleman/case1/MMBE1.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/middleman/case1/MMBE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ProductHandler",
+  "filePath": "main/java/middleman/case2/MMBE2.java",
+  "lineNumbers": [
+   35
+  ],
+  "relativeFilePath": "main/java/middleman/case2/MMBE2.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartServiceImpl",
+  "filePath": "main/java/middleman/case3/MMIE1.java",
+  "lineNumbers": [
+   66
+  ],
+  "relativeFilePath": "main/java/middleman/case3/MMIE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MobileGood",
+  "filePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "lineNumbers": [
+   55
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MathClassGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EnglishClassGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   60
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Middle Man"
+ },
+ {
+  "additionalInfo": "",
+  "className": "OrderBad",
+  "filePath": "main/java/comments/case1/CBE1.java",
+  "lineNumbers": [
+   23,
+   25,
+   26,
+   27
+  ],
+  "relativeFilePath": "main/java/comments/case1/CBE1.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MatrixBad",
+  "filePath": "main/java/comments/case2/CBE2.java",
+  "lineNumbers": [
+   14
+  ],
+  "relativeFilePath": "main/java/comments/case2/CBE2.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "UserAddressBad",
+  "filePath": "main/java/comments/case3/CBE3.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/comments/case3/CBE3.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RGBColor",
+  "filePath": "main/java/comments/case4/CBE4.java",
+  "lineNumbers": [
+   18,
+   19
+  ],
+  "relativeFilePath": "main/java/comments/case4/CBE4.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "iOSSystem",
+  "filePath": "main/java/comments/case6/CBE6.java",
+  "lineNumbers": [
+   37
+  ],
+  "relativeFilePath": "main/java/comments/case6/CBE6.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SmartThermostat",
+  "filePath": "main/java/comments/case7/CBE7.java",
+  "lineNumbers": [
+   32,
+   31
+  ],
+  "relativeFilePath": "main/java/comments/case7/CBE7.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ImageModel",
+  "filePath": "main/java/comments/case8/CBE8.java",
+  "lineNumbers": [
+   146,
+   151,
+   105,
+   137,
+   156,
+   140,
+   143,
+   159
+  ],
+  "relativeFilePath": "main/java/comments/case8/CBE8.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Circle",
+  "filePath": "main/java/specgen/case3/SGBE3.java",
+  "lineNumbers": [
+   30
+  ],
+  "relativeFilePath": "main/java/specgen/case3/SGBE3.java",
+  "smellName": "Comments"
+ },
+ {
+  "additionalInfo": "",
+  "className": "RectangleBad",
+  "filePath": "main/java/dataclass/case1/DCLSBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dataclass/case1/DCLSBE1.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Plane",
+  "filePath": "main/java/dataclass/case2/DCLSBE2.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dataclass/case2/DCLSBE2.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Task",
+  "filePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Coordinates2DBad",
+  "filePath": "main/java/featureenvy/case1/FEBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEBE1.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "NameGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MedicalBioDataGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MedicationHistory",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   103
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Data Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "LionBad",
+  "filePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "RabbitBad",
+  "filePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "UserAddressBad",
+  "filePath": "main/java/comments/case3/CBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/comments/case3/CBE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 0 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "RectangleBad",
+  "filePath": "main/java/dataclass/case1/DCLSBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dataclass/case1/DCLSBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "RectangleGood",
+  "filePath": "main/java/dataclass/case1/DCLSGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/dataclass/case1/DCLSGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 0 and is only used by 'dataclass.case3.TaskList'. Consider 'Inline Class' or deletion.",
+  "className": "Task",
+  "filePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'dataclass.case3.TaskVariationList'. Consider 'Inline Class' or deletion.",
+  "className": "TaskVariation",
+  "filePath": "main/java/dataclass/case3/DCLSGE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSGE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'dataclumps.case1.FlightBookingGood'. Consider 'Inline Class' or deletion.",
+  "className": "TravelPlaceGood",
+  "filePath": "main/java/dataclumps/case1/DCGE1.java",
+  "lineNumbers": [
+   72
+  ],
+  "relativeFilePath": "main/java/dataclumps/case1/DCGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is only used by 'featureenvy.case1.Rectangle2DSpaceBad'. Consider 'Inline Class' or deletion.",
+  "className": "Coordinates2DBad",
+  "filePath": "main/java/featureenvy/case1/FEBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/featureenvy/case1/FEBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "TeacherBad",
+  "filePath": "main/java/intimacy/case1/IIBE1.java",
+  "lineNumbers": [
+   49
+  ],
+  "relativeFilePath": "main/java/intimacy/case1/IIBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'intimacy.case1.TeacherGood'. Consider 'Inline Class' or deletion.",
+  "className": "EnglishGood",
+  "filePath": "main/java/intimacy/case1/IIGE1.java",
+  "lineNumbers": [
+   37
+  ],
+  "relativeFilePath": "main/java/intimacy/case1/IIGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "TeacherGood",
+  "filePath": "main/java/intimacy/case1/IIGE1.java",
+  "lineNumbers": [
+   47
+  ],
+  "relativeFilePath": "main/java/intimacy/case1/IIGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 1 and is only used by 'lazyclass.case1.MatrixOperationBad'. Consider 'Inline Class' or deletion.",
+  "className": "MatrixOperationValidatorBad",
+  "filePath": "main/java/lazyclass/case1/LZCBE1.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/lazyclass/case1/LZCBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is only used by 'lazyclass.case2.PrintHelloUserBad'. Consider 'Inline Class' or deletion.",
+  "className": "PrintGreetingsBad",
+  "filePath": "main/java/lazyclass/case2/LZCBE2.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/lazyclass/case2/LZCBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 1 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "PrintHelloUserBad",
+  "filePath": "main/java/lazyclass/case2/LZCBE2.java",
+  "lineNumbers": [
+   13
+  ],
+  "relativeFilePath": "main/java/lazyclass/case2/LZCBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "PrintGreetingsGood",
+  "filePath": "main/java/lazyclass/case2/LZCGE2.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/lazyclass/case2/LZCGE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "RGBBad",
+  "filePath": "main/java/lazyclass/case3/LZCBE3.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/lazyclass/case3/LZCBE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "Security",
+  "filePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "lineNumbers": [
+   76
+  ],
+  "relativeFilePath": "main/java/lazyclass/case4/LZCBE4.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 1 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "Tiger",
+  "filePath": "main/java/lazyclass/case5/LZCBE5.java",
+  "lineNumbers": [
+   21
+  ],
+  "relativeFilePath": "main/java/lazyclass/case5/LZCBE5.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 0 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "Cheetah",
+  "filePath": "main/java/lazyclass/case5/LZCBE5.java",
+  "lineNumbers": [
+   31
+  ],
+  "relativeFilePath": "main/java/lazyclass/case5/LZCBE5.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'lazyclass.case5.TigerVariation'. Consider 'Inline Class' or deletion.",
+  "className": "CatVariation",
+  "filePath": "main/java/lazyclass/case5/LZCGE5.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/lazyclass/case5/LZCGE5.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 1 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "TigerVariation",
+  "filePath": "main/java/lazyclass/case5/LZCGE5.java",
+  "lineNumbers": [
+   21
+  ],
+  "relativeFilePath": "main/java/lazyclass/case5/LZCGE5.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'longmethod.case1.CreditCardBad'. Consider 'Inline Class' or deletion.",
+  "className": "CardDetailsBad",
+  "filePath": "main/java/longmethod/case1/LMBE1.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'longmethod.case1.CreditCardGood'. Consider 'Inline Class' or deletion.",
+  "className": "CardDetailsGood",
+  "filePath": "main/java/longmethod/case1/LMGE1.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'longparams.case1.PersonBad'. Consider 'Inline Class' or deletion.",
+  "className": "BankAccountBad",
+  "filePath": "main/java/longparams/case1/LPLBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'longparams.case1.PersonBad'. Consider 'Inline Class' or deletion.",
+  "className": "AddressBad",
+  "filePath": "main/java/longparams/case1/LPLBE1.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'longparams.case1.PersonGood'. Consider 'Inline Class' or deletion.",
+  "className": "BankAccountGood",
+  "filePath": "main/java/longparams/case1/LPLGE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'longparams.case1.PersonGood'. Consider 'Inline Class' or deletion.",
+  "className": "AddressGood",
+  "filePath": "main/java/longparams/case1/LPLGE1.java",
+  "lineNumbers": [
+   19
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "PersonGood",
+  "filePath": "main/java/longparams/case1/LPLGE1.java",
+  "lineNumbers": [
+   37
+  ],
+  "relativeFilePath": "main/java/longparams/case1/LPLGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "StoreMemberPricingBad",
+  "filePath": "main/java/longparams/case2/LPLBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is only used by 'longparams.case2.ShoppingCartGood'. Consider 'Inline Class' or deletion.",
+  "className": "StoreMemberPricingGood",
+  "filePath": "main/java/longparams/case2/LPLGE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/longparams/case2/LPLGE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'messagechains.case1.PersonGood'. Consider 'Inline Class' or deletion.",
+  "className": "AddressGood",
+  "filePath": "main/java/messagechains/case1/MCGE1.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'messagechains.case1.OrderGood'. Consider 'Inline Class' or deletion.",
+  "className": "PersonGood",
+  "filePath": "main/java/messagechains/case1/MCGE1.java",
+  "lineNumbers": [
+   22
+  ],
+  "relativeFilePath": "main/java/messagechains/case1/MCGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "PayrollSystem",
+  "filePath": "main/java/messagechains/case2/MCBE2.java",
+  "lineNumbers": [
+   87
+  ],
+  "relativeFilePath": "main/java/messagechains/case2/MCBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'messagechains.case3.Vehicle'. Consider 'Inline Class' or deletion.",
+  "className": "Distributor",
+  "filePath": "main/java/messagechains/case3/MCBE3.java",
+  "lineNumbers": [
+   71
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCBE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'messagechains.case3.VehicleGood'. Consider 'Inline Class' or deletion.",
+  "className": "DistributorGood",
+  "filePath": "main/java/messagechains/case3/MCGE3.java",
+  "lineNumbers": [
+   71
+  ],
+  "relativeFilePath": "main/java/messagechains/case3/MCGE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'middleman.case2.ProductHandler'. Consider 'Inline Class' or deletion.",
+  "className": "Product",
+  "filePath": "main/java/middleman/case2/MMBE2.java",
+  "lineNumbers": [
+   6
+  ],
+  "relativeFilePath": "main/java/middleman/case2/MMBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 2 and is only used by 'primobsession.case1.PatientGood'. Consider 'Inline Class' or deletion.",
+  "className": "NameGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'primobsession.case1.PatientGood'. Consider 'Inline Class' or deletion.",
+  "className": "MedicalBioDataGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   23
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is only used by 'primobsession.case1.PatientGood'. Consider 'Inline Class' or deletion.",
+  "className": "AddressGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   53
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is only used by 'primobsession.case4.ShippingVolumeCheckGood'. Consider 'Inline Class' or deletion.",
+  "className": "CardboardBox",
+  "filePath": "main/java/primobsession/case4/POGE4.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/primobsession/case4/POGE4.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 5 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "ShippingVolumeCheckGood",
+  "filePath": "main/java/primobsession/case4/POGE4.java",
+  "lineNumbers": [
+   20
+  ],
+  "relativeFilePath": "main/java/primobsession/case4/POGE4.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 4 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "MobileBad",
+  "filePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "lineNumbers": [
+   58
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'shotgun.case1.SSBE1'. Consider 'Inline Class' or deletion.",
+  "className": "MathClassBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'shotgun.case1.SSBE1'. Consider 'Inline Class' or deletion.",
+  "className": "EnglishClassBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   59
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "MathClassGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "EnglishClassGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   60
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 0 and is only used by 'specgen.case2.GoldMembership'. Consider 'Inline Class' or deletion.",
+  "className": "SilverMembership",
+  "filePath": "main/java/specgen/case2/SGBE2.java",
+  "lineNumbers": [
+   94
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 0 and is only used by 'specgen.case2.PlatinumMembership'. Consider 'Inline Class' or deletion.",
+  "className": "GoldMembership",
+  "filePath": "main/java/specgen/case2/SGBE2.java",
+  "lineNumbers": [
+   100
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 0 and is unused (Dead Code). Consider 'Inline Class' or deletion.",
+  "className": "PlatinumMembership",
+  "filePath": "main/java/specgen/case2/SGBE2.java",
+  "lineNumbers": [
+   106
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'switchstmts.case3.CosmeticLab'. Consider 'Inline Class' or deletion.",
+  "className": "CosmeticSample",
+  "filePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 3 and is only used by 'tempfield.case2.VerizonUserManagement'. Consider 'Inline Class' or deletion.",
+  "className": "Customer",
+  "filePath": "main/java/tempfield/case2/TFBE2.java",
+  "lineNumbers": [
+   12
+  ],
+  "relativeFilePath": "main/java/tempfield/case2/TFBE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Lazy Class: Logic weight is 1 and is only used by 'tempfield.case2.VerizonUserManagementGood'. Consider 'Inline Class' or deletion.",
+  "className": "NullCustomer",
+  "filePath": "main/java/tempfield/case2/TFGE2.java",
+  "lineNumbers": [
+   40
+  ],
+  "relativeFilePath": "main/java/tempfield/case2/TFGE2.java",
+  "smellName": "Lazy Class"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case3.SimpleAvatar', Similarity Score: 94.2%",
+  "className": "altclasses.case3.SimplePersona",
+  "filePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "lineNumbers": [
+   24
+  ],
+  "relativeFilePath": "main/java/altclasses/case3/ACDIBE3.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.Rook', Similarity Score: 78.1%",
+  "className": "altclasses.case2.Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.Queen', Similarity Score: 77.3%",
+  "className": "altclasses.case2.Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.Knight', Similarity Score: 78.1%",
+  "className": "altclasses.case2.Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.King', Similarity Score: 77.3%",
+  "className": "altclasses.case2.Bishop",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'primobsession.case1.MedicationHistory', Similarity Score: 100.0%",
+  "className": "primobsession.case1.NameGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   5
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.Queen', Similarity Score: 77.3%",
+  "className": "altclasses.case2.Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   498
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.Knight', Similarity Score: 78.1%",
+  "className": "altclasses.case2.Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   498
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.King', Similarity Score: 77.3%",
+  "className": "altclasses.case2.Rook",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   498
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case1.RabbitBad', Similarity Score: 100.0%",
+  "className": "altclasses.case1.LionBad",
+  "filePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "lineNumbers": [
+   3
+  ],
+  "relativeFilePath": "main/java/altclasses/case1/ACDIBE1.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.Knight', Similarity Score: 77.3%",
+  "className": "altclasses.case2.Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   418
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.King', Similarity Score: 78.1%",
+  "className": "altclasses.case2.Queen",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   418
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'altclasses.case2.King', Similarity Score: 77.3%",
+  "className": "altclasses.case2.Knight",
+  "filePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "lineNumbers": [
+   156
+  ],
+  "relativeFilePath": "main/java/altclasses/case2/ACDIBE2.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'shotgun.case1.EnglishClassGood', Similarity Score: 100.0%",
+  "className": "shotgun.case1.MathClassGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "Match: 'shotgun.case1.EnglishClassBad', Similarity Score: 88.3%",
+  "className": "shotgun.case1.MathClassBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Alternative Classes with Different Interfaces"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SecurityEmployeeVariation",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   52
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Manager",
+  "filePath": "main/java/largeclass/case3/LCGE3.java",
+  "lineNumbers": [
+   91
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCGE3.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MobileBad",
+  "filePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "lineNumbers": [
+   64,
+   68
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "NotebookNotesBad",
+  "filePath": "main/java/refusedbequest/case2/RBBE2.java",
+  "lineNumbers": [
+   27
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case2/RBBE2.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LegoPart",
+  "filePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "lineNumbers": [
+   44
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case3/RBBE3.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Bicycle",
+  "filePath": "main/java/refusedbequest/case4/RBBE4.java",
+  "lineNumbers": [
+   96,
+   101
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case4/RBBE4.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Circle",
+  "filePath": "main/java/specgen/case3/SGBE3.java",
+  "lineNumbers": [
+   29
+  ],
+  "relativeFilePath": "main/java/specgen/case3/SGBE3.java",
+  "smellName": "Refused Bequest"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SquareMatrixOperationsBad",
+  "filePath": "main/java/divergentchange/case1/DVCHBE1.java",
+  "lineNumbers": [
+   55
+  ],
+  "relativeFilePath": "main/java/divergentchange/case1/DVCHBE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PrintLoggerGood",
+  "filePath": "main/java/divergentchange/case1/DVCHGE1.java",
+  "lineNumbers": [
+   15
+  ],
+  "relativeFilePath": "main/java/divergentchange/case1/DVCHGE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SquareMatrixOperationsGood",
+  "filePath": "main/java/divergentchange/case1/DVCHGE1.java",
+  "lineNumbers": [
+   85
+  ],
+  "relativeFilePath": "main/java/divergentchange/case1/DVCHGE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "LucyChartService",
+  "filePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "lineNumbers": [
+   78,
+   103,
+   128
+  ],
+  "relativeFilePath": "main/java/divergentchange/case2/DVCHBE2.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CreditCardBad",
+  "filePath": "main/java/longmethod/case1/LMBE1.java",
+  "lineNumbers": [
+   97
+  ],
+  "relativeFilePath": "main/java/longmethod/case1/LMBE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFriday",
+  "filePath": "main/java/longparams/case4/LPLBE4.java",
+  "lineNumbers": [
+   54
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLBE4.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "BlackFridayVariation",
+  "filePath": "main/java/longparams/case4/LPLGE4.java",
+  "lineNumbers": [
+   53
+  ],
+  "relativeFilePath": "main/java/longparams/case4/LPLGE4.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "TeachingStaffBad",
+  "filePath": "main/java/primobsession/case2/POBE2.java",
+  "lineNumbers": [
+   28
+  ],
+  "relativeFilePath": "main/java/primobsession/case2/POBE2.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SubjectsGradingBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   15
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "MathClassBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   45
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "EnglishClassBad",
+  "filePath": "main/java/shotgun/case1/SSBE1.java",
+  "lineNumbers": [
+   75
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSBE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "SubjectsGradingGood",
+  "filePath": "main/java/shotgun/case1/SSGE1.java",
+  "lineNumbers": [
+   11,
+   30
+  ],
+  "relativeFilePath": "main/java/shotgun/case1/SSGE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CustomerDriver",
+  "filePath": "main/java/specgen/case2/SGBE2.java",
+  "lineNumbers": [
+   176
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGBE2.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CustomerDriverGood",
+  "filePath": "main/java/specgen/case2/SGGE2.java",
+  "lineNumbers": [
+   138
+  ],
+  "relativeFilePath": "main/java/specgen/case2/SGGE2.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ShapeBad",
+  "filePath": "main/java/switchstmts/case1/SWSBE1.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/switchstmts/case1/SWSBE1.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "UserRouteBad",
+  "filePath": "main/java/switchstmts/case2/SWSBE2.java",
+  "lineNumbers": [
+   15
+  ],
+  "relativeFilePath": "main/java/switchstmts/case2/SWSBE2.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CosmeticLab",
+  "filePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "lineNumbers": [
+   49
+  ],
+  "relativeFilePath": "main/java/switchstmts/case3/SWSBE3.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "CommandParser",
+  "filePath": "main/java/switchstmts/case4/SWSBE4.java",
+  "lineNumbers": [
+   35
+  ],
+  "relativeFilePath": "main/java/switchstmts/case4/SWSBE4.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Action",
+  "filePath": "main/java/switchstmts/case4/SWSGE4.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/switchstmts/case4/SWSGE4.java",
+  "smellName": "Switch Statements"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Task",
+  "filePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "lineNumbers": [
+   8
+  ],
+  "relativeFilePath": "main/java/dataclass/case3/DCLSBE3.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "WestVillageManagement",
+  "filePath": "main/java/dataclumps/case4/DCBE4.java",
+  "lineNumbers": [
+   8
+  ],
+  "relativeFilePath": "main/java/dataclumps/case4/DCBE4.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Employee",
+  "filePath": "main/java/largeclass/case3/LCBE3.java",
+  "lineNumbers": [
+   16,
+   17
+  ],
+  "relativeFilePath": "main/java/largeclass/case3/LCBE3.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "Passenger",
+  "filePath": "main/java/longmethod/case4/LMBE4.java",
+  "lineNumbers": [
+   9
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMBE4.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PassengerVariation",
+  "filePath": "main/java/longmethod/case4/LMGE4.java",
+  "lineNumbers": [
+   10
+  ],
+  "relativeFilePath": "main/java/longmethod/case4/LMGE4.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PatientGood",
+  "filePath": "main/java/primobsession/case1/POGE1.java",
+  "lineNumbers": [
+   74
+  ],
+  "relativeFilePath": "main/java/primobsession/case1/POGE1.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ComputerBad",
+  "filePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "lineNumbers": [
+   25
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBBE1.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "ComputerGood",
+  "filePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "lineNumbers": [
+   25
+  ],
+  "relativeFilePath": "main/java/refusedbequest/case1/RBGE1.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "VerizonUserManagement",
+  "filePath": "main/java/tempfield/case2/TFBE2.java",
+  "lineNumbers": [
+   37
+  ],
+  "relativeFilePath": "main/java/tempfield/case2/TFBE2.java",
+  "smellName": "Temporary Field"
+ },
+ {
+  "additionalInfo": "",
+  "className": "PolynomialSolver",
+  "filePath": "main/java/tempfield/case3/TFBE3.java",
+  "lineNumbers": [
+   7
+  ],
+  "relativeFilePath": "main/java/tempfield/case3/TFBE3.java",
+  "smellName": "Temporary Field"
+ }
+]

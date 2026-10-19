@@ -1,0 +1,79 @@
+# Reference: the StaticNose Java tool
+
+The Rust detectors in this repository are ports of the Java detectors in
+[`refactoring-assistant/StaticNose`](https://github.com/refactoring-assistant/StaticNose)
+(the tool described in Yash Mahesh Burshe's MS thesis, *Detecting Fowler's Code
+Smells using Static Analysis*, Northeastern University, 2026).
+
+The Java tool is the **reference implementation**. Every ported detector is held
+to its output by `tests/parity.rs`.
+
+## Building the reference
+
+Requires Docker (the tool needs JDK 25; the Maven image provides it):
+
+```sh
+git clone https://github.com/refactoring-assistant/StaticNose /tmp/StaticNose
+cd /tmp/StaticNose
+docker run --rm -v "$PWD:/app" -w /app maven:3.9-eclipse-temurin-25 \
+  mvn -B -DskipTests package
+# -> target/StaticNose-1.0.5.jar
+```
+
+Produce the golden report for the SmellBench corpus:
+
+```sh
+docker run --rm -v /tmp/StaticNose:/app -w /app maven:3.9-eclipse-temurin-25 \
+  java -jar target/StaticNose-1.0.5.jar \
+  -f /app/datasets/smellbench-dataset -a -r json
+# -> datasets/smellbench-dataset/staticnose-report/report-<timestamp>.json
+```
+
+## Debug probes
+
+`java-probes/` contains two small probes used to reverse-engineer the exact
+semantics of Spoon's metrics. They are not part of the shipped tool; they exist
+so that the goldens can be regenerated and cross-checked when the port needs to
+answer "what does Spoon actually do here?".
+
+- `Probe.java` — dumps per-method `declLine`, `bodyLine`, LLOC and cyclomatic
+  complexity as TSV, matching the shape of `examples/dump_metrics.rs`.
+  Pass a second argument `comments` to force `setCommentEnabled(true)`;
+  pass nothing to use Spoon's default (**comments are enabled by default**).
+- `ProbeStatements.java` — dumps, for a file (optionally filtered to one method
+  name), the class name of every `CtStatement` Spoon counts for LLOC, plus its
+  LLOC and complexity.
+
+Copy them into `src/main/java/edu/northeastern/`, rebuild, and run them from the
+shaded jar:
+
+```sh
+java -cp target/StaticNose-1.0.5.jar edu.northeastern.Probe /path/to/project
+java -cp target/StaticNose-1.0.5.jar edu.northeastern.ProbeStatements \
+  /path/to/File.java someMethodName
+```
+
+## Semantics discovered while porting
+
+These are non-obvious behaviours of Spoon 11.2.2-beta-10 that the port must
+reproduce. Each was confirmed with the probes above, not assumed.
+
+- **Comments are enabled by default.** `AbstractDetector` never calls
+  `setCommentEnabled`, and Spoon's default includes comments in the model.
+  `CtComment` is a `CtStatement`, so comments count towards LLOC.
+- **LLOC counts expressions as statements.** `CtInvocation`,
+  `CtConstructorCall`, `CtAssignment` (including `+=`) and `CtUnaryOperator`
+  (`!x`, `i++`) are all `CtStatement`s. Nested invocations count individually,
+  so `a.b().c()` is two statements.
+- **There is no expression-statement wrapper**, so the *inner* expression is
+  counted rather than an enclosing node.
+- **`CtCatch` is not a `CtStatement`**, so `catch` blocks do not add to LLOC.
+- **For-each loops create an implicit `CtLocalVariable`** for the loop variable,
+  which counts towards LLOC; try-with-resources resources do too.
+- **`CtModel.getAllTypes()` returns top-level types only.** Methods of nested
+  types are never returned, so nested types never produce findings.
+- **Annotation lines are excluded from a declaration's position**, so a method
+  annotated with `@Override` on the previous line reports the line of its first
+  modifier or return type.
+- **The CLI exposes 19 smells.** `DEAD_CODE`, `DUPLICATE_CODE` and
+  `SPECULATIVE_GENERALITY` are commented out in `CodeSmell.java`.
