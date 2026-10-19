@@ -85,32 +85,42 @@ impl LanguageModel for RustModel {
         }
 
         // Methods of a type: functions inside `impl` blocks targeting it.
-        if let Some(name) = self.type_name(file, ty) {
-            for node in descendants(file.root()) {
-                if node.kind() != "impl_item" {
-                    continue;
-                }
-                // A malformed `impl Foo` with no braces has a target but no
-                // body, so both fields are required and either absence means
-                // the same thing: there is nothing here to collect.
-                let (Some(target), Some(body)) = (
-                    node.child_by_field_name("type"),
-                    node.child_by_field_name("body"),
-                ) else {
-                    continue;
-                };
-                if !impl_targets(file.text(target), name) {
-                    continue;
-                }
-                out.extend(functions_in(body));
+        //
+        // Every type `types()` returns above the file itself is a struct, enum,
+        // trait or union, all of which name themselves, so the name is there.
+        // Asking for it as an option and skipping when it is absent would be a
+        // branch no input can reach.
+        let name = self
+            .type_name(file, ty)
+            .expect("a type returned by types() has a name");
+        for node in descendants(file.root()) {
+            if node.kind() != "impl_item" {
+                continue;
             }
+            // A malformed `impl Foo` with no braces has a target but no
+            // body, so both fields are required and either absence means
+            // the same thing: there is nothing here to collect.
+            let (Some(target), Some(body)) = (
+                node.child_by_field_name("type"),
+                node.child_by_field_name("body"),
+            ) else {
+                continue;
+            };
+            if !impl_targets(file.text(target), name) {
+                continue;
+            }
+            out.extend(functions_in(body));
         }
 
-        // Default methods declared in the trait itself.
+        // Default methods declared in the trait itself. Every trait has a body
+        // — a trait with none is not valid Rust — so this is not an optional
+        // step, and a missing body would be a grammar change worth hearing
+        // about rather than a trait that quietly has no methods.
         if ty.kind() == "trait_item" {
-            if let Some(body) = ty.child_by_field_name("body") {
-                out.extend(functions_in(body));
-            }
+            let described = ty
+                .child_by_field_name("body")
+                .expect("a trait_item has a body");
+            out.extend(functions_in(described));
         }
 
         out
@@ -120,17 +130,12 @@ impl LanguageModel for RustModel {
         node.child_by_field_name("body")
     }
 
-    /// Line of the first token that is not an attribute, so `#[derive(..)]` on
-    /// the line above does not shift the reported line. The Java adapter drops
-    /// annotations for the same reason.
+    /// Line of a declaration, which is its own line: in this grammar an
+    /// attribute is a sibling of the item it annotates, never a child of it, so
+    /// nothing has to be walked past. The Java adapter has to skip annotations
+    /// because tree-sitter-java nests them, and this one deliberately does not
+    /// guess at a shape its own grammar never produces.
     fn decl_line(&self, node: Node<'_>) -> usize {
-        let mut cursor = node.walk();
-        for child in node.children(&mut cursor) {
-            if matches!(child.kind(), "attribute_item" | "inner_attribute_item") {
-                continue;
-            }
-            return child.start_position().row + 1;
-        }
         node.start_position().row + 1
     }
 

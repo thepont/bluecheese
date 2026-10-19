@@ -67,9 +67,12 @@ pub fn decl_line(node: Node<'_>) -> usize {
 /// is transparently descended into.
 pub fn methods<'a>(ty: Node<'a>) -> Vec<Node<'a>> {
     let mut out = Vec::new();
-    if let Some(body) = body(ty) {
-        collect_methods(body, &mut out);
-    }
+    // Every declaration `all_types()` returns has a body: a class, interface,
+    // enum, record or annotation without braces is not Java. Treating that as
+    // optional would turn a grammar change into a type that looks like it has no
+    // methods at all, which is indistinguishable from a clean type.
+    let described = body(ty).expect("a type declaration has a body");
+    collect_methods(described, &mut out);
     out
 }
 
