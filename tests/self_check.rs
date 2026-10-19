@@ -24,12 +24,12 @@ fn shipped() -> Scope {
     }
 }
 
-fn long_methods(project: Project) -> Vec<Finding> {
-    bluecheese::detect(&project.files, "long-method").expect("run the long-method detector")
+fn findings(project: &Project, smell: &str) -> Vec<Finding> {
+    bluecheese::detect(&project.files, smell).expect("run a ported detector")
 }
 
 #[test]
-fn the_projects_own_source_has_no_long_methods() {
+fn the_projects_own_source_is_free_of_every_smell_the_tool_can_detect() {
     let project = load_project_with(&common::repo(), &shipped()).expect("scan the repository");
 
     // A scan that read nothing would pass this test. Ten is well under the
@@ -40,11 +40,16 @@ fn the_projects_own_source_has_no_long_methods() {
         project.files.len()
     );
 
-    let findings = long_methods(project);
-    assert!(
-        findings.is_empty(),
-        "a long method outside a fixture is not deliberate: {findings:#?}"
-    );
+    // Every ported smell, not one of them: a detector is written and added to
+    // the list, and the second port is where a scan pinned to the first would
+    // have started missing things.
+    for smell in bluecheese::ported_smells() {
+        let findings = findings(&project, smell);
+        assert!(
+            findings.is_empty(),
+            "'{smell}' outside a fixture is not deliberate: {findings:#?}"
+        );
+    }
 }
 
 #[test]
@@ -55,12 +60,14 @@ fn the_exclusion_is_what_keeps_the_corpus_out_of_the_self_scan() {
     // see from the outside.
     let unscoped =
         load_project_with(&common::repo(), &Scope::default()).expect("scan the repository");
-    let findings = long_methods(unscoped);
 
-    assert!(
-        findings.iter().any(|finding| finding
-            .relative_file_path
-            .starts_with("tests/fixtures/smelly/")),
-        "the deliberate smells in the corpus must be findable, or the exclusion is untested: {findings:#?}"
-    );
+    for smell in bluecheese::ported_smells() {
+        let findings = findings(&unscoped, smell);
+        assert!(
+            findings.iter().any(|finding| finding
+                .relative_file_path
+                .starts_with("tests/fixtures/smelly/")),
+            "'{smell}' has no deliberate smell in the corpus to find, so the exclusion is untested: {findings:#?}"
+        );
+    }
 }
