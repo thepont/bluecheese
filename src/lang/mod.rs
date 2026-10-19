@@ -128,10 +128,10 @@ fn models() -> [&'static dyn LanguageModel; 2] {
 }
 
 pub fn model_for(id: LanguageId) -> &'static dyn LanguageModel {
-    match id {
-        LanguageId::Java => &java::JAVA,
-        LanguageId::Rust => &rust::RUST,
-    }
+    models()
+        .into_iter()
+        .find(|model| model.id() == id)
+        .expect("every LanguageId has a model")
 }
 
 /// The adapter that claims `path`, if any. This is the per-file factory.

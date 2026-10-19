@@ -101,9 +101,11 @@ fn describe(by_extension: &BTreeMap<String, usize>) -> String {
         .collect::<Vec<_>>()
         .join(", ");
 
-    match counts.len().saturating_sub(NAMED_EXTENSIONS) {
-        0 => named,
-        remaining => format!("{named}, and {remaining} more extensions"),
+    let remaining = counts.len().saturating_sub(NAMED_EXTENSIONS);
+    if remaining == 0 {
+        named
+    } else {
+        format!("{named}, and {remaining} more extensions")
     }
 }
 

@@ -22,10 +22,12 @@ use lang::SourceFile;
 /// for yet, and when the label is not a smell of the book at all. Both have to
 /// come back as a message: an empty report reads exactly like clean code.
 pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
-    match smell {
-        "long-method" => Ok(detectors::long_method::detect(files)),
-        "long-params" => Ok(detectors::long_params::detect(files)),
-        other => Err(refused(other)),
+    if smell == "long-method" {
+        Ok(detectors::long_method::detect(files))
+    } else if smell == "long-params" {
+        Ok(detectors::long_params::detect(files))
+    } else {
+        Err(refused(smell))
     }
 }
 
@@ -33,18 +35,19 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
 /// it is. A smell waiting for its port wants a plan; anything else wants the
 /// list of what the book actually names.
 fn refused(smell: &str) -> anyhow::Error {
-    match smells::by_label(smell) {
-        Some(known) => anyhow!(
+    if let Some(known) = smells::by_label(smell) {
+        anyhow!(
             "no detector for smell '{}' ({}) yet; ported: {}",
             known.label,
             known.name,
             ported_smells().join(", ")
-        ),
-        None => anyhow!(
+        )
+    } else {
+        anyhow!(
             "unknown smell '{smell}'; this tool knows the {} smells of 'Bad Smells in Code': {}",
             smells::SMELLS.len(),
             smells::labels().join(", ")
-        ),
+        )
     }
 }
 
