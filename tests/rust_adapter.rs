@@ -150,3 +150,119 @@ fn partitions_a_mixed_tree_by_language() {
         "every finding is either Rust or Java; none is produced twice or dropped"
     );
 }
+
+#[test]
+fn a_trait_default_method_belongs_to_the_trait() {
+    let features = file("rust-features", "features.rs");
+    let model = model_for(features.language);
+
+    let volume = model
+        .types(&features)
+        .into_iter()
+        .find(|ty| model.type_name(&features, *ty) == Some("Volume"))
+        .expect("Volume is a type");
+    let names: Vec<&str> = model
+        .methods(&features, volume)
+        .into_iter()
+        .map(|method| features.text(method.child_by_field_name("name").expect("a name")))
+        .collect();
+
+    // Both are methods of the trait, as an abstract Java method is a method of
+    // its interface. Only `doubled` has a body, so only it can be measured: a
+    // detector must skip the other rather than treat it as an empty method, and
+    // a detector that counted methods would count both.
+    assert_eq!(names, ["size", "doubled"]);
+}
+
+#[test]
+fn attributes_do_not_shift_a_declarations_line() {
+    let features = file("rust-features", "features.rs");
+    let model = model_for(features.language);
+
+    let krate = model
+        .types(&features)
+        .into_iter()
+        .find(|ty| model.type_name(&features, *ty) == Some("Crate"))
+        .expect("Crate is a type");
+    let declaration_line = line_of(&features, "pub struct Crate");
+    assert_eq!(model.decl_line(krate), declaration_line);
+    assert!(
+        features
+            .source
+            .lines()
+            .nth(declaration_line - 2)
+            .expect("the line above")
+            .contains("#[allow"),
+        "the attributes sit above the declaration and must not be reported as it"
+    );
+
+    // A leaf has nothing but itself to report, and the search for a first token
+    // finds no children at all.
+    let identifier = bluecheese::walk::descendants(features.root())
+        .into_iter()
+        .find(|node| node.kind() == "identifier")
+        .expect("the fixture has identifiers");
+    assert_eq!(model.decl_line(identifier), features.line(identifier));
+}
+
+#[test]
+fn logical_operators_are_decisions_but_bitwise_is_not() {
+    let features = file("rust-features", "features.rs");
+    let model = model_for(features.language);
+
+    let mut complexity = None;
+    for ty in model.types(&features) {
+        for method in model.methods(&features, ty) {
+            let name = method.child_by_field_name("name").expect("a name");
+            if features.text(name) == "fits" {
+                complexity = Some(model.complexity(&features, method));
+            }
+        }
+    }
+
+    // One base, `&&` and `||`: three. The `1 & 2` on the line above is
+    // arithmetic, and counting it would inflate every bit-manipulating method.
+    assert_eq!(complexity, Some(3));
+}
+
+#[test]
+fn an_impl_without_a_body_yields_no_methods() {
+    // Not valid Rust, and tree-sitter recovers by giving the `impl` a target and
+    // no body. Reaching for the body anyway must not panic.
+    let broken = file("rust-broken", "impl_without_body.rs");
+    let model = model_for(broken.language);
+
+    for ty in model.types(&broken) {
+        for method in model.methods(&broken, ty) {
+            let name = method.child_by_field_name("name").expect("a name");
+            assert_ne!(broken.text(name), "anything", "there is nothing in there");
+        }
+    }
+}
+
+/// A Rust file whose name is not valid UTF-8 has no pseudo-type, because the
+/// pseudo-type is the file's stem and a stem that is not text cannot be a name.
+/// Its free functions are therefore skipped in silence, which is a known
+/// limitation and not a design: the alternative was to fail the whole scan over
+/// one badly named file.
+///
+/// It is pinned because the failure mode — a file that is read, understood, and
+/// contributes nothing — looks exactly like clean code.
+#[cfg(unix)]
+#[test]
+fn a_rust_file_whose_name_is_not_utf8_reports_nothing() {
+    let tree = TempTree::new("rust-unreadable");
+    tree.write("named.rs", "pub fn named() -> i32 {\n    1\n}\n")
+        .write_unreadable_name(b"\xff\xfe.rs", "pub fn odd() -> i32 {\n    1\n}\n");
+
+    let files = load_project(tree.path()).expect("load the tree").files;
+    assert_eq!(files.len(), 2, "both files are read and parsed");
+
+    let findings = bluecheese::detect(&files, "long-method").expect("run the detector");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.relative_file_path == "named.rs"),
+        "only the file with a readable name can be attributed: {findings:#?}"
+    );
+}

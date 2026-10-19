@@ -108,12 +108,41 @@ impl TempTree {
     pub fn path(&self) -> &Path {
         &self.0
     }
+
+    /// Write a file from raw bytes, for contents that are not text at all.
+    pub fn write_bytes(&self, rel: &str, contents: &[u8]) -> &Self {
+        let path = self.0.join(rel);
+        std::fs::create_dir_all(path.parent().expect("has a parent")).expect("create directory");
+        std::fs::write(path, contents).expect("write file");
+        self
+    }
+
+    /// Write a file whose name is not valid UTF-8, which no `&str` can express.
+    #[cfg(unix)]
+    pub fn write_unreadable_name(&self, name: &[u8], contents: &str) -> &Self {
+        use std::os::unix::ffi::OsStrExt;
+        let path = self.0.join(std::ffi::OsStr::from_bytes(name));
+        std::fs::write(path, contents).expect("write file");
+        self
+    }
 }
 
 impl Drop for TempTree {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.0);
     }
+}
+
+/// A parsed single file, built from `source` written to a throwaway tree. The
+/// extension of `name` decides which adapter reads it.
+pub fn parse(name: &str, source: &str) -> SourceFile {
+    let tree = TempTree::new(name);
+    tree.write(name, source);
+    load_project(tree.path())
+        .expect("load the throwaway tree")
+        .files
+        .pop()
+        .expect("the tree holds the one file it was given")
 }
 
 /// The 1-based line of the first line containing `needle`.
