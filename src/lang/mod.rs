@@ -14,8 +14,8 @@
 pub mod java;
 pub mod rust;
 
-use std::collections::{BTreeMap, HashMap};
 use std::collections::hash_map::Entry;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
@@ -140,69 +140,112 @@ const PRUNED_DIRECTORIES: &[&str] = &["target", "vendor", "node_modules"];
 /// sorted by path for determinism.
 ///
 /// Files no adapter claims are skipped, so a mixed or partly-irrelevant tree can
-/// be pointed at safely. Hidden directories and the conventional build and
-/// dependency directories in [`PRUNED_DIRECTORIES`] are pruned entirely: build
-/// output can contain generated source, and vendored code is not the project's
-/// own. Parsers are reused per language.
+/// be pointed at safely; the skipped ones are counted rather than dropped
+/// silently. Hidden directories and the conventional build and dependency
+/// directories in [`PRUNED_DIRECTORIES`] are pruned entirely: build output can
+/// contain generated source, and vendored code is not the project's own.
 pub fn load_project(root: &Path) -> Result<Project> {
-    let walker = walkdir::WalkDir::new(root).into_iter().filter_entry(|e| {
-        if e.depth() == 0 || !e.file_type().is_dir() {
-            return true;
-        }
-        let name = e.file_name().to_string_lossy();
-        !(name.starts_with('.') || PRUNED_DIRECTORIES.contains(&name.as_ref()))
-    });
-
-    let mut paths: Vec<PathBuf> = walker
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
-        .map(|e| e.into_path())
-        .collect();
-    paths.sort();
-
-    let mut parsers: HashMap<LanguageId, Parser> = HashMap::new();
+    let mut parsers = ParserCache::default();
     let mut files = Vec::new();
     let mut skipped: BTreeMap<String, usize> = BTreeMap::new();
 
-    for path in paths {
+    for path in candidate_paths(root) {
         let Some(model) = model_for_path(&path) else {
-            let extension = path
-                .extension()
-                .and_then(|e| e.to_str())
-                .unwrap_or("<none>")
-                .to_string();
-            *skipped.entry(extension).or_default() += 1;
+            *skipped.entry(extension_of(&path)).or_default() += 1;
             continue;
         };
+        let parser = parsers.get(model)?;
+        files.push(parse_file(&path, root, model, parser)?);
+    }
 
-        if let Entry::Vacant(slot) = parsers.entry(model.id()) {
+    Ok(Project { files, skipped })
+}
+
+/// Everything under `root` that policy does not prune, sorted for determinism.
+///
+/// Which files an adapter actually claims is decided later, in
+/// [`load_project`]: this step only answers "what counts as this project's
+/// source at all?".
+fn candidate_paths(root: &Path) -> Vec<PathBuf> {
+    let walker = walkdir::WalkDir::new(root)
+        .into_iter()
+        .filter_entry(|entry| !is_pruned(entry));
+
+    let mut paths: Vec<PathBuf> = walker
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .map(|entry| entry.into_path())
+        .collect();
+    paths.sort();
+    paths
+}
+
+/// Whether to skip descending into `entry`.
+fn is_pruned(entry: &walkdir::DirEntry) -> bool {
+    if entry.depth() == 0 || !entry.file_type().is_dir() {
+        return false;
+    }
+    let name = entry.file_name().to_string_lossy();
+    name.starts_with('.') || PRUNED_DIRECTORIES.contains(&name.as_ref())
+}
+
+/// Parsers are reusable and costly to set up, so keep one per language.
+#[derive(Default)]
+struct ParserCache {
+    parsers: HashMap<LanguageId, Parser>,
+}
+
+impl ParserCache {
+    fn get(&mut self, model: &'static dyn LanguageModel) -> Result<&mut Parser> {
+        if let Entry::Vacant(slot) = self.parsers.entry(model.id()) {
             let mut parser = Parser::new();
             parser
                 .set_language(&model.grammar())
                 .with_context(|| format!("loading the {:?} grammar", model.id()))?;
             slot.insert(parser);
         }
-        let parser = parsers.get_mut(&model.id()).expect("parser just inserted");
-
-        let source = std::fs::read_to_string(&path)
-            .with_context(|| format!("reading {}", path.display()))?;
-        let tree = parser
-            .parse(&source, None)
-            .with_context(|| format!("parsing {}", path.display()))?;
-        let rel = path
-            .strip_prefix(root)
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .replace('\\', "/");
-
-        files.push(SourceFile {
-            path,
-            rel,
-            source,
-            tree,
-            language: model.id(),
-        });
+        Ok(self
+            .parsers
+            .get_mut(&model.id())
+            .expect("parser just inserted"))
     }
+}
 
-    Ok(Project { files, skipped })
+/// Read and parse one file with the adapter that claims it.
+fn parse_file(
+    path: &Path,
+    root: &Path,
+    model: &'static dyn LanguageModel,
+    parser: &mut Parser,
+) -> Result<SourceFile> {
+    let source =
+        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+    let tree = parser
+        .parse(&source, None)
+        .with_context(|| format!("parsing {}", path.display()))?;
+
+    Ok(SourceFile {
+        rel: relative_path(root, path),
+        path: path.to_path_buf(),
+        source,
+        tree,
+        language: model.id(),
+    })
+}
+
+/// The path as the reference tool reports it: relative to the project root,
+/// with `/` separators.
+fn relative_path(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+/// The extension a skipped file is counted under, for reporting.
+fn extension_of(path: &Path) -> String {
+    path.extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("<none>")
+        .to_string()
 }
