@@ -32,6 +32,8 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         Ok(detectors::large_class::detect(files))
     } else if smell == "intimacy" {
         Ok(detectors::intimacy::detect(files))
+    } else if smell == "refused-bequest" {
+        Ok(detectors::refused_bequest::detect(files))
     } else if smell == "dup-code" {
         Ok(detectors::dup_code::detect(files))
     } else if smell == "long-method" {
@@ -81,6 +83,7 @@ pub fn ported_smells() -> &'static [&'static str] {
         "middle-man",
         "large-class",
         "intimacy",
+        "refused-bequest",
         "dup-code",
         "long-method",
         "long-params",
