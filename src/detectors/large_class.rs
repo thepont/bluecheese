@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, SourceFile, model_for};
+use crate::lang::{model_for, LanguageId, SourceFile};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -21,9 +21,115 @@ struct Analysis<'a> {
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
-        .flat_map(file_findings)
+        .flat_map(|file| {
+            if file.language == LanguageId::Java {
+                file_findings(file)
+            } else {
+                non_java_findings(file)
+            }
+        })
         .collect()
+}
+
+fn non_java_findings(file: &SourceFile) -> Vec<Finding> {
+    let model = model_for(file.language);
+    model
+        .types(file)
+        .into_iter()
+        .filter_map(|ty| {
+            let is_type = match file.language {
+                LanguageId::Rust => matches!(ty.kind(), "struct_item" | "enum_item"),
+                LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
+                    ty.kind(),
+                    "class_declaration" | "class" | "abstract_class_declaration"
+                ),
+                LanguageId::Java => false,
+            };
+            if !is_type {
+                return None;
+            }
+            let name = model.type_name(file, ty)?;
+            let field_names = non_java_fields(file, ty);
+            let methods: Vec<_> = model
+                .methods(file, ty)
+                .into_iter()
+                .filter(|method| model.body(*method).is_some())
+                .collect();
+            if methods.is_empty() {
+                return None;
+            }
+            let wmc: usize = methods
+                .iter()
+                .map(|method| model.complexity(file, *method))
+                .sum();
+            let tcc = non_java_tcc(file, &field_names, &methods);
+            if field_names.len() < FIELD_THRESHOLD && !(wmc >= WMC_THRESHOLD && tcc < TCC_THRESHOLD)
+            {
+                return None;
+            }
+            Some(Finding {
+                smell_name: SMELL_NAME.to_string(),
+                file_path: file.rel.clone(),
+                class_name: name.to_owned(),
+                line_numbers: vec![model.decl_line(ty)],
+                relative_file_path: file.rel.clone(),
+                additional_info: String::new(),
+            })
+        })
+        .collect()
+}
+
+fn non_java_fields(file: &SourceFile, ty: Node<'_>) -> BTreeSet<String> {
+    let Some(body) = ty.child_by_field_name("body") else {
+        return BTreeSet::new();
+    };
+    let mut cursor = body.walk();
+    let fields = body
+        .named_children(&mut cursor)
+        .filter(|field| match file.language {
+            LanguageId::Rust => field.kind() == "field_declaration",
+            LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
+                field.kind(),
+                "public_field_definition" | "field_definition" | "property_definition"
+            ),
+            LanguageId::Java => false,
+        });
+    fields
+        .filter_map(|field| {
+            field
+                .child_by_field_name("name")
+                .or_else(|| field.child_by_field_name("property"))
+                .map(|name| file.text(name).trim_start_matches('#').to_owned())
+        })
+        .collect()
+}
+
+fn non_java_tcc(file: &SourceFile, fields: &BTreeSet<String>, methods: &[Node<'_>]) -> f64 {
+    if methods.len() < 2 {
+        return 1.0;
+    }
+    let usages: Vec<_> = methods
+        .iter()
+        .map(|method| {
+            descendants(*method)
+                .into_iter()
+                .filter(|node| node.kind() == "identifier" && fields.contains(file.text(*node)))
+                .map(|node| file.text(node).to_owned())
+                .collect::<BTreeSet<_>>()
+        })
+        .collect();
+    let mut connected = 0usize;
+    for left in 0..usages.len() {
+        for right in left + 1..usages.len() {
+            if usages[left]
+                .iter()
+                .any(|field| usages[right].contains(field))
+            {
+                connected += 1;
+            }
+        }
+    }
+    connected as f64 / (usages.len() * (usages.len() - 1) / 2) as f64
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
