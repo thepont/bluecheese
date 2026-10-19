@@ -2,6 +2,7 @@
 //! `src/detectors/mod.rs` for the dispatch table.
 
 pub mod comments;
+pub mod data_clumps;
 pub mod dup_code;
 pub mod long_method;
 pub mod long_params;

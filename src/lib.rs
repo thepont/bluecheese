@@ -22,7 +22,9 @@ use lang::SourceFile;
 /// for yet, and when the label is not a smell of the book at all. Both have to
 /// come back as a message: an empty report reads exactly like clean code.
 pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
-    if smell == "dup-code" {
+    if smell == "data-clumps" {
+        Ok(detectors::data_clumps::detect(files))
+    } else if smell == "dup-code" {
         Ok(detectors::dup_code::detect(files))
     } else if smell == "long-method" {
         Ok(detectors::long_method::detect(files))
@@ -64,6 +66,7 @@ fn refused(smell: &str) -> anyhow::Error {
 /// The smell labels [`detect`] accepts, for diagnostics.
 pub fn ported_smells() -> &'static [&'static str] {
     &[
+        "data-clumps",
         "dup-code",
         "long-method",
         "long-params",

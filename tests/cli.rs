@@ -223,6 +223,25 @@ fn speculative_generality_can_be_requested_from_the_cli() {
 }
 
 #[test]
+fn data_clumps_can_be_requested_from_the_cli() {
+    let output = run_smell(&fixtures().join("smellbench"), "data-clumps", &[]);
+
+    assert!(
+        output.status.success(),
+        "stderr was: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).expect("JSON findings");
+    assert!(findings.iter().any(|finding| {
+        finding.smell_name == "Data Clumps"
+            && finding.class_name == "FlightBookingBad"
+            && finding
+                .relative_file_path
+                .ends_with("dataclumps/case1/DCBE1.java")
+    }));
+}
+
+#[test]
 fn a_label_that_is_not_a_smell_at_all_says_so() {
     // This is the mistake a person makes from memory, so it must not be
     // answered as if the smell were merely unported: `dead-code` was a detector
