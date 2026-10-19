@@ -5,7 +5,63 @@ defects in current releases. Keep adding examples here, including weak leads
 and controls. A large commit or frequently co-changing files alone does not
 establish that a responsibility is scattered.
 
-## Port and follow-up validation, 2026-10-20
+## JavaScript, TypeScript and mixed-language follow-up
+
+JS/TS shotgun support is implemented in the Rust CLI in `03dd7cd`, with
+runtime suffix resolution added in `a1252bd`. Cross-language structural
+duplication is implemented in `2abcc4e`. Earlier unsupported-language results
+below are historical baselines, not the current JS/TS coverage.
+
+Supported source extensions: `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.mts`,
+`.cts` and `.tsx`, alongside the existing Java and Rust grammars.
+The JS/TS resolver can follow relative ES imports between those languages.
+Java and Rust do not acquire call edges merely from matching names.
+
+| Check | Source/evidence | Observed result |
+| --- | --- | --- |
+| Mixed JS/TS coupling | Controlled `tests/fixtures/multilingual/` directory | `Policy.check` in `policy.ts:2`, called by JS `ClientA` and TS `ClientB`; CM=2, CC=2, Fan-Out=0 |
+| Cross-language duplication | Same controlled directory | One structural clone group, four locations: `Calculator.java:2`, `calculator.rs:1`, `client-a.js:7`, `client-b.ts:7` |
+| Shared Long Parameter List metric | `shared_metrics_find_parameter_lists_in_four_languages_together` test | Four findings from one mixed Java/Rust/JS/TS project |
+| Original public JS teaching example | Clean Code School at `e88f760414faac08e1f91b211c37f4daad4b4211`, two shotgun files | Both now parse as JavaScript; shotgun scan succeeds but emits zero findings |
+| Broader public mixed JS/TS scan | Clean Code School HEAD `b7791a5e41cc6b70937efc8857c35de5db0ab549` | 80 JS and 1 TS files analysed, no parse problems; zero shotgun candidates and zero cross-language duplicate candidates |
+
+The mixed fixture and its four-language calculation are deliberately authored
+controls. They establish reproducible capabilities, not independently found
+public-project defects. The public teaching example remains a miss for the
+shotgun heuristic: its repeated policy is not evidence of two external owners
+calling a common method. Zero candidates on the broader repository are not a
+claim that the project is clean.
+
+The cross-language comparison normalises parameter/local names, declaration
+syntax and a Rust tail return, while retaining operations, constants, operand
+order and reference identity. A changed multiplier, swapped operands or changed
+return target stays distinct. TS and TSX count as the same language. Bodies
+need at least three supported statements and a returned value; unknown syntax
+rejects a body. Calls, loops, branches and field access are outside this pass.
+Numeric overflow, coercion and runtime behaviour still need review.
+
+The JS/TS resolver is static and bounded. It does not run modules, load npm
+packages, resolve arbitrary CommonJS `require()`, track runtime mutation or
+implement the full TypeScript compiler. Its tests cover imports, aliases,
+module suffixes, typed/inferred receivers, object methods, scoped bindings,
+fields, interface contracts and cyclic input. Java parity remains unchanged.
+
+Reproduce the controlled checks:
+
+```sh
+cargo run --locked -- -f tests/fixtures/multilingual -s shotgun
+cargo run --locked -- -f tests/fixtures/multilingual -s dup-code
+cargo test --locked --test ecmascript --test cross_language_duplicates
+```
+
+The complete suite now passes **153 tests**, including 17 ECMAScript tests
+and 10 cross-language tests. Build and changed-file rustfmt checks pass.
+All-target Clippy passes with the existing `while_let_loop` lint allowed;
+strict Clippy and repository-wide formatting still expose the pre-existing
+switch-loop lint and Data Clumps import ordering described below. Public
+application code was parsed, not executed, and its application tests were not run.
+
+## Java port and follow-up validation, 2026-10-20
 
 The Java static-coupling detector is now available with `-s shotgun`, committed
 as `ecb540d854109807bbe3738dfec03eb6c766d057`. The
