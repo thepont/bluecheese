@@ -8,25 +8,41 @@
 pub mod detectors;
 pub mod finding;
 pub mod lang;
+pub mod smells;
 pub mod walk;
 
-use anyhow::{Result, bail};
+use anyhow::{Result, anyhow};
 
 use finding::Finding;
 use lang::SourceFile;
 
-/// Run a single detector by its StaticNose label.
+/// Run a single detector by its smell label.
 ///
-/// Fails when no detector has been ported for `smell`. The reference tool
-/// exposes nineteen smells and this one exposes one of them, so an unknown label
-/// is an ordinary mistake, not a bug: it must come back as a message rather than
-/// as an empty report, which would read exactly like clean code.
+/// Fails when the smell is one the book names but no detector has been ported
+/// for yet, and when the label is not a smell of the book at all. Both have to
+/// come back as a message: an empty report reads exactly like clean code.
 pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
     match smell {
         "long-method" => Ok(detectors::long_method::detect(files)),
-        other => bail!(
-            "no detector for smell '{other}'; ported: {}",
+        other => Err(refused(other)),
+    }
+}
+
+/// Why `smell` cannot be run, as a message that says which of the two mistakes
+/// it is. A smell waiting for its port wants a plan; anything else wants the
+/// list of what the book actually names.
+fn refused(smell: &str) -> anyhow::Error {
+    match smells::by_label(smell) {
+        Some(known) => anyhow!(
+            "no detector for smell '{}' ({}) yet; ported: {}",
+            known.label,
+            known.name,
             ported_smells().join(", ")
+        ),
+        None => anyhow!(
+            "unknown smell '{smell}'; this tool knows the {} smells of 'Bad Smells in Code': {}",
+            smells::SMELLS.len(),
+            smells::labels().join(", ")
         ),
     }
 }
@@ -48,6 +64,18 @@ mod tests {
             assert!(
                 detect(&[], smell).is_ok(),
                 "'{smell}' is offered but not dispatched"
+            );
+        }
+    }
+
+    /// And what is dispatched has to be a smell of the book, or the port is of
+    /// something outside the catalogue it claims to be working through.
+    #[test]
+    fn every_ported_smell_is_one_the_book_names() {
+        for smell in ported_smells() {
+            assert!(
+                smells::by_label(smell).is_some(),
+                "'{smell}' is ported but not a smell of the book"
             );
         }
     }

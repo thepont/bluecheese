@@ -118,9 +118,8 @@ fn a_folder_with_nothing_it_can_read_says_what_it_saw() {
 
 #[test]
 fn an_unported_smell_is_refused_by_name() {
-    // The reference tool exposes nineteen smells and this one has ported one. A
-    // label from the other eighteen must not come back as an empty report, which
-    // is what clean code looks like.
+    // A smell of the book with no detector yet must not come back as an empty
+    // report, which is what clean code looks like.
     let output = run_smell(&fixtures().join("rust"), "feature-envy", &[]);
 
     assert!(!output.status.success());
@@ -132,6 +131,29 @@ fn an_unported_smell_is_refused_by_name() {
     assert!(
         stderr.contains("long-method"),
         "and it must say what can be run instead; stderr was: {stderr}"
+    );
+}
+
+#[test]
+fn a_label_that_is_not_a_smell_at_all_says_so() {
+    // This is the mistake a person makes from memory, so it must not be
+    // answered as if the smell were merely unported: `dead-code` was a detector
+    // in the reference tool's source but it is not one of the book's smells.
+    let output = run_smell(&fixtures().join("rust"), "dead-code", &[]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("unknown smell 'dead-code'"),
+        "stderr was: {stderr}"
+    );
+    assert!(
+        stderr.contains("22 smells of 'Bad Smells in Code'"),
+        "and it must count what it does know; stderr was: {stderr}"
+    );
+    assert!(
+        stderr.contains("switch-stmts"),
+        "and list it; stderr was: {stderr}"
     );
 }
 

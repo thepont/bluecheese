@@ -74,6 +74,42 @@ fn long_method_matches_java_on_smellbench() {
     );
 }
 
+/// The published smell vocabulary, checked against the evidence rather than
+/// restated: every smell the goldens name is one the book names and the
+/// reference tool's command line exposes, and the goldens name all of those.
+///
+/// The equality is a fact about the audit, not a coincidence to rely on: the
+/// reference tool exposes nineteen smells, and all nineteen fire somewhere in
+/// SmellBench, so its report over that corpus names exactly its vocabulary.
+#[test]
+fn the_goldens_name_the_reference_tools_whole_vocabulary() {
+    let named: BTreeSet<String> = ["smellbench.json", "smelly.json", "refactored.json"]
+        .into_iter()
+        .flat_map(golden)
+        .map(|finding| finding.smell_name)
+        .collect();
+
+    for name in &named {
+        let smell = bluecheese::smells::by_name(name)
+            .unwrap_or_else(|| panic!("a golden names '{name}', which is not a smell of the book"));
+        assert!(
+            smell.in_reference_tool,
+            "a golden names '{name}', so the reference tool must expose it"
+        );
+    }
+
+    let exposed: BTreeSet<String> = bluecheese::smells::SMELLS
+        .iter()
+        .filter(|smell| smell.in_reference_tool)
+        .map(|smell| smell.name.to_string())
+        .collect();
+
+    assert_eq!(
+        named, exposed,
+        "the goldens and the reference tool's vocabulary must agree"
+    );
+}
+
 #[test]
 fn long_method_matches_java_on_the_smelly_corpus() {
     assert_parity("smelly", "smelly.json", "long-method", "Long Method");
