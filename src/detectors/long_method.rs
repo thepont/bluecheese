@@ -27,7 +27,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             };
 
             let mut lines = Vec::new();
-            for method in model.methods(ty) {
+            for method in model.methods(file, ty) {
                 let Some(body) = model.body(method) else {
                     continue;
                 };

@@ -70,8 +70,12 @@ pub trait LanguageModel {
     /// Simple name of a type declaration.
     fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str>;
 
-    /// Methods declared directly in `ty`. Constructors are not methods.
-    fn methods<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>>;
+    /// Methods belonging to `ty`, as the language defines that relationship.
+    /// Constructors are not methods.
+    ///
+    /// The file is passed because a language may not keep methods inside the
+    /// type declaration (Rust puts them in `impl` blocks elsewhere in the file).
+    fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>>;
 
     /// The body of a method, if it has one.
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>>;

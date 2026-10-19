@@ -37,7 +37,7 @@ impl LanguageModel for JavaModel {
         types::simple_name(file, ty)
     }
 
-    fn methods<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn methods<'a>(&self, _file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
         types::methods(ty)
     }
 
