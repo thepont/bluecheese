@@ -140,8 +140,66 @@ fn rust_is_refusal_stub(file: &SourceFile, method: Node<'_>) -> bool {
             || file.text(statements[0]).starts_with("unimplemented!"))
 }
 
+struct EcmaClass<'a> {
+    file: &'a SourceFile,
+    node: Node<'a>,
+    name: String,
+}
+
+impl EcmaClass<'_> {
+    fn parent_name(&self) -> Option<&str> {
+        let heritage = descendants(self.node)
+            .into_iter()
+            .find(|node| node.kind() == "class_heritage")?;
+        descendants(heritage)
+            .into_iter()
+            .find(|node| matches!(node.kind(), "type_identifier" | "identifier"))
+            .map(|node| self.file.text(node))
+    }
+
+    fn refusal_lines(&self, parent: &Self) -> Vec<usize> {
+        let model = model_for(self.file.language);
+        let child_methods = model.methods(self.file, self.node);
+        let parent_methods = model.methods(parent.file, parent.node);
+        let mut lines: Vec<_> = child_methods
+            .into_iter()
+            .filter(|method| self.refuses(*method, parent, &parent_methods))
+            .map(|method| model.decl_line(method))
+            .collect();
+        lines.sort_unstable();
+        lines.dedup();
+        lines
+    }
+
+    fn refuses(&self, method: Node<'_>, parent: &Self, parent_methods: &[Node<'_>]) -> bool {
+        if !(ecma_empty_body(self.file, method) || ecma_refusal_throw(self.file, method)) {
+            return false;
+        }
+        let Some(name) = method.child_by_field_name("name") else {
+            return false;
+        };
+        let model = model_for(self.file.language);
+        parent_methods.iter().any(|parent_method| {
+            parent_method
+                .child_by_field_name("name")
+                .is_some_and(|parent_name| {
+                    parent.file.text(parent_name) == self.file.text(name)
+                        && model.parameters(*parent_method) == model.parameters(method)
+                })
+        })
+    }
+}
+
 fn ecmascript_findings(files: &[SourceFile]) -> Vec<Finding> {
-    let classes: Vec<_> = files
+    let classes = ecmascript_classes(files);
+    classes
+        .iter()
+        .filter_map(|child| ecmascript_finding(child, &classes))
+        .collect()
+}
+
+fn ecmascript_classes(files: &[SourceFile]) -> Vec<EcmaClass<'_>> {
+    files
         .iter()
         .filter(|file| {
             matches!(
@@ -162,69 +220,34 @@ fn ecmascript_findings(files: &[SourceFile]) -> Vec<Finding> {
                 .filter_map(move |node| {
                     model_for(file.language)
                         .type_name(file, node)
-                        .map(|name| (file, node, name.to_owned()))
+                        .map(|name| EcmaClass {
+                            file,
+                            node,
+                            name: name.to_owned(),
+                        })
                 })
         })
+        .collect()
+}
+
+fn ecmascript_finding(child: &EcmaClass<'_>, classes: &[EcmaClass<'_>]) -> Option<Finding> {
+    let parent_name = child.parent_name()?;
+    let parents: Vec<_> = classes
+        .iter()
+        .filter(|parent| parent.name == parent_name)
         .collect();
-    let mut findings = Vec::new();
-    for (file, child, child_name) in &classes {
-        let Some(heritage) = descendants(*child)
-            .into_iter()
-            .find(|node| node.kind() == "class_heritage")
-        else {
-            continue;
-        };
-        let Some(parent_name) = descendants(heritage)
-            .into_iter()
-            .find(|node| matches!(node.kind(), "type_identifier" | "identifier"))
-            .map(|node| file.text(node))
-        else {
-            continue;
-        };
-        let parents: Vec<_> = classes
-            .iter()
-            .filter(|(_, _, name)| name == parent_name)
-            .collect();
-        if parents.len() != 1 {
-            continue;
-        }
-        let (parent_file, parent, _) = parents[0];
-        let model = model_for(file.language);
-        let child_methods = model.methods(file, *child);
-        let parent_methods = model.methods(parent_file, *parent);
-        let mut lines = Vec::new();
-        for method in &child_methods {
-            if !(ecma_empty_body(file, *method) || ecma_refusal_throw(file, *method)) {
-                continue;
-            }
-            let Some(name) = method.child_by_field_name("name") else {
-                continue;
-            };
-            if parent_methods.iter().any(|parent_method| {
-                parent_method
-                    .child_by_field_name("name")
-                    .is_some_and(|parent_name| {
-                        parent_file.text(parent_name) == file.text(name)
-                            && model.parameters(*parent_method) == model.parameters(*method)
-                    })
-            }) {
-                lines.push(model.decl_line(*method));
-            }
-        }
-        lines.sort_unstable();
-        lines.dedup();
-        if !lines.is_empty() {
-            findings.push(Finding {
-                smell_name: SMELL_NAME.to_owned(),
-                file_path: file.rel.clone(),
-                class_name: child_name.clone(),
-                line_numbers: lines,
-                relative_file_path: file.rel.clone(),
-                additional_info: String::new(),
-            });
-        }
+    if parents.len() != 1 {
+        return None;
     }
-    findings
+    let lines = child.refusal_lines(parents[0]);
+    (!lines.is_empty()).then(|| Finding {
+        smell_name: SMELL_NAME.to_owned(),
+        file_path: child.file.rel.clone(),
+        class_name: child.name.clone(),
+        line_numbers: lines,
+        relative_file_path: child.file.rel.clone(),
+        additional_info: String::new(),
+    })
 }
 
 fn ecma_empty_body(_file: &SourceFile, method: Node<'_>) -> bool {
