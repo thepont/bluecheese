@@ -49,14 +49,15 @@ impl LanguageModel for RustModel {
     }
 
     fn is_statement(&self, node: Node<'_>) -> bool {
-        matches!(
+        if matches!(
             node.kind(),
-            "let_declaration"
-                | "expression_statement"
-                | "return_expression"
-                | "break_expression"
-                | "continue_expression"
-        )
+            "return_expression" | "break_expression" | "continue_expression"
+        ) {
+            return !node
+                .parent()
+                .is_some_and(|parent| parent.kind() == "expression_statement");
+        }
+        matches!(node.kind(), "let_declaration" | "expression_statement")
     }
 
     fn method_coupling(&self, files: &[SourceFile]) -> Vec<crate::lang::coupling::MethodCoupling> {
