@@ -6,6 +6,7 @@
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use bluecheese::finding::Finding;
 use bluecheese::lang::{Project, SourceFile, load_project};
@@ -75,13 +76,23 @@ pub fn count_lines_starting_with(source: &SourceFile, prefix: &str) -> usize {
         .count()
 }
 
+/// Counts trees so two parallel tests cannot pick the same directory.
+static NEXT_TREE: AtomicUsize = AtomicUsize::new(0);
+
 /// A throwaway directory tree, so behaviour that depends on ignore files can be
 /// exercised without committing files git itself would refuse to track.
 pub struct TempTree(PathBuf);
 
 impl TempTree {
     pub fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("bluecheese-{}-{name}", std::process::id()));
+        // Tests run in parallel within one binary, so the name alone is not
+        // unique: two tests wanting the same fixture would share a directory and
+        // delete each other's files.
+        let serial = NEXT_TREE.fetch_add(1, Ordering::Relaxed);
+        let dir = std::env::temp_dir().join(format!(
+            "bluecheese-{}-{serial}-{name}",
+            std::process::id()
+        ));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("create temp tree");
         Self(dir)
