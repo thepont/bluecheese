@@ -207,3 +207,18 @@ fn switch_statements_match_java_on_the_refactored_corpus() {
         "Switch Statements",
     );
 }
+
+#[test]
+fn comments_match_java_on_smellbench() {
+    assert_parity("smellbench", "smellbench.json", "comments", "Comments");
+}
+
+#[test]
+fn comments_match_java_on_the_smelly_corpus() {
+    assert_parity("smelly", "smelly.json", "comments", "Comments");
+}
+
+#[test]
+fn comments_match_java_on_the_refactored_corpus() {
+    assert_parity("refactored", "refactored.json", "comments", "Comments");
+}
