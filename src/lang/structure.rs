@@ -96,7 +96,7 @@ impl<'a> Normalizer<'a> {
                 && index + 1 == nodes.len()
                 && !["let_declaration", "expression_statement"].contains(&statement.kind())
             {
-                statements.push(Statement::Return(normalizer.expression(*statement, 0)?));
+                statements.push(Statement::Return(normalizer.expression(*statement)?));
             } else {
                 statements.extend(normalizer.statement(*statement)?);
             }
@@ -133,7 +133,7 @@ impl<'a> Normalizer<'a> {
         }
         if ["return_statement", "return_expression"].contains(&node.kind()) {
             return Some(vec![Statement::Return(
-                self.expression(*children(node).first()?, 0)?,
+                self.expression(*children(node).first()?)?,
             )]);
         }
         if node.kind() == "expression_statement" {
@@ -153,7 +153,7 @@ impl<'a> Normalizer<'a> {
         if name.kind() != "identifier" || self.bindings.contains_key(self.file.text(name)) {
             return None;
         }
-        let value = self.expression(node.child_by_field_name("value")?, 0)?;
+        let value = self.expression(node.child_by_field_name("value")?)?;
         let index = self.bindings.len();
         self.bindings.insert(self.file.text(name).into(), index);
         Some(Statement::Bind(value))
@@ -170,12 +170,37 @@ impl<'a> Normalizer<'a> {
         let index = *self.bindings.get(self.file.text(left))?;
         Some(Statement::Assign(
             index,
-            self.expression(node.child_by_field_name("right")?, 0)?,
+            self.expression(node.child_by_field_name("right")?)?,
         ))
     }
 
-    fn expression(&self, node: Node<'_>, depth: usize) -> Option<Expression> {
-        if depth > 48 {
+    fn expression(&self, node: Node<'_>) -> Option<Expression> {
+        ExpressionReader {
+            file: self.file,
+            bindings: &self.bindings,
+            depth: 0,
+        }
+        .read(node)
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ExpressionReader<'a> {
+    file: &'a SourceFile,
+    bindings: &'a BTreeMap<String, usize>,
+    depth: usize,
+}
+
+impl ExpressionReader<'_> {
+    fn deeper(self) -> Self {
+        Self {
+            depth: self.depth + 1,
+            ..self
+        }
+    }
+
+    fn read(&self, node: Node<'_>) -> Option<Expression> {
+        if self.depth > 48 {
             return None;
         }
         if node.kind() == "identifier" {
@@ -185,15 +210,15 @@ impl<'a> Normalizer<'a> {
                 .map(|index| Expression::Binding(*index));
         }
         if node.kind() == "parenthesized_expression" {
-            return self.expression(*children(node).first()?, depth + 1);
+            return self.deeper().read(*children(node).first()?);
         }
         if node.kind() == "binary_expression" {
-            return self.binary(node, depth);
+            return self.binary(node);
         }
         if node.kind() == "unary_expression" {
             return Some(Expression::Unary(
                 operator(self.file, node)?.into(),
-                Box::new(self.expression(*children(node).last()?, depth + 1)?),
+                Box::new(self.deeper().read(*children(node).last()?)?),
             ));
         }
         if [
@@ -213,9 +238,9 @@ impl<'a> Normalizer<'a> {
         None
     }
 
-    fn binary(&self, node: Node<'_>, depth: usize) -> Option<Expression> {
-        let left = self.expression(node.child_by_field_name("left")?, depth + 1)?;
-        let right = self.expression(node.child_by_field_name("right")?, depth + 1)?;
+    fn binary(&self, node: Node<'_>) -> Option<Expression> {
+        let left = self.deeper().read(node.child_by_field_name("left")?)?;
+        let right = self.deeper().read(node.child_by_field_name("right")?)?;
         Some(Expression::Binary(
             operator(self.file, node)?.into(),
             Box::new(left),
