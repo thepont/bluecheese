@@ -20,7 +20,11 @@ use common::finding_keys_in;
 fn extract_method_removes_the_finding() {
     // The book's primary answer to Long Method. The work is identical on both
     // sides; only the division into methods changes.
-    let expected = [("ExtractMe.java".to_string(), "ExtractMe".to_string(), vec![14])];
+    let expected = [(
+        "ExtractMe.java".to_string(),
+        "ExtractMe".to_string(),
+        vec![14],
+    )];
     assert_eq!(
         finding_keys_in("smelly", "ExtractMe.java"),
         expected.into_iter().collect()
@@ -60,7 +64,11 @@ fn replace_method_with_method_object_moves_the_finding_instead() {
     // It is still long, so it is still reported — now under the object that
     // holds it. A detector that went quiet here would be reporting the shape of
     // the class rather than the state of the code.
-    let before = [("ManyTemps.java".to_string(), "ManyTemps".to_string(), vec![11])];
+    let before = [(
+        "ManyTemps.java".to_string(),
+        "ManyTemps".to_string(),
+        vec![11],
+    )];
     assert_eq!(
         finding_keys_in("smelly", "ManyTemps.java"),
         before.into_iter().collect()

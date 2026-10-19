@@ -66,7 +66,12 @@ fn assert_parity(corpus: &str, golden_name: &str, smell: &str, java_smell: &str)
 
 #[test]
 fn long_method_matches_java_on_smellbench() {
-    assert_parity("smellbench", "smellbench.json", "long-method", "Long Method");
+    assert_parity(
+        "smellbench",
+        "smellbench.json",
+        "long-method",
+        "Long Method",
+    );
 }
 
 #[test]
@@ -79,5 +84,10 @@ fn long_method_matches_java_on_the_refactored_corpus() {
     // The interesting half: the Java tool also reports the body that Replace
     // Method with Method Object moved into a new class, and reports it under
     // that class. The pair's claim is verified rather than asserted.
-    assert_parity("refactored", "refactored.json", "long-method", "Long Method");
+    assert_parity(
+        "refactored",
+        "refactored.json",
+        "long-method",
+        "Long Method",
+    );
 }

@@ -35,7 +35,10 @@ fn methods_by_type(file: &SourceFile) -> BTreeMap<String, Vec<String>> {
     let model = model_for(file.language);
     let mut by_type = BTreeMap::new();
     for ty in model.types(file) {
-        let type_name = model.type_name(file, ty).expect("type has a name").to_string();
+        let type_name = model
+            .type_name(file, ty)
+            .expect("type has a name")
+            .to_string();
         let methods = model
             .methods(file, ty)
             .into_iter()
@@ -136,7 +139,12 @@ fn reports_a_declaration_at_its_own_line_not_at_its_annotations() {
     let shape_line = line_of(&shape, "public class Shape");
     assert_eq!(model.decl_line(annotated), shape_line);
     assert!(
-        shape.source.lines().nth(shape_line - 2).unwrap().contains("@Deprecated"),
+        shape
+            .source
+            .lines()
+            .nth(shape_line - 2)
+            .unwrap()
+            .contains("@Deprecated"),
         "the annotation sits on the line above; the declaration line must skip it"
     );
 
@@ -150,7 +158,12 @@ fn reports_a_declaration_at_its_own_line_not_at_its_annotations() {
     let bare_line = line_of(&shape, "class Bare");
     assert_eq!(model.decl_line(bare), bare_line);
     assert!(
-        shape.source.lines().nth(bare_line - 2).unwrap().contains("@Marker"),
+        shape
+            .source
+            .lines()
+            .nth(bare_line - 2)
+            .unwrap()
+            .contains("@Marker"),
         "Bare is annotated on the line above its declaration"
     );
 }

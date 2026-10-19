@@ -16,7 +16,11 @@ use common::{count_lines_starting_with, file, finding_keys_in};
 fn a_method_over_the_size_limit_is_reported() {
     // `LongBySize.record` is 31 invocations in a row: over the limit on size
     // alone, with no branching at all.
-    let expected = [("LongBySize.java".to_string(), "LongBySize".to_string(), vec![12])];
+    let expected = [(
+        "LongBySize.java".to_string(),
+        "LongBySize".to_string(),
+        vec![12],
+    )];
     assert_eq!(
         finding_keys_in("smelly", "LongBySize.java"),
         expected.into_iter().collect()
@@ -27,7 +31,11 @@ fn a_method_over_the_size_limit_is_reported() {
 fn one_file_can_trip_either_limit() {
     // `applyShipment` is over the size limit alone and `inRange` is over the
     // complexity limit alone; both are reported, from the same type.
-    let expected = [("LongMethod.java".to_string(), "LongMethod".to_string(), vec![23, 67])];
+    let expected = [(
+        "LongMethod.java".to_string(),
+        "LongMethod".to_string(),
+        vec![23, 67],
+    )];
     assert_eq!(
         finding_keys_in("smelly", "LongMethod.java"),
         expected.into_iter().collect()
@@ -62,7 +70,11 @@ fn a_long_method_in_a_nested_type_is_invisible() {
 fn a_long_method_in_a_top_level_enum_is_reported() {
     // The counterpart to the nested case: an enum is a top-level type, so it is
     // reported even though its body sits one level deeper.
-    let expected = [("EnumLong.java".to_string(), "EnumLong".to_string(), vec![11])];
+    let expected = [(
+        "EnumLong.java".to_string(),
+        "EnumLong".to_string(),
+        vec![11],
+    )];
     assert_eq!(
         finding_keys_in("smelly", "EnumLong.java"),
         expected.into_iter().collect()

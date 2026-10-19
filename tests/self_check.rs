@@ -53,13 +53,14 @@ fn the_exclusion_is_what_keeps_the_corpus_out_of_the_self_scan() {
     // above is passing because the walk never reached the fixtures rather than
     // because of the exclusion — which is exactly the failure a reviewer cannot
     // see from the outside.
-    let unscoped = load_project_with(&common::repo(), &Scope::default()).expect("scan the repository");
+    let unscoped =
+        load_project_with(&common::repo(), &Scope::default()).expect("scan the repository");
     let findings = long_methods(unscoped);
 
     assert!(
-        findings
-            .iter()
-            .any(|finding| finding.relative_file_path.starts_with("tests/fixtures/smelly/")),
+        findings.iter().any(|finding| finding
+            .relative_file_path
+            .starts_with("tests/fixtures/smelly/")),
         "the deliberate smells in the corpus must be findable, or the exclusion is untested: {findings:#?}"
     );
 }

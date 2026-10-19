@@ -98,5 +98,8 @@ fn nothing_matching_gives_nothing() {
 
     let found = ancestor_while(shallow, |_| false, |node| node.kind() == "if_statement");
 
-    assert_eq!(found, None, "a call outside every branch has no branch above it");
+    assert_eq!(
+        found, None,
+        "a call outside every branch has no branch above it"
+    );
 }

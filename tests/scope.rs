@@ -44,7 +44,10 @@ fn two_files(name: &str) -> TempTree {
 fn without_a_scope_every_source_file_is_read() {
     let tree = two_files("scope-none");
 
-    assert_eq!(analysed(&tree, Scope::default()), ["fixtures/b.rs", "src/a.rs"]);
+    assert_eq!(
+        analysed(&tree, Scope::default()),
+        ["fixtures/b.rs", "src/a.rs"]
+    );
 }
 
 #[test]

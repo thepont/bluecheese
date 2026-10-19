@@ -136,10 +136,13 @@ fn partitions_a_mixed_tree_by_language() {
         .filter(|(path, _, _)| path.starts_with("rust/"))
         .cloned()
         .collect();
-    let sample: BTreeSet<(String, String, Vec<usize>)> =
-        [("rust/sample.rs".to_string(), "Analyzer".to_string(), vec![18])]
-            .into_iter()
-            .collect();
+    let sample: BTreeSet<(String, String, Vec<usize>)> = [(
+        "rust/sample.rs".to_string(),
+        "Analyzer".to_string(),
+        vec![18],
+    )]
+    .into_iter()
+    .collect();
     assert_eq!(under_rust, sample);
     assert_eq!(
         &java

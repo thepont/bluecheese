@@ -89,10 +89,8 @@ impl TempTree {
         // unique: two tests wanting the same fixture would share a directory and
         // delete each other's files.
         let serial = NEXT_TREE.fetch_add(1, Ordering::Relaxed);
-        let dir = std::env::temp_dir().join(format!(
-            "bluecheese-{}-{serial}-{name}",
-            std::process::id()
-        ));
+        let dir =
+            std::env::temp_dir().join(format!("bluecheese-{}-{serial}-{name}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("create temp tree");
         Self(dir)
