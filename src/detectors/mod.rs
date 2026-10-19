@@ -3,6 +3,7 @@
 
 pub mod comments;
 pub mod cross_language_duplicates;
+pub mod alt_classes;
 pub mod data_class;
 pub mod data_clumps;
 pub mod large_class;
