@@ -6,6 +6,13 @@ The SmellBench corpus (163 Java files), copied from the `StaticNose` repository
 (`datasets/smellbench-dataset/main`). Each case is a small program that either
 exhibits a smell (`*BE*`) or is the refactored variant (`*GE*`).
 
+## `rust/`
+
+A hand-written Rust fixture for the Rust adapter. There is no reference
+implementation for Rust smells, so `tests/rust_adapter.rs` uses these as
+characterisation tests rather than parity tests: expectations are reasoned by
+hand from the source, and only lock in behaviour.
+
 ## `golden/smellbench.json`
 
 The report produced by the reference Java tool over `smellbench/`, with the

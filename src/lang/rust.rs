@@ -1,0 +1,197 @@
+//! Rust adapter.
+//!
+//! There is **no reference implementation** for Rust smells: SmellBench and the
+//! Java tool it feeds are Java-only. The metrics below are therefore *our*
+//! definition, chosen as the natural analogue of the Java ones. The tests in
+//! `tests/rust_adapter.rs` lock in observed behaviour; they do not prove parity
+//! with another tool, and should not be read as if they did.
+//!
+//! Two mappings are worth stating because Rust does not look like Java:
+//!
+//! - Methods do not live in the type. They live in `impl` blocks, which may sit
+//!   anywhere in the file, so a type's methods are found by scanning for `impl`
+//!   blocks whose target is that type.
+//! - Free functions belong to no type. They are reported under a pseudo-type
+//!   named after the file, so that a module of free functions is still
+//!   analysed rather than silently dropped.
+
+use tree_sitter::{Language, Node};
+
+use crate::lang::{LanguageId, LanguageModel, SourceFile};
+use crate::walk::descendants;
+
+/// Item kinds that declare a type.
+const TYPE_KINDS: &[&str] = &["struct_item", "enum_item", "trait_item", "union_item"];
+
+/// Branch points. Rust has no ternary; `if` covers it. `try_expression` is the
+/// `?` operator, which is a branch.
+const DECISION_KINDS: &[&str] = &[
+    "if_expression",
+    "for_expression",
+    "while_expression",
+    "loop_expression",
+    "try_expression",
+];
+
+pub struct RustModel;
+
+pub static RUST: RustModel = RustModel;
+
+impl LanguageModel for RustModel {
+    fn id(&self) -> LanguageId {
+        LanguageId::Rust
+    }
+
+    fn extensions(&self) -> &'static [&'static str] {
+        &["rs"]
+    }
+
+    fn grammar(&self) -> Language {
+        tree_sitter_rust::LANGUAGE.into()
+    }
+
+    fn types<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
+        let root = file.root();
+        // The file itself acts as the module, so free functions are analysable.
+        let mut out = vec![root];
+        let mut cursor = root.walk();
+        for child in root.named_children(&mut cursor) {
+            if TYPE_KINDS.contains(&child.kind()) {
+                out.push(child);
+            }
+        }
+        out
+    }
+
+    fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str> {
+        if ty.kind() == "source_file" {
+            return file.path.file_stem().and_then(|s| s.to_str());
+        }
+        ty.child_by_field_name("name").map(|n| file.text(n))
+    }
+
+    fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
+        let mut out = Vec::new();
+
+        // Free functions: direct children of the file.
+        if ty.kind() == "source_file" {
+            let mut cursor = ty.walk();
+            for child in ty.named_children(&mut cursor) {
+                if child.kind() == "function_item" {
+                    out.push(child);
+                }
+            }
+            return out;
+        }
+
+        // Methods of a type: functions inside `impl` blocks targeting it.
+        if let Some(name) = self.type_name(file, ty) {
+            for node in descendants(file.root()) {
+                if node.kind() != "impl_item" {
+                    continue;
+                }
+                let Some(target) = node.child_by_field_name("type") else {
+                    continue;
+                };
+                if !impl_targets(file.text(target), name) {
+                    continue;
+                }
+                let Some(body) = node.child_by_field_name("body") else {
+                    continue;
+                };
+                out.extend(functions_in(body));
+            }
+        }
+
+        // Default methods declared in the trait itself.
+        if ty.kind() == "trait_item" {
+            if let Some(body) = ty.child_by_field_name("body") {
+                out.extend(functions_in(body));
+            }
+        }
+
+        out
+    }
+
+    fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>> {
+        node.child_by_field_name("body")
+    }
+
+    /// Line of the first token that is not an attribute, so `#[derive(..)]` on
+    /// the line above does not shift the reported line. The Java adapter drops
+    /// annotations for the same reason.
+    fn decl_line(&self, node: Node<'_>) -> usize {
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            if matches!(child.kind(), "attribute_item" | "inner_attribute_item") {
+                continue;
+            }
+            return child.start_position().row + 1;
+        }
+        node.start_position().row + 1
+    }
+
+    /// Logical lines of code: the number of statements, summed over every block
+    /// in the body. A statement is any named child of a block that is not a
+    /// comment, which counts nested statements without counting the expressions
+    /// inside them. The Java metric is far more inclusive (Spoon counts nested
+    /// invocations); this one is deliberately simpler, since there is no
+    /// reference to match.
+    fn lloc(&self, _file: &SourceFile, body: Node<'_>) -> usize {
+        descendants(body)
+            .into_iter()
+            .filter(|n| n.kind() == "block")
+            .map(|block| {
+                let mut cursor = block.walk();
+                block
+                    .named_children(&mut cursor)
+                    .filter(|c| !matches!(c.kind(), "line_comment" | "block_comment"))
+                    .count()
+            })
+            .sum()
+    }
+
+    /// Cyclomatic complexity: one plus every branch point. A `match` arm is a
+    /// branch, except the wildcard arm, which is the fall-through case rather
+    /// than a decision.
+    fn complexity(&self, file: &SourceFile, method: Node<'_>) -> usize {
+        let mut complexity = 1;
+        for node in descendants(method) {
+            let kind = node.kind();
+            if DECISION_KINDS.contains(&kind) {
+                complexity += 1;
+            }
+            if kind == "match_arm" {
+                let is_wildcard = node
+                    .child_by_field_name("pattern")
+                    .is_some_and(|p| p.kind() == "wildcard_pattern");
+                if !is_wildcard {
+                    complexity += 1;
+                }
+            }
+            if kind == "binary_expression" {
+                let op = node.child_by_field_name("operator").map(|n| file.text(n));
+                if matches!(op, Some("&&") | Some("||")) {
+                    complexity += 1;
+                }
+            }
+        }
+        complexity
+    }
+}
+
+/// Functions directly inside an `impl` or trait body.
+fn functions_in<'a>(body: Node<'a>) -> Vec<Node<'a>> {
+    let mut cursor = body.walk();
+    body.named_children(&mut cursor)
+        .filter(|c| c.kind() == "function_item")
+        .collect()
+}
+
+/// Whether an `impl` target names `name`. Targets may be paths or generic, so
+/// `crate::Foo<T>` and `Foo` both name `Foo`.
+fn impl_targets(target: &str, name: &str) -> bool {
+    let base = target.split('<').next().unwrap_or(target);
+    let base = base.rsplit("::").next().unwrap_or(base);
+    base.trim() == name
+}

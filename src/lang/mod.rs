@@ -12,6 +12,7 @@
 //! not exist in either language.
 
 pub mod java;
+pub mod rust;
 
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -24,6 +25,7 @@ use tree_sitter::{Language, Node, Parser, Tree};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum LanguageId {
     Java,
+    Rust,
 }
 
 /// A parsed source file, tagged with the adapter that parsed it.
@@ -91,13 +93,14 @@ pub trait LanguageModel {
 }
 
 /// All adapters the tool knows about.
-fn models() -> [&'static dyn LanguageModel; 1] {
-    [&java::JAVA]
+fn models() -> [&'static dyn LanguageModel; 2] {
+    [&java::JAVA, &rust::RUST]
 }
 
 pub fn model_for(id: LanguageId) -> &'static dyn LanguageModel {
     match id {
         LanguageId::Java => &java::JAVA,
+        LanguageId::Rust => &rust::RUST,
     }
 }
 
@@ -113,10 +116,19 @@ pub fn model_for_path(path: &Path) -> Option<&'static dyn LanguageModel> {
 /// sorted by path for determinism.
 ///
 /// Files no adapter claims are skipped, so a mixed or partly-irrelevant tree can
-/// be pointed at safely. Parsers are reused per language.
+/// be pointed at safely. Hidden directories and `target` are skipped: build
+/// output can contain generated source that is not the project's own. Parsers
+/// are reused per language.
 pub fn load_project(root: &Path) -> Result<Vec<SourceFile>> {
-    let mut paths: Vec<PathBuf> = walkdir::WalkDir::new(root)
-        .into_iter()
+    let walker = walkdir::WalkDir::new(root).into_iter().filter_entry(|e| {
+        if e.depth() == 0 {
+            return true;
+        }
+        let name = e.file_name().to_string_lossy();
+        !(e.file_type().is_dir() && (name == "target" || name.starts_with('.')))
+    });
+
+    let mut paths: Vec<PathBuf> = walker
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file())
         .map(|e| e.into_path())
