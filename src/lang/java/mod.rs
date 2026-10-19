@@ -63,6 +63,10 @@ impl LanguageModel for JavaModel {
         types::all_types(file)
     }
 
+    fn fields<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>> {
+        types::fields(ty)
+    }
+
     fn method_comparison_owners<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
         self.types(file)
             .into_iter()

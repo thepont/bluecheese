@@ -80,6 +80,19 @@ impl LanguageModel for EcmaModel {
             owner_name(file, ty)
         }
     }
+
+    fn fields<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>> {
+        self.body_children(ty)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|field| {
+                matches!(
+                    field.kind(),
+                    "public_field_definition" | "field_definition" | "property_definition"
+                )
+            })
+            .collect()
+    }
     fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
         descendants(ty)
             .into_iter()

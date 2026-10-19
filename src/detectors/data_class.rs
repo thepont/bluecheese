@@ -46,7 +46,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 return None;
             }
 
-            let fields = fields(ty);
+            let fields = model.fields(ty);
             let methods = model.methods(file, ty);
             let public_mutable_fields = fields
                 .iter()
@@ -93,10 +93,9 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
             if !matches!(ty.kind(), "struct_item" | "enum_item") {
                 return None;
             }
-            let body = ty.child_by_field_name("body")?;
-            let mut cursor = body.walk();
-            body.named_children(&mut cursor)
-                .filter(|field| field.kind() == "field_declaration")
+            model
+                .fields(ty)
+                .into_iter()
                 .filter(|field| file.text(*field).trim_start().starts_with("pub "))
                 .filter_map(|field| {
                     field
@@ -112,15 +111,9 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
             ) {
                 return None;
             }
-            let body = ty.child_by_field_name("body")?;
-            let mut cursor = body.walk();
-            body.named_children(&mut cursor)
-                .filter(|field| {
-                    matches!(
-                        field.kind(),
-                        "public_field_definition" | "field_definition" | "property_definition"
-                    )
-                })
+            model
+                .fields(ty)
+                .into_iter()
                 .filter(|field| {
                     !has_non_java_modifier(file.text(*field), "private")
                         && !has_non_java_modifier(file.text(*field), "protected")
@@ -164,23 +157,6 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
 fn has_non_java_modifier(text: &str, modifier: &str) -> bool {
     text.split(|ch: char| !ch.is_alphanumeric() && ch != '_')
         .any(|word| word == modifier)
-}
-
-fn fields(ty: Node<'_>) -> Vec<Node<'_>> {
-    let Some(body) = ty.child_by_field_name("body") else {
-        return Vec::new();
-    };
-    let mut cursor = body.walk();
-    body.named_children(&mut cursor)
-        .filter(|node| node.kind() == "field_declaration")
-        .flat_map(|declaration| {
-            let mut cursor = declaration.walk();
-            declaration
-                .named_children(&mut cursor)
-                .filter(|node| node.kind() == "variable_declarator")
-                .collect::<Vec<_>>()
-        })
-        .collect()
 }
 
 fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {

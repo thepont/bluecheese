@@ -107,6 +107,14 @@ impl LanguageModel for RustModel {
         ty.child_by_field_name("name").map(|n| file.text(n))
     }
 
+    fn fields<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>> {
+        self.body_children(ty)
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|field| field.kind() == "field_declaration")
+            .collect()
+    }
+
     fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
         let mut out = Vec::new();
 

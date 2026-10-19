@@ -157,3 +157,20 @@ pub fn is_override(file: &SourceFile, node: Node<'_>) -> bool {
                 .is_some_and(|name| file.text(name).rsplit('.').next() == Some("Override"))
     })
 }
+
+pub fn fields(ty: Node<'_>) -> Vec<Node<'_>> {
+    let Some(body) = ty.child_by_field_name("body") else {
+        return Vec::new();
+    };
+    let mut cursor = body.walk();
+    body.named_children(&mut cursor)
+        .filter(|node| node.kind() == "field_declaration")
+        .flat_map(|declaration| {
+            let mut cursor = declaration.walk();
+            declaration
+                .named_children(&mut cursor)
+                .filter(|node| node.kind() == "variable_declarator")
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}

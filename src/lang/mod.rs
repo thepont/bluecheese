@@ -116,6 +116,9 @@ pub trait LanguageModel {
     /// Top-level types declared in the file.
     fn types<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>>;
 
+    /// Individual fields declared directly in a type, excluding inherited fields.
+    fn fields<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>>;
+
     /// Owners included in comparisons between methods of the same type.
     fn method_comparison_owners<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
         self.types(file)

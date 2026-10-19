@@ -80,21 +80,9 @@ fn non_java_findings(file: &SourceFile) -> Vec<Finding> {
 }
 
 fn non_java_fields(file: &SourceFile, ty: Node<'_>) -> BTreeSet<String> {
-    let Some(body) = ty.child_by_field_name("body") else {
-        return BTreeSet::new();
-    };
-    let mut cursor = body.walk();
-    let fields = body
-        .named_children(&mut cursor)
-        .filter(|field| match file.language {
-            LanguageId::Rust => field.kind() == "field_declaration",
-            LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
-                field.kind(),
-                "public_field_definition" | "field_definition" | "property_definition"
-            ),
-            LanguageId::Java => false,
-        });
-    fields
+    model_for(file.language)
+        .fields(ty)
+        .into_iter()
         .filter_map(|field| {
             field
                 .child_by_field_name("name")
@@ -137,7 +125,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             ) {
                 return None;
             }
-            let fields = fields(ty);
+            let fields = model.fields(ty);
             let all_methods = model.methods(file, ty);
             if all_methods.is_empty() {
                 return None;
@@ -172,23 +160,6 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 relative_file_path: file.rel.clone(),
                 additional_info: String::new(),
             })
-        })
-        .collect()
-}
-
-fn fields(ty: Node<'_>) -> Vec<Node<'_>> {
-    let Some(body) = ty.child_by_field_name("body") else {
-        return Vec::new();
-    };
-    let mut cursor = body.walk();
-    body.named_children(&mut cursor)
-        .filter(|node| node.kind() == "field_declaration")
-        .flat_map(|declaration| {
-            let mut cursor = declaration.walk();
-            declaration
-                .named_children(&mut cursor)
-                .filter(|node| node.kind() == "variable_declarator")
-                .collect::<Vec<_>>()
         })
         .collect()
 }
