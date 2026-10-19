@@ -1,9 +1,9 @@
 //! Port of StaticNose's direct access to another project type's fields.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, SourceFile, model_for};
+use crate::lang::{model_for, LanguageId, SourceFile};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -71,7 +71,250 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             });
         }
     }
+    findings.extend(non_java_findings(files));
     findings
+}
+
+struct NonJavaType<'a> {
+    file: &'a SourceFile,
+    node: Node<'a>,
+    name: String,
+    fields: BTreeMap<String, String>,
+}
+
+fn non_java_findings(files: &[SourceFile]) -> Vec<Finding> {
+    let mut types = Vec::new();
+    for file in files
+        .iter()
+        .filter(|file| file.language != LanguageId::Java)
+    {
+        for node in model_for(file.language).types(file) {
+            if matches!(node.kind(), "source_file" | "program") {
+                continue;
+            }
+            let Some(name) = model_for(file.language).type_name(file, node) else {
+                continue;
+            };
+            let fields = non_java_field_types(file, node);
+            types.push(NonJavaType {
+                file,
+                node,
+                name: name.to_owned(),
+                fields,
+            });
+        }
+    }
+    let known: BTreeSet<_> = types.iter().map(|ty| ty.name.clone()).collect();
+    let mut findings = Vec::new();
+    for owner in &types {
+        let mut lines = Vec::new();
+        for method in model_for(owner.file.language).methods(owner.file, owner.node) {
+            let vars = non_java_variable_types(owner, method);
+            for access in descendants(method)
+                .into_iter()
+                .filter(|node| field_access_kind(owner.file.language, *node))
+            {
+                let (Some(receiver), Some(field)) = (
+                    access_receiver(owner.file.language, access),
+                    access_field(owner.file.language, access),
+                ) else {
+                    continue;
+                };
+                if matches!(receiver.kind(), "this")
+                    || owner.file.text(receiver) == "this"
+                    || owner.file.text(receiver) == "self"
+                {
+                    continue;
+                }
+                let Some(target_type) = expression_type(owner.file, receiver, &vars) else {
+                    continue;
+                };
+                let target_name = simple_type_name(&target_type);
+                if target_name == owner.name || !known.contains(&target_name) {
+                    continue;
+                }
+                if types.iter().any(|ty| {
+                    ty.name == target_name && ty.fields.contains_key(owner.file.text(field))
+                }) {
+                    lines.push(owner.file.line(access));
+                }
+            }
+        }
+        lines.sort_unstable();
+        lines.dedup();
+        if !lines.is_empty() {
+            findings.push(Finding {
+                smell_name: SMELL_NAME.to_owned(),
+                file_path: owner.file.rel.clone(),
+                class_name: owner.name.clone(),
+                line_numbers: lines,
+                relative_file_path: owner.file.rel.clone(),
+                additional_info: String::new(),
+            });
+        }
+    }
+    findings
+}
+
+fn non_java_field_types(file: &SourceFile, ty: Node<'_>) -> BTreeMap<String, String> {
+    let Some(body) = ty.child_by_field_name("body") else {
+        return BTreeMap::new();
+    };
+    let mut fields = BTreeMap::new();
+    if file.language == LanguageId::Rust {
+        let mut cursor = body.walk();
+        for field in body
+            .named_children(&mut cursor)
+            .filter(|node| node.kind() == "field_declaration")
+        {
+            if let (Some(name), Some(kind)) = (
+                field.child_by_field_name("name"),
+                field.child_by_field_name("type"),
+            ) {
+                fields.insert(file.text(name).to_owned(), file.text(kind).to_owned());
+            }
+        }
+    } else {
+        for field in descendants(body).into_iter().filter(|node| {
+            matches!(
+                node.kind(),
+                "field_definition" | "public_field_definition" | "property_definition"
+            )
+        }) {
+            let Some(name) = field
+                .child_by_field_name("property")
+                .or_else(|| field.child_by_field_name("name"))
+            else {
+                continue;
+            };
+            let kind = field
+                .child_by_field_name("type")
+                .map(|node| file.text(node).to_owned())
+                .unwrap_or_default();
+            fields.insert(file.text(name).trim_start_matches('#').to_owned(), kind);
+        }
+    }
+    fields
+}
+
+fn non_java_variable_types(owner: &NonJavaType<'_>, method: Node<'_>) -> BTreeMap<String, String> {
+    let file = owner.file;
+    let mut vars = owner.fields.clone();
+    if let Some(parameters) = method.child_by_field_name("parameters") {
+        for parameter in descendants(parameters).into_iter().filter(|node| {
+            matches!(
+                node.kind(),
+                "parameter" | "required_parameter" | "optional_parameter" | "formal_parameter"
+            )
+        }) {
+            let name_node = parameter
+                .child_by_field_name("name")
+                .or_else(|| parameter.child_by_field_name("pattern"));
+            let Some(name_node) = name_node else {
+                continue;
+            };
+            let Some(kind) = parameter.child_by_field_name("type") else {
+                continue;
+            };
+            vars.insert(
+                file.text(name_node)
+                    .trim_start_matches('&')
+                    .trim()
+                    .to_owned(),
+                file.text(kind).to_owned(),
+            );
+        }
+    }
+    for declaration in descendants(method) {
+        if declaration.kind() == "variable_declarator" {
+            let (Some(name), Some(value)) = (
+                declaration.child_by_field_name("name"),
+                declaration.child_by_field_name("value"),
+            ) else {
+                continue;
+            };
+            if value.kind() == "new_expression" {
+                if let Some(constructor) = value.child_by_field_name("constructor") {
+                    vars.insert(
+                        file.text(name).to_owned(),
+                        file.text(constructor).to_owned(),
+                    );
+                }
+            }
+        } else if declaration.kind() == "let_declaration" {
+            let Some(pattern) = declaration.child_by_field_name("pattern") else {
+                continue;
+            };
+            let Some(value) = declaration.child_by_field_name("value") else {
+                continue;
+            };
+            if value.kind() == "call_expression" {
+                if let Some(name) = value.child_by_field_name("function") {
+                    vars.insert(file.text(pattern).to_owned(), file.text(name).to_owned());
+                }
+            }
+        }
+    }
+    vars
+}
+
+fn field_access_kind(language: LanguageId, node: Node<'_>) -> bool {
+    match language {
+        LanguageId::Rust => node.kind() == "field_expression",
+        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
+            node.kind() == "member_expression"
+        }
+        LanguageId::Java => false,
+    }
+}
+
+fn access_receiver(language: LanguageId, node: Node<'_>) -> Option<Node<'_>> {
+    match language {
+        LanguageId::Rust => node.child_by_field_name("value"),
+        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
+            node.child_by_field_name("object")
+        }
+        LanguageId::Java => None,
+    }
+}
+
+fn access_field(language: LanguageId, node: Node<'_>) -> Option<Node<'_>> {
+    match language {
+        LanguageId::Rust => node.child_by_field_name("field"),
+        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
+            node.child_by_field_name("property")
+        }
+        LanguageId::Java => None,
+    }
+}
+
+fn expression_type(
+    file: &SourceFile,
+    expression: Node<'_>,
+    vars: &BTreeMap<String, String>,
+) -> Option<String> {
+    match expression.kind() {
+        "identifier" => vars.get(file.text(expression)).cloned(),
+        "reference_type" => Some(file.text(expression).trim_start_matches('&').to_owned()),
+        _ => None,
+    }
+}
+
+fn simple_type_name(raw: &str) -> String {
+    raw.trim()
+        .trim_start_matches('&')
+        .trim_start_matches("mut ")
+        .trim_start_matches(':')
+        .trim()
+        .trim_end_matches("[]")
+        .rsplit("::")
+        .next()
+        .unwrap_or(raw)
+        .rsplit('.')
+        .next()
+        .unwrap_or(raw)
+        .trim()
+        .to_owned()
 }
 
 impl<'a> Analyzer<'a> {
