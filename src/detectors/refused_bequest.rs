@@ -38,7 +38,106 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
         .filter_map(|index| finding_for_type(&project, index))
         .collect();
     findings.extend(ecmascript_findings(files));
+    findings.extend(rust_trait_findings(files));
     findings
+}
+
+fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for file in files
+        .iter()
+        .filter(|file| file.language == LanguageId::Rust)
+    {
+        let model = model_for(file.language);
+        let types = model.types(file);
+        for implementation in descendants(file.root())
+            .into_iter()
+            .filter(|node| node.kind() == "impl_item")
+        {
+            let (Some(trait_node), Some(target_node)) = (
+                implementation.child_by_field_name("trait"),
+                implementation.child_by_field_name("type"),
+            ) else {
+                continue;
+            };
+            let trait_name = file
+                .text(trait_node)
+                .rsplit("::")
+                .next()
+                .unwrap_or_default();
+            let target_name = file
+                .text(target_node)
+                .rsplit("::")
+                .next()
+                .unwrap_or_default();
+            let Some(trait_type) = types.iter().copied().find(|ty| {
+                ty.kind() == "trait_item"
+                    && model
+                        .type_name(file, *ty)
+                        .is_some_and(|name| name == trait_name)
+            }) else {
+                continue;
+            };
+            let Some(target_type) = types.iter().copied().find(|ty| {
+                matches!(ty.kind(), "struct_item" | "enum_item" | "union_item")
+                    && model
+                        .type_name(file, *ty)
+                        .is_some_and(|name| name == target_name)
+            }) else {
+                continue;
+            };
+            let trait_methods = model.methods(file, trait_type);
+            let implementation_methods: Vec<_> = descendants(implementation)
+                .into_iter()
+                .filter(|node| node.kind() == "function_item")
+                .collect();
+            let mut lines: Vec<_> = implementation_methods
+                .iter()
+                .copied()
+                .filter(|method| rust_is_refusal_stub(file, *method))
+                .filter(|method| {
+                    let Some(name) = method.child_by_field_name("name") else {
+                        return false;
+                    };
+                    trait_methods.iter().any(|parent| {
+                        parent
+                            .child_by_field_name("name")
+                            .is_some_and(|parent_name| {
+                                file.text(parent_name) == file.text(name)
+                                    && parent.child_by_field_name("body").is_some()
+                            })
+                    })
+                })
+                .map(|method| file.line(method))
+                .collect();
+            lines.sort_unstable();
+            lines.dedup();
+            if !lines.is_empty() {
+                let name = model.type_name(file, target_type).unwrap_or(target_name);
+                findings.push(Finding {
+                    smell_name: SMELL_NAME.to_owned(),
+                    file_path: file.rel.clone(),
+                    class_name: name.to_owned(),
+                    line_numbers: lines,
+                    relative_file_path: file.rel.clone(),
+                    additional_info: String::new(),
+                });
+            }
+        }
+    }
+    findings
+}
+
+fn rust_is_refusal_stub(file: &SourceFile, method: Node<'_>) -> bool {
+    let Some(body) = method.child_by_field_name("body") else {
+        return false;
+    };
+    let mut cursor = body.walk();
+    let statements: Vec<_> = body.named_children(&mut cursor).collect();
+    statements.len() == 1
+        && statements[0].kind() == "macro_invocation"
+        && (file.text(statements[0]).starts_with("todo!")
+            || file.text(statements[0]).starts_with("unimplemented!"))
 }
 
 fn ecmascript_findings(files: &[SourceFile]) -> Vec<Finding> {
