@@ -14,6 +14,13 @@ pub static TYPESCRIPT: EcmaModel = EcmaModel(LanguageId::TypeScript);
 pub static TSX: EcmaModel = EcmaModel(LanguageId::Tsx);
 
 impl LanguageModel for EcmaModel {
+    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+        if node.kind() != "call_expression" {
+            return 0;
+        }
+        crate::lang::accessors::ecma_accessor_depth(file, node)
+    }
+
     fn is_comment(&self, node: Node<'_>) -> bool {
         node.kind() == "comment"
     }

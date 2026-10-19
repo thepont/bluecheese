@@ -38,6 +38,13 @@ pub struct RustModel;
 pub static RUST: RustModel = RustModel;
 
 impl LanguageModel for RustModel {
+    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+        if node.kind() != "call_expression" {
+            return 0;
+        }
+        crate::lang::accessors::rust_accessor_depth(file, node)
+    }
+
     fn is_comment(&self, node: Node<'_>) -> bool {
         matches!(node.kind(), "line_comment" | "block_comment")
     }

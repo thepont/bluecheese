@@ -18,6 +18,13 @@ pub struct JavaModel;
 pub static JAVA: JavaModel = JavaModel;
 
 impl LanguageModel for JavaModel {
+    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+        if node.kind() != "method_invocation" {
+            return 0;
+        }
+        crate::lang::accessors::java_accessor_depth(file, node)
+    }
+
     fn is_comment(&self, node: Node<'_>) -> bool {
         matches!(node.kind(), "line_comment" | "block_comment")
     }

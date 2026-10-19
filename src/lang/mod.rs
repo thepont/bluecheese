@@ -11,6 +11,7 @@
 //! language families: JavaScript and TypeScript share an ES-module resolver,
 //! while Java and Rust do not acquire call edges just from matching names.
 
+mod accessors;
 pub mod coupling;
 pub mod ecmascript;
 pub mod java;
@@ -76,6 +77,8 @@ pub struct Project {
 /// The vocabulary is deliberately small: it is what the ported detectors
 /// actually need, and it grows only when a detector needs a new concept.
 pub trait LanguageModel {
+    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize;
+
     fn is_comment(&self, node: Node<'_>) -> bool;
 
     /// Adapter-resolved coupling. Languages without a resolver return no
