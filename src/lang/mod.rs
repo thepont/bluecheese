@@ -140,6 +140,32 @@ pub fn supported_extensions() -> Vec<&'static str> {
 /// source, and a name we guessed must not overrule a declaration like that.
 const CONVENTIONAL_OUTPUT_DIRECTORIES: &[&str] = &["target", "node_modules"];
 
+/// Which of a project's files to analyse, on top of what the project itself
+/// declares.
+///
+/// `.gitignore` answers "what is not source". It cannot answer "what is source
+/// but not worth analysing here" — a test fixture full of deliberate smells is
+/// tracked, and no ignore file will ever exclude it. `exclude` drops such paths
+/// and `include` rescues what an ignore file dropped, such as a vendored crate a
+/// project patched and kept.
+///
+/// Patterns use gitignore syntax and are relative to the scanned root. `include`
+/// is a whitelist: the moment it holds a pattern, only paths matching it are
+/// scanned at all, so `exclude` then narrows that set rather than the whole tree.
+///
+/// Because a whitelist also *prunes* unmatched directories, an `include` that
+/// reaches into a directory the project's ignore file dropped must name that
+/// directory as well as its contents: `vendor/**` alone matches nothing but
+/// files under `vendor`, never the `vendor` entry the walk asks about first, so
+/// the walk never descends and the include appears to do nothing. `vendor/` plus
+/// `vendor/**` is the working form, exactly as re-including a directory in
+/// gitignore requires naming the directory before its contents.
+#[derive(Debug, Default, Clone)]
+pub struct Scope {
+    pub include: Vec<String>,
+    pub exclude: Vec<String>,
+}
+
 /// Load and parse every source file under `root` that a known adapter claims,
 /// sorted by path for determinism.
 ///
@@ -151,13 +177,19 @@ const CONVENTIONAL_OUTPUT_DIRECTORIES: &[&str] = &["target", "node_modules"];
 /// files, and anything `.gitignore` or `.ignore` excludes, are left out, so a
 /// checked-out dependency tree or a build directory is never reported as the
 /// project's own smells. [`CONVENTIONAL_OUTPUT_DIRECTORIES`] is pruned as well,
-/// for trees that carry no ignore file.
+/// for trees that carry no ignore file. Use [`load_project_with`] to narrow the
+/// scan further.
 pub fn load_project(root: &Path) -> Result<Project> {
+    load_project_with(root, &Scope::default())
+}
+
+/// [`load_project`], narrowed by an explicit [`Scope`].
+pub fn load_project_with(root: &Path, scope: &Scope) -> Result<Project> {
     let mut parsers = ParserCache::default();
     let mut files = Vec::new();
     let mut skipped: BTreeMap<String, usize> = BTreeMap::new();
 
-    for path in candidate_paths(root) {
+    for path in candidate_paths(root, scope)? {
         let Some(model) = model_for_path(&path) else {
             *skipped.entry(extension_of(&path)).or_default() += 1;
             continue;
@@ -178,8 +210,24 @@ pub fn load_project(root: &Path) -> Result<Project> {
 /// The walker's standard filters are on, so hidden files and anything matched by
 /// a `.gitignore` or `.ignore` file are excluded. That is the whole mechanism: a
 /// project's own declaration of what is not its source beats any guess of ours.
-fn candidate_paths(root: &Path) -> Vec<PathBuf> {
+/// An explicit [`Scope`] then overrides it, in both directions.
+fn candidate_paths(root: &Path, scope: &Scope) -> Result<Vec<PathBuf>> {
+    let mut overrides = ignore::overrides::OverrideBuilder::new(root);
+    for pattern in &scope.exclude {
+        // Overrides are inverted relative to gitignore: a plain glob whitelists
+        // a path and `!` drops it. The sign therefore flips here, and only here.
+        overrides
+            .add(&format!("!{pattern}"))
+            .with_context(|| format!("invalid exclude pattern '{pattern}'"))?;
+    }
+    for pattern in &scope.include {
+        overrides
+            .add(pattern)
+            .with_context(|| format!("invalid include pattern '{pattern}'"))?;
+    }
+
     let walker = ignore::WalkBuilder::new(root)
+        .overrides(overrides.build()?)
         .filter_entry(|entry| !is_pruned(entry))
         .build();
 
@@ -189,7 +237,7 @@ fn candidate_paths(root: &Path) -> Vec<PathBuf> {
         .map(|entry| entry.into_path())
         .collect();
     paths.sort();
-    paths
+    Ok(paths)
 }
 
 /// Whether to skip descending into `entry`.

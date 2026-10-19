@@ -18,11 +18,28 @@ struct Args {
     /// Report format.
     #[arg(short = 'r', long = "report-format", default_value = "json")]
     format: String,
+
+    /// Skip paths matching this gitignore-style pattern, relative to the folder.
+    /// Repeatable. Use it for code that is tracked and legitimate but should not
+    /// be analysed here, such as fixtures full of deliberate smells.
+    #[arg(short = 'x', long = "exclude")]
+    exclude: Vec<String>,
+
+    /// Analyse paths matching this pattern even where a .gitignore or .ignore
+    /// file excludes them. Repeatable, and takes precedence over `--exclude`.
+    /// A pattern reaching into a directory must name the directory too, as
+    /// `vendor/` plus `vendor/**`.
+    #[arg(short = 'i', long = "include")]
+    include: Vec<String>,
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    let project = bluecheese::lang::load_project(&args.folder)?;
+    let scope = bluecheese::lang::Scope {
+        include: args.include,
+        exclude: args.exclude,
+    };
+    let project = bluecheese::lang::load_project_with(&args.folder, &scope)?;
 
     // An empty report from a working analyser and an empty report from an
     // analyser that understood nothing are the same bytes. Refuse to produce
