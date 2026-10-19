@@ -30,11 +30,8 @@ struct Project<'a> {
     methods: Vec<Method<'a>>,
 }
 
-type ExpressionReader<'query, 'source> = fn(
-    &JavaExpressionResolver<'query, 'source>,
-    CallSite<'source>,
-    Node<'source>,
-) -> Option<String>;
+type ExpressionReader<'query, 'source> =
+    fn(&JavaExpressionResolver<'query, 'source>, Node<'source>) -> Option<String>;
 
 #[derive(Clone, Copy)]
 struct CallSite<'a> {
@@ -97,7 +94,11 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
 
 impl<'a> Project<'a> {
     fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        JavaExpressionResolver { project: self }.expression_type(site, expression)
+        JavaExpressionResolver {
+            project: self,
+            site,
+        }
+        .expression_type(expression)
     }
 
     fn type_resolver(&self) -> TypeResolver<'_, 'a> {
@@ -259,13 +260,22 @@ impl<'a> Project<'a> {
     }
 }
 
+#[derive(Clone, Copy)]
 struct JavaExpressionResolver<'query, 'source> {
     project: &'query Project<'source>,
+    site: CallSite<'source>,
 }
 
 impl<'a> JavaExpressionResolver<'_, 'a> {
-    fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        if site.depth > 24 {
+    fn deeper(self) -> Self {
+        Self {
+            site: self.site.deeper(),
+            ..self
+        }
+    }
+
+    fn expression_type(&self, expression: Node<'a>) -> Option<String> {
+        if self.site.depth > 24 {
             return None;
         }
         let readers: &[(&str, ExpressionReader<'_, 'a>)] = &[
@@ -283,65 +293,56 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
             ("method_invocation", Self::call_expression_type),
         ];
         if let Some((_, read)) = readers.iter().find(|(kind, _)| *kind == expression.kind()) {
-            read(self, site, expression)
+            read(self, expression)
         } else {
-            literal_type(self.project.types[site.owner].file, expression)
+            literal_type(self.project.types[self.site.owner].file, expression)
         }
     }
 
-    fn qualified_expression_type(
-        &self,
-        site: CallSite<'a>,
-        expression: Node<'a>,
-    ) -> Option<String> {
+    fn qualified_expression_type(&self, expression: Node<'a>) -> Option<String> {
         let name = self.project.type_resolver().type_name(
-            site.owner,
-            self.project.types[site.owner].file.text(expression),
+            self.site.owner,
+            self.project.types[self.site.owner].file.text(expression),
         );
         self.project.type_resolver().type_index(&name).map(|_| name)
     }
 
-    fn receiver_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+    fn receiver_expression_type(&self, expression: Node<'a>) -> Option<String> {
         if expression.kind() == "this" {
-            Some(self.project.types[site.owner].qualified.clone())
+            Some(self.project.types[self.site.owner].qualified.clone())
         } else {
             self.project
                 .type_resolver()
-                .parents(site.owner)
+                .parents(self.site.owner)
                 .first()
                 .map(|p| self.project.types[*p].qualified.clone())
         }
     }
 
-    fn identifier_expression_type(
-        &self,
-        site: CallSite<'a>,
-        expression: Node<'a>,
-    ) -> Option<String> {
-        self.variable_type(site.deeper(), expression)
-            .or_else(|| self.qualified_expression_type(site, expression))
+    fn identifier_expression_type(&self, expression: Node<'a>) -> Option<String> {
+        self.deeper()
+            .variable_type(expression)
+            .or_else(|| self.qualified_expression_type(expression))
     }
 
-    fn declared_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
+    fn declared_expression_type(&self, expression: Node<'a>) -> Option<String> {
         expression.child_by_field_name("type").map(|n| {
-            self.project
-                .type_resolver()
-                .type_name(site.owner, self.project.types[site.owner].file.text(n))
+            self.project.type_resolver().type_name(
+                self.site.owner,
+                self.project.types[self.site.owner].file.text(n),
+            )
         })
     }
 
-    fn parenthesized_expression_type(
-        &self,
-        site: CallSite<'a>,
-        expression: Node<'a>,
-    ) -> Option<String> {
+    fn parenthesized_expression_type(&self, expression: Node<'a>) -> Option<String> {
         named_children(expression)
             .first()
-            .and_then(|n| self.expression_type(site.deeper(), *n))
+            .and_then(|n| self.deeper().expression_type(*n))
     }
 
-    fn call_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        let target = &self.project.methods[self.project.resolve_call(site.deeper(), expression)?];
+    fn call_expression_type(&self, expression: Node<'a>) -> Option<String> {
+        let target =
+            &self.project.methods[self.project.resolve_call(self.site.deeper(), expression)?];
         let file = self.project.types[target.owner].file;
         target.node.child_by_field_name("type").map(|n| {
             self.project
@@ -350,8 +351,8 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
         })
     }
 
-    fn field_expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
-        let owner = site.owner;
+    fn field_expression_type(&self, expression: Node<'a>) -> Option<String> {
+        let owner = self.site.owner;
         let file = self.project.types[owner].file;
         let qualified = self
             .project
@@ -366,7 +367,7 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
             return Some(qualified);
         }
         let object = expression.child_by_field_name("object")?;
-        let receiver = self.expression_type(site.deeper(), object)?;
+        let receiver = self.deeper().expression_type(object)?;
         let target_owner = self.project.type_resolver().type_index(&receiver)?;
         self.project.type_resolver().field_type(
             target_owner,
@@ -374,8 +375,8 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
         )
     }
 
-    fn variable_type(&self, site: CallSite<'a>, usage: Node<'a>) -> Option<String> {
-        let owner = site.owner;
+    fn variable_type(&self, usage: Node<'a>) -> Option<String> {
+        let owner = self.site.owner;
         let file = self.project.types[owner].file;
         let name = file.text(usage);
         let mut scope = usage.parent();
@@ -407,9 +408,9 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
                     .into_iter()
                     .find(|n| n.kind() == "variable_declarator")
                     .and_then(|n| n.child_by_field_name("value"))
-                    .and_then(|value| self.expression_type(site.deeper(), value));
+                    .and_then(|value| self.deeper().expression_type(value));
             }
-            if block.id() == site.method.id() {
+            if block.id() == self.site.method.id() {
                 break;
             }
             scope = block.parent();
