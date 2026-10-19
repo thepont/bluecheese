@@ -20,3 +20,4 @@ pub mod middle_man;
 pub mod shotgun;
 pub mod spec_gen;
 pub mod switch_stmts;
+pub mod temp_field;

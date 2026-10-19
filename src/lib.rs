@@ -32,6 +32,8 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         Ok(detectors::primitive_obsession::detect(files))
     } else if smell == "feature-envy" {
         Ok(detectors::feature_envy::detect(files))
+    } else if smell == "temp-field" {
+        Ok(detectors::temp_field::detect(files))
     } else if smell == "data-class" {
         Ok(detectors::data_class::detect(files))
     } else if smell == "middle-man" {
@@ -91,6 +93,7 @@ pub fn ported_smells() -> &'static [&'static str] {
         "lazy-class",
         "prim-obsession",
         "feature-envy",
+        "temp-field",
         "data-class",
         "middle-man",
         "large-class",
