@@ -66,11 +66,10 @@ pub fn decl_line(node: Node<'_>) -> usize {
 /// Enum members are wrapped in an `enum_body_declarations` node, so that level
 /// is transparently descended into.
 pub fn methods<'a>(ty: Node<'a>) -> Vec<Node<'a>> {
-    let Some(body) = body(ty) else {
-        return Vec::new();
-    };
     let mut out = Vec::new();
-    collect_methods(body, &mut out);
+    if let Some(body) = body(ty) {
+        collect_methods(body, &mut out);
+    }
     out
 }
 

@@ -90,15 +90,18 @@ impl LanguageModel for RustModel {
                 if node.kind() != "impl_item" {
                     continue;
                 }
-                let Some(target) = node.child_by_field_name("type") else {
+                // A malformed `impl Foo` with no braces has a target but no
+                // body, so both fields are required and either absence means
+                // the same thing: there is nothing here to collect.
+                let (Some(target), Some(body)) = (
+                    node.child_by_field_name("type"),
+                    node.child_by_field_name("body"),
+                ) else {
                     continue;
                 };
                 if !impl_targets(file.text(target), name) {
                     continue;
                 }
-                let Some(body) = node.child_by_field_name("body") else {
-                    continue;
-                };
                 out.extend(functions_in(body));
             }
         }

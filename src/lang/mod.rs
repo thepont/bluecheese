@@ -176,12 +176,10 @@ pub fn load_project(root: &Path) -> Result<Project> {
 /// source at all?".
 ///
 /// The walker's standard filters are on, so hidden files and anything matched by
-/// a `.gitignore` or `.ignore` file are excluded. `require_git(false)` applies
-/// those files outside a repository too: a project's declaration of its own
-/// source is worth honouring whether or not we are the ones tracking it.
+/// a `.gitignore` or `.ignore` file are excluded. That is the whole mechanism: a
+/// project's own declaration of what is not its source beats any guess of ours.
 fn candidate_paths(root: &Path) -> Vec<PathBuf> {
     let walker = ignore::WalkBuilder::new(root)
-        .require_git(false)
         .filter_entry(|entry| !is_pruned(entry))
         .build();
 
