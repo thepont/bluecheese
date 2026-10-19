@@ -50,7 +50,10 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             .into_iter()
             .filter(|node| model.is_comment(*node))
         {
-            if is_leading_non_java_declaration_comment(comment) || !is_explanatory(file, comment) {
+            if is_documentation(file, comment)
+                || is_leading_non_java_declaration_comment(comment)
+                || !is_explanatory(file, comment)
+            {
                 continue;
             }
             let owner = comment_owner(comment).unwrap_or(root);
@@ -82,6 +85,12 @@ fn is_explanatory(file: &SourceFile, node: Node<'_>) -> bool {
     word_count(file.text(node)) > MAX_COMMENT_WORDS || file.text(node).contains("TODO")
 }
 
+fn is_documentation(file: &SourceFile, comment: Node<'_>) -> bool {
+    file.language == LanguageId::Rust
+        && (comment.child_by_field_name("outer").is_some()
+            || comment.child_by_field_name("inner").is_some())
+}
+
 fn comment_owner(comment: Node<'_>) -> Option<Node<'_>> {
     let mut parent = comment.parent();
     while let Some(node) = parent {
@@ -104,6 +113,12 @@ fn comment_owner(comment: Node<'_>) -> Option<Node<'_>> {
 }
 
 fn is_leading_non_java_declaration_comment(comment: Node<'_>) -> bool {
+    if comment
+        .prev_named_sibling()
+        .is_some_and(|previous| previous.end_position().row == comment.start_position().row)
+    {
+        return false;
+    }
     let mut next = comment.next_named_sibling();
     while let Some(sibling) = next {
         if matches!(sibling.kind(), "line_comment" | "block_comment" | "comment") {
