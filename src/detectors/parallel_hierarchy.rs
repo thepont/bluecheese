@@ -90,29 +90,22 @@ fn parent_types(file: &SourceFile, ty: Node<'_>) -> Vec<String> {
 }
 
 fn type_names(file: &SourceFile, node: Node<'_>) -> Vec<String> {
-    let mut names = Vec::new();
-    collect_type_names(file, node, &mut names);
-    names
-}
-
-fn collect_type_names(file: &SourceFile, node: Node<'_>, names: &mut Vec<String>) {
     if matches!(node.kind(), "type_identifier" | "scoped_type_identifier") {
-        names.push(
+        return vec![
             file.text(node)
                 .rsplit('.')
                 .next()
                 .unwrap_or(file.text(node))
                 .to_owned(),
-        );
-        return;
+        ];
     }
     if node.kind() == "type_arguments" {
-        return;
+        return Vec::new();
     }
     let mut cursor = node.walk();
-    for child in node.named_children(&mut cursor) {
-        collect_type_names(file, child, names);
-    }
+    node.named_children(&mut cursor)
+        .flat_map(|child| type_names(file, child))
+        .collect()
 }
 
 fn paired_children(left: &[usize], right: &[usize], types: &[TypeInfo<'_>]) -> Vec<(usize, usize)> {
