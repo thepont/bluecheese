@@ -22,15 +22,26 @@ fn detect_file(file: &SourceFile) -> Vec<Finding> {
 }
 
 fn type_findings(file: &SourceFile) -> Vec<Finding> {
-    if file.language != LanguageId::Java {
-        return Vec::new();
-    }
-
     let model = model_for(file.language);
     model
         .types(file)
         .into_iter()
-        .filter(|ty| ty.kind() == "class_declaration")
+        .filter(|ty| match file.language {
+            LanguageId::Java => ty.kind() == "class_declaration",
+            LanguageId::Rust => matches!(
+                ty.kind(),
+                "source_file" | "struct_item" | "enum_item" | "trait_item" | "union_item"
+            ),
+            LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
+                ty.kind(),
+                "program"
+                    | "class_declaration"
+                    | "class"
+                    | "abstract_class_declaration"
+                    | "interface_declaration"
+                    | "object"
+            ),
+        })
         .filter_map(|ty| type_finding(file, ty))
         .collect()
 }
@@ -80,12 +91,29 @@ fn parameter_names(executable: Node<'_>, file: &SourceFile) -> BTreeSet<String> 
     let mut cursor = parameters.walk();
     parameters
         .named_children(&mut cursor)
-        .filter_map(|parameter| parameter.child_by_field_name("name"))
+        .filter_map(|parameter| {
+            (parameter.kind() == "identifier")
+                .then_some(parameter)
+                .or_else(|| {
+                    parameter
+                        .child_by_field_name("name")
+                        .or_else(|| parameter.child_by_field_name("pattern"))
+                })
+        })
+        .filter(|name| {
+            matches!(
+                name.kind(),
+                "identifier" | "shorthand_property_identifier_pattern"
+            )
+        })
         .map(|name| file.text(name).to_string())
         .collect()
 }
 
 fn repeated_argument_groups(file: &SourceFile) -> Vec<Finding> {
+    if file.language != LanguageId::Java {
+        return Vec::new();
+    }
     let declared = declared_methods(file);
     let (calls_by_executable, calls_by_type) = collect_argument_calls(file, &declared);
 
