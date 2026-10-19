@@ -9,6 +9,7 @@ pub mod dup_code;
 pub mod long_method;
 pub mod long_params;
 pub mod message_chains;
+pub mod middle_man;
 pub mod shotgun;
 pub mod spec_gen;
 pub mod switch_stmts;
