@@ -76,6 +76,8 @@ pub struct Project {
 /// The vocabulary is deliberately small: it is what the ported detectors
 /// actually need, and it grows only when a detector needs a new concept.
 pub trait LanguageModel {
+    fn is_comment(&self, node: Node<'_>) -> bool;
+
     /// Adapter-resolved coupling. Languages without a resolver return no
     /// relationships; adapters must never invent cross-language call edges.
     fn method_coupling(&self, _files: &[SourceFile]) -> Vec<coupling::MethodCoupling> {

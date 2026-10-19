@@ -14,6 +14,10 @@ pub static TYPESCRIPT: EcmaModel = EcmaModel(LanguageId::TypeScript);
 pub static TSX: EcmaModel = EcmaModel(LanguageId::Tsx);
 
 impl LanguageModel for EcmaModel {
+    fn is_comment(&self, node: Node<'_>) -> bool {
+        node.kind() == "comment"
+    }
+
     fn method_coupling(&self, files: &[SourceFile]) -> Vec<MethodCoupling> {
         calls::coupling(files, self.0)
     }

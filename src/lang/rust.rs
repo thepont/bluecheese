@@ -38,6 +38,10 @@ pub struct RustModel;
 pub static RUST: RustModel = RustModel;
 
 impl LanguageModel for RustModel {
+    fn is_comment(&self, node: Node<'_>) -> bool {
+        matches!(node.kind(), "line_comment" | "block_comment")
+    }
+
     fn id(&self) -> LanguageId {
         LanguageId::Rust
     }

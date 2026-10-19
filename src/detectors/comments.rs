@@ -48,7 +48,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
         let mut grouped = BTreeMap::<(usize, String), Vec<usize>>::new();
         for comment in descendants(root)
             .into_iter()
-            .filter(|node| is_comment(file.language, *node))
+            .filter(|node| model.is_comment(*node))
         {
             if is_leading_non_java_declaration_comment(comment) || !is_explanatory(file, comment) {
                 continue;
@@ -76,16 +76,6 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
         }
     }
     findings
-}
-
-fn is_comment(language: LanguageId, node: Node<'_>) -> bool {
-    match language {
-        LanguageId::Java => matches!(node.kind(), "line_comment" | "block_comment"),
-        LanguageId::Rust => matches!(node.kind(), "line_comment" | "block_comment"),
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
-            node.kind() == "comment"
-        }
-    }
 }
 
 fn is_explanatory(file: &SourceFile, node: Node<'_>) -> bool {

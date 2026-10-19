@@ -18,6 +18,10 @@ pub struct JavaModel;
 pub static JAVA: JavaModel = JavaModel;
 
 impl LanguageModel for JavaModel {
+    fn is_comment(&self, node: Node<'_>) -> bool {
+        matches!(node.kind(), "line_comment" | "block_comment")
+    }
+
     fn method_coupling(&self, files: &[SourceFile]) -> Vec<crate::lang::coupling::MethodCoupling> {
         calls::coupling(files)
     }
