@@ -38,7 +38,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 return None;
             }
 
-            let constructors = model.constructors(ty);
+            let constructors = model.constructors(file, ty);
             if !constructors.is_empty()
                 && constructors
                     .iter()
