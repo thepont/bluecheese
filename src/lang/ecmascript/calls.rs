@@ -75,7 +75,10 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
 
 impl<'a> Project<'a> {
     fn type_resolver(&self) -> TypeResolver<'_, 'a> {
-        TypeResolver { project: self }
+        TypeResolver {
+            project: self,
+            depth: 0,
+        }
     }
 
     fn expression(&self, context: Context, node: Node<'a>) -> Option<Target> {
@@ -210,19 +213,30 @@ impl<'a> Project<'a> {
     }
 }
 
+#[derive(Clone, Copy)]
 struct TypeResolver<'query, 'source> {
     project: &'query Project<'source>,
+    depth: usize,
 }
 
 impl<'a> TypeResolver<'_, 'a> {
-    fn named_type(&self, file: usize, name: &str, depth: usize) -> Option<usize> {
-        if depth > 24 {
+    fn at_depth(self, depth: usize) -> Self {
+        Self { depth, ..self }
+    }
+
+    fn deeper(self) -> Self {
+        self.at_depth(self.depth + 1)
+    }
+
+    fn named_type(&self, file: usize, name: &str) -> Option<usize> {
+        if self.depth > 24 {
             return None;
         }
-        let target = self
-            .project
-            .local_symbol(file, name)
-            .or_else(|| self.project.module(file, depth + 1).imported(name))?;
+        let target = self.project.local_symbol(file, name).or_else(|| {
+            self.project
+                .module(file, self.deeper().depth)
+                .imported(name)
+        })?;
         if let Target::Class(owner) = target {
             Some(owner)
         } else {
@@ -251,7 +265,7 @@ impl<'a> TypeResolver<'_, 'a> {
             .filter(|node| ["class_heritage", "extends_type_clause"].contains(&node.kind()))
             .flat_map(descendants)
             .filter(|node| ["identifier", "type_identifier"].contains(&node.kind()))
-            .filter_map(|node| self.named_type(owner.file, file.text(node), 0))
+            .filter_map(|node| self.at_depth(0).named_type(owner.file, file.text(node)))
             .collect()
     }
 
@@ -285,7 +299,7 @@ impl<'a> TypeResolver<'_, 'a> {
         })
     }
 
-    fn field_type(&self, index: usize, name: &str, depth: usize) -> Option<usize> {
+    fn field_type(&self, index: usize, name: &str) -> Option<usize> {
         for owner_index in self.hierarchy(index) {
             let owner = &self.project.owners[owner_index];
             let file = self.project.files[owner.file];
@@ -296,21 +310,18 @@ impl<'a> TypeResolver<'_, 'a> {
                     continue;
                 }
                 if let Some(annotation) = field.child_by_field_name("type") {
-                    return self.named_type(
-                        owner.file,
-                        annotation_name(file, annotation)?,
-                        depth + 1,
-                    );
+                    return self
+                        .deeper()
+                        .named_type(owner.file, annotation_name(file, annotation)?);
                 }
                 if let Some(value) = field
                     .child_by_field_name("value")
                     .or_else(|| field.child_by_field_name("right"))
                     && value.kind() == "new_expression"
                 {
-                    return self.named_type(
+                    return self.deeper().named_type(
                         owner.file,
                         file.text(value.child_by_field_name("constructor")?),
-                        depth + 1,
                     );
                 }
             }
@@ -358,11 +369,8 @@ impl<'a> ExpressionResolver<'_, 'a> {
             return self
                 .project
                 .type_resolver()
-                .named_type(
-                    file,
-                    source.text(node.child_by_field_name("constructor")?),
-                    self.context.deeper().depth,
-                )
+                .at_depth(self.context.deeper().depth)
+                .named_type(file, source.text(node.child_by_field_name("constructor")?))
                 .map(Target::Class);
         }
         if node.kind() == "member_expression" {
@@ -389,11 +397,8 @@ impl<'a> ExpressionResolver<'_, 'a> {
                 return self
                     .project
                     .type_resolver()
-                    .named_type(
-                        file,
-                        annotation_name(self.project.files[file], annotation)?,
-                        self.context.deeper().depth,
-                    )
+                    .at_depth(self.context.deeper().depth)
+                    .named_type(file, annotation_name(self.project.files[file], annotation)?)
                     .map(Target::Class);
             }
             return binding.child_by_field_name("value").and_then(|value| {
@@ -429,7 +434,8 @@ impl<'a> ExpressionResolver<'_, 'a> {
                 .or_else(|| {
                     self.project
                         .type_resolver()
-                        .field_type(owner, name, self.context.deeper().depth)
+                        .at_depth(self.context.deeper().depth)
+                        .field_type(owner, name)
                         .map(Target::Class)
                 });
         }
