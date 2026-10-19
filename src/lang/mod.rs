@@ -214,7 +214,14 @@ pub fn load_project_with(root: &Path, scope: &Scope) -> Result<Project> {
             continue;
         };
         let parser = parsers.get(model)?;
-        files.push(parse_file(&path, root, model, parser)?);
+        let (source, tree) = read_and_parse(&path, parser)?;
+        files.push(SourceFile {
+            rel: relative_path(root, &path),
+            path,
+            source,
+            tree,
+            language: model.id(),
+        });
     }
 
     Ok(Project { files, skipped })
@@ -293,26 +300,18 @@ impl ParserCache {
     }
 }
 
-/// Read and parse one file with the adapter that claims it.
-fn parse_file(
-    path: &Path,
-    root: &Path,
-    model: &'static dyn LanguageModel,
-    parser: &mut Parser,
-) -> Result<SourceFile> {
+/// Read and parse one file, giving back what the caller needs to record it.
+///
+/// Naming the file relative to the project is the caller's business: this only
+/// has to turn a path into source and a tree.
+fn read_and_parse(path: &Path, parser: &mut Parser) -> Result<(String, Tree)> {
     let source =
         std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     let tree = parser
         .parse(&source, None)
         .with_context(|| format!("parsing {}", path.display()))?;
 
-    Ok(SourceFile {
-        rel: relative_path(root, path),
-        path: path.to_path_buf(),
-        source,
-        tree,
-        language: model.id(),
-    })
+    Ok((source, tree))
 }
 
 /// The path as the reference tool reports it: relative to the project root,
