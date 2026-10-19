@@ -139,6 +139,22 @@ pub trait LanguageModel {
     /// The body of a method, if it has one.
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>>;
 
+    fn body_children<'a>(&self, method: Node<'a>) -> Option<Vec<Node<'a>>> {
+        let body = self.body(method)?;
+        let mut cursor = body.walk();
+        let children = body.named_children(&mut cursor).collect();
+        Some(children)
+    }
+
+    fn body_statements<'a>(&self, method: Node<'a>) -> Option<Vec<Node<'a>>> {
+        Some(
+            self.body_children(method)?
+                .into_iter()
+                .filter(|node| !self.is_comment(*node))
+                .collect(),
+        )
+    }
+
     /// Line a declaration starts on, as the reference tool reports it.
     fn decl_line(&self, node: Node<'_>) -> usize;
 

@@ -189,14 +189,9 @@ fn non_java_pure_delegate(
 ) -> bool {
     let file = analysis.file;
     let project_types = analysis.project_types;
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_statements(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body
-        .named_children(&mut cursor)
-        .filter(|node| !node.kind().ends_with("comment"))
-        .collect();
     if statements.len() != 1 {
         return false;
     }
@@ -316,14 +311,9 @@ fn referenced_project_types(analysis: &Analysis<'_>, ty: Node<'_>) -> usize {
 }
 
 fn is_pure_delegate(analysis: &Analysis<'_>, method: Node<'_>, owner: Node<'_>) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(analysis.file.language).body_statements(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body
-        .named_children(&mut cursor)
-        .filter(|node| !node.kind().ends_with("comment"))
-        .collect();
     if statements.is_empty() {
         return false;
     }

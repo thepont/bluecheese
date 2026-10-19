@@ -129,11 +129,9 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
 }
 
 fn rust_is_refusal_stub(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_children(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body.named_children(&mut cursor).collect();
     statements.len() == 1
         && statements[0].kind() == "macro_invocation"
         && (file.text(statements[0]).starts_with("todo!")
@@ -259,14 +257,9 @@ fn ecma_empty_body(_file: &SourceFile, method: Node<'_>) -> bool {
 }
 
 fn ecma_refusal_throw(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_statements(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body
-        .named_children(&mut cursor)
-        .filter(|node| node.kind() != "comment")
-        .collect();
     statements.len() == 1
         && statements[0].kind() == "throw_statement"
         && (file.text(statements[0]).contains("UnsupportedOperation")
@@ -500,14 +493,9 @@ fn is_empty_body(file: &SourceFile, method: Node<'_>) -> bool {
     {
         return false;
     }
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_statements(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body
-        .named_children(&mut cursor)
-        .filter(|node| !node.kind().ends_with("comment"))
-        .collect();
     statements.is_empty()
         || (statements.len() == 1
             && statements[0].kind() == "return_statement"
@@ -515,14 +503,9 @@ fn is_empty_body(file: &SourceFile, method: Node<'_>) -> bool {
 }
 
 fn is_refusal_throw(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_statements(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body
-        .named_children(&mut cursor)
-        .filter(|node| !node.kind().ends_with("comment"))
-        .collect();
     statements.len() == 1
         && statements[0].kind() == "throw_statement"
         && (file.text(statements[0]).contains("UnsupportedOperation")

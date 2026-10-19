@@ -159,11 +159,9 @@ fn has_non_java_modifier(text: &str, modifier: &str) -> bool {
 }
 
 fn is_non_java_accessor(file: &SourceFile, method: Node<'_>, fields: &[String]) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_children(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements = body.named_children(&mut cursor).collect::<Vec<_>>();
     if statements.len() > 1 {
         return false;
     }
@@ -236,14 +234,9 @@ fn fields(ty: Node<'_>) -> Vec<Node<'_>> {
 }
 
 fn is_strict_accessor(file: &SourceFile, method: Node<'_>, fields: &[Node<'_>]) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+    let Some(statements) = model_for(file.language).body_statements(method) else {
         return false;
     };
-    let mut cursor = body.walk();
-    let statements: Vec<_> = body
-        .named_children(&mut cursor)
-        .filter(|node| node.kind() != "line_comment" && node.kind() != "block_comment")
-        .collect();
     if statements.len() != 1 {
         return false;
     }
