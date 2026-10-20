@@ -38,15 +38,7 @@ fn non_java_findings(file: &SourceFile) -> Vec<Finding> {
         .types(file)
         .into_iter()
         .filter_map(|ty| {
-            let is_type = match file.language {
-                LanguageId::Rust => matches!(ty.kind(), "struct_item" | "enum_item"),
-                LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
-                    ty.kind(),
-                    "class_declaration" | "class" | "abstract_class_declaration"
-                ),
-                LanguageId::Java => false,
-            };
-            if !is_type {
+            if !model.is_data_type(ty.kind()) {
                 return None;
             }
             let name = model.type_name(file.at(ty))?;

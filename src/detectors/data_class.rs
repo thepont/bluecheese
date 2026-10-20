@@ -86,46 +86,20 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
 
 fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Finding> {
     let model = model_for(file.language);
-    let fields = match file.language {
-        LanguageId::Rust => {
-            if ty.kind() == "source_file" {
-                return None;
-            }
-            if !matches!(ty.kind(), "struct_item" | "enum_item") {
-                return None;
-            }
-            model
-                .fields(ty)
-                .into_iter()
-                .filter(|field| file.text(*field).trim_start().starts_with("pub "))
-                .filter_map(|field| {
-                    field
-                        .child_by_field_name("name")
-                        .map(|name| file.text(name).to_owned())
-                })
-                .collect::<Vec<_>>()
-        }
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => {
-            if !matches!(
-                ty.kind(),
-                "class_declaration" | "class" | "abstract_class_declaration"
-            ) {
-                return None;
-            }
-            model
-                .fields(ty)
-                .into_iter()
-                .filter(|field| is_public_instance_field(file.at(*field)))
-                .filter_map(|field| {
-                    field
-                        .child_by_field_name("name")
-                        .or_else(|| field.child_by_field_name("property"))
-                        .map(|name| file.text(name).trim_start_matches('#').to_owned())
-                })
-                .collect::<Vec<_>>()
-        }
-        LanguageId::Java => return None,
-    };
+    if !model.is_data_type(ty.kind()) {
+        return None;
+    }
+    let fields: Vec<_> = model
+        .fields(ty)
+        .into_iter()
+        .filter(|field| model.is_public_instance_field(file.at(*field)))
+        .filter_map(|field| {
+            field
+                .child_by_field_name("name")
+                .or_else(|| field.child_by_field_name("property"))
+                .map(|name| file.text(name).trim_start_matches('#').to_owned())
+        })
+        .collect();
     if fields.is_empty() {
         return None;
     }
@@ -143,22 +117,6 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
         line_numbers: vec![model.decl_line(ty)],
         relative_file_path: file.rel.clone(),
         additional_info: String::new(),
-    })
-}
-
-fn is_public_instance_field(source: crate::lang::SourceNode<'_>) -> bool {
-    let field = source.node();
-    let name = field
-        .child_by_field_name("name")
-        .or_else(|| field.child_by_field_name("property"));
-    if name.is_some_and(|name| name.kind() == "private_property_identifier") {
-        return false;
-    }
-    let mut cursor = field.walk();
-    !field.children(&mut cursor).any(|child| {
-        child.kind() == "static"
-            || (child.kind() == "accessibility_modifier"
-                && matches!(source.file().text(child), "private" | "protected"))
     })
 }
 

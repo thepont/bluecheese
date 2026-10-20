@@ -152,6 +152,11 @@ pub trait LanguageModel {
     /// Individual fields declared directly in a type, excluding inherited fields.
     fn fields<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>>;
 
+    /// A class or value type with instance data, excluding module pseudo-types.
+    fn is_data_type(&self, kind: &str) -> bool;
+
+    fn is_public_instance_field(&self, source: SourceNode<'_>) -> bool;
+
     fn field_type<'a>(&self, field: Node<'a>) -> Option<Node<'a>> {
         field.child_by_field_name("type")
     }

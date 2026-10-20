@@ -14,6 +14,29 @@ pub static TYPESCRIPT: EcmaModel = EcmaModel(LanguageId::TypeScript);
 pub static TSX: EcmaModel = EcmaModel(LanguageId::Tsx);
 
 impl LanguageModel for EcmaModel {
+    fn is_data_type(&self, kind: &str) -> bool {
+        matches!(
+            kind,
+            "class_declaration" | "class" | "abstract_class_declaration"
+        )
+    }
+
+    fn is_public_instance_field(&self, source: SourceNode<'_>) -> bool {
+        let field = source.node();
+        let name = field
+            .child_by_field_name("name")
+            .or_else(|| field.child_by_field_name("property"));
+        if name.is_some_and(|name| name.kind() == "private_property_identifier") {
+            return false;
+        }
+        let mut cursor = field.walk();
+        !field.children(&mut cursor).any(|child| {
+            child.kind() == "static"
+                || (child.kind() == "accessibility_modifier"
+                    && matches!(source.file().text(child), "private" | "protected"))
+        })
+    }
+
     fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)> {
         if node.kind() != "member_expression" {
             return None;

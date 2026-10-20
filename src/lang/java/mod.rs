@@ -20,6 +20,17 @@ pub struct JavaModel;
 pub static JAVA: JavaModel = JavaModel;
 
 impl LanguageModel for JavaModel {
+    fn is_data_type(&self, kind: &str) -> bool {
+        matches!(kind, "class_declaration" | "record_declaration")
+    }
+
+    fn is_public_instance_field(&self, source: SourceNode<'_>) -> bool {
+        source.node().parent().is_some_and(|declaration| {
+            let declaration = source.file().at(declaration);
+            has_modifier(declaration, "public") && !has_modifier(declaration, "static")
+        })
+    }
+
     fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)> {
         if node.kind() != "field_access" {
             return None;

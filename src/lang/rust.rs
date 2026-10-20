@@ -38,6 +38,14 @@ pub struct RustModel;
 pub static RUST: RustModel = RustModel;
 
 impl LanguageModel for RustModel {
+    fn is_data_type(&self, kind: &str) -> bool {
+        matches!(kind, "struct_item" | "enum_item")
+    }
+
+    fn is_public_instance_field(&self, source: SourceNode<'_>) -> bool {
+        source.text().trim_start().starts_with("pub ")
+    }
+
     fn field_access_parts<'a>(&self, node: Node<'a>) -> Option<(Node<'a>, Node<'a>)> {
         if node.kind() != "field_expression" {
             return None;
