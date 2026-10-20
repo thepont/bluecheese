@@ -113,7 +113,7 @@ impl<'a> Project<'a> {
                 .into_iter()
                 .filter(|node| is_owner(*node))
             {
-                if let Some(name) = owner_name(file, node) {
+                if let Some(name) = owner_name(file.at(node)) {
                     owners.push(Owner {
                         file: index,
                         node,
@@ -128,7 +128,7 @@ impl<'a> Project<'a> {
                 .into_iter()
                 .filter(|node| is_function(*node))
             {
-                let Some(name) = function_name(file, node) else {
+                let Some(name) = function_name(file.at(node)) else {
                     continue;
                 };
                 let Some(owner_index) = owners
@@ -710,7 +710,7 @@ impl BindingQuery<'_> {
                 .child_by_field_name("property")
                 .is_some_and(|property| self.file.text(property) == self.name)
             && enclosing_function(node).is_some_and(|method| {
-                function_name(self.file, method).as_deref() == Some("constructor")
+                function_name(self.file.at(method)).as_deref() == Some("constructor")
             })
     }
 }

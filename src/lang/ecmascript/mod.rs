@@ -79,7 +79,7 @@ impl LanguageModel for EcmaModel {
         if ty.kind() == "program" {
             Some(&file.rel)
         } else {
-            owner_name(file, ty)
+            owner_name(source)
         }
     }
 
@@ -116,7 +116,7 @@ impl LanguageModel for EcmaModel {
         descendants(ty)
             .into_iter()
             .filter(|node| is_function(*node))
-            .filter(|node| function_name(file, *node).is_some_and(|name| name != "constructor"))
+            .filter(|node| function_name(file.at(*node)).is_some_and(|name| name != "constructor"))
             .filter(|node| owner(*node).id() == ty.id() && enclosing_function(*node).is_none())
             .collect()
     }
@@ -224,16 +224,16 @@ pub fn children(node: Node<'_>) -> Vec<Node<'_>> {
         .collect()
 }
 
-pub fn function_name(file: &SourceFile, node: Node<'_>) -> Option<String> {
-    if let Some(name) = node.child_by_field_name("name") {
-        return Some(file.text(name).into());
+pub fn function_name(source: SourceNode<'_>) -> Option<String> {
+    if let Some(name) = source.node().child_by_field_name("name") {
+        return Some(source.file().text(name).into());
     }
-    let parent = node.parent()?;
+    let parent = source.node().parent()?;
     let name = parent
         .child_by_field_name("name")
         .or_else(|| parent.child_by_field_name("key"))
         .or_else(|| parent.child_by_field_name("property"))?;
-    Some(file.text(name).into())
+    Some(source.file().text(name).into())
 }
 
 pub fn owner(mut node: Node<'_>) -> Node<'_> {
@@ -250,15 +250,15 @@ pub fn is_owner(node: Node<'_>) -> bool {
     is_class(node) || node.kind() == "object"
 }
 
-pub fn owner_name<'a>(file: &'a SourceFile, node: Node<'_>) -> Option<&'a str> {
-    let name = node.child_by_field_name("name").or_else(|| {
-        node.parent().and_then(|parent| {
+pub fn owner_name<'a>(source: SourceNode<'a>) -> Option<&'a str> {
+    let name = source.node().child_by_field_name("name").or_else(|| {
+        source.node().parent().and_then(|parent| {
             parent
                 .child_by_field_name("name")
                 .or_else(|| parent.child_by_field_name("key"))
         })
     })?;
-    Some(file.text(name))
+    Some(source.file().text(name))
 }
 
 pub fn enclosing_function(node: Node<'_>) -> Option<Node<'_>> {
