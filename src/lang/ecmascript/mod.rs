@@ -93,6 +93,22 @@ impl LanguageModel for EcmaModel {
             })
             .collect()
     }
+
+    fn supports_primitive_fields(&self, kind: &str) -> bool {
+        self.0 != LanguageId::JavaScript
+            && matches!(
+                kind,
+                "class_declaration" | "class" | "abstract_class_declaration"
+            )
+    }
+
+    fn is_primitive_type(&self, raw: &str) -> bool {
+        self.0 != LanguageId::JavaScript
+            && matches!(
+                super::primitive_type_name(raw),
+                "number" | "string" | "boolean" | "bigint" | "symbol"
+            )
+    }
     fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
         descendants(ty)
             .into_iter()

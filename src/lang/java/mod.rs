@@ -67,6 +67,21 @@ impl LanguageModel for JavaModel {
         types::fields(ty)
     }
 
+    fn field_type<'a>(&self, field: Node<'a>) -> Option<Node<'a>> {
+        field.parent()?.child_by_field_name("type")
+    }
+
+    fn supports_primitive_fields(&self, kind: &str) -> bool {
+        kind == "class_declaration"
+    }
+
+    fn is_primitive_type(&self, raw: &str) -> bool {
+        matches!(
+            super::primitive_type_name(raw),
+            "byte" | "short" | "int" | "long" | "float" | "double" | "char" | "boolean"
+        )
+    }
+
     fn method_comparison_owners<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
         self.types(file)
             .into_iter()

@@ -119,6 +119,14 @@ pub trait LanguageModel {
     /// Individual fields declared directly in a type, excluding inherited fields.
     fn fields<'a>(&self, ty: Node<'a>) -> Vec<Node<'a>>;
 
+    fn field_type<'a>(&self, field: Node<'a>) -> Option<Node<'a>> {
+        field.child_by_field_name("type")
+    }
+
+    fn supports_primitive_fields(&self, kind: &str) -> bool;
+
+    fn is_primitive_type(&self, raw: &str) -> bool;
+
     /// Owners included in comparisons between methods of the same type.
     fn method_comparison_owners<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
         self.types(file)
@@ -198,6 +206,19 @@ pub fn model_for(id: LanguageId) -> &'static dyn LanguageModel {
         .into_iter()
         .find(|model| model.id() == id)
         .expect("every LanguageId has a model")
+}
+
+fn primitive_type_name(raw: &str) -> &str {
+    let text = raw
+        .trim()
+        .trim_start_matches(':')
+        .trim()
+        .trim_end_matches('?')
+        .trim();
+    text.split('<')
+        .next()
+        .unwrap_or(text)
+        .trim_end_matches("[]")
 }
 
 /// The adapter that claims `path`, if any. This is the per-file factory.

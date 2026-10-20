@@ -115,6 +115,31 @@ impl LanguageModel for RustModel {
             .collect()
     }
 
+    fn supports_primitive_fields(&self, kind: &str) -> bool {
+        kind == "struct_item"
+    }
+
+    fn is_primitive_type(&self, raw: &str) -> bool {
+        matches!(
+            super::primitive_type_name(raw),
+            "u8" | "u16"
+                | "u32"
+                | "u64"
+                | "u128"
+                | "usize"
+                | "i8"
+                | "i16"
+                | "i32"
+                | "i64"
+                | "i128"
+                | "isize"
+                | "f32"
+                | "f64"
+                | "bool"
+                | "char"
+        )
+    }
+
     fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
         let mut out = Vec::new();
 
