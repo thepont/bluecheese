@@ -23,6 +23,10 @@ query currently reports every match expression, including forwarding
 matches that BlueCheese filters. Java's type-code `if`/`else if` ladders are not
 yet represented in the CodeQL rules.
 
+**Primitive Obsession** is ported for Java classes, TypeScript classes, and
+Rust structs: a type is reported when it has at least four explicitly typed
+primitive fields. As in BlueCheese, untyped JavaScript fields are not inferred.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
