@@ -24,9 +24,9 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
                 project_types: &project_types,
             };
             let stats: StatsReader = if file.language == LanguageId::Java {
-                java_stats
+                |query| query.java_stats()
             } else {
-                non_java_stats
+                |query| query.non_java_stats()
             };
             file_findings(&analysis, stats)
         })
@@ -70,34 +70,7 @@ impl DelegationStats {
     }
 }
 
-type StatsReader = fn(&Analysis<'_>, Node<'_>) -> Option<DelegationStats>;
-
-fn non_java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationStats> {
-    let file = analysis.file;
-    let fields = non_java_field_types(file, ty);
-    if fields.is_empty() {
-        return None;
-    }
-    let methods = model_for(file.language).methods(file.at(ty));
-    if methods.is_empty() {
-        return None;
-    }
-    let delegates = methods
-        .iter()
-        .filter(|method| non_java_pure_delegate(analysis, **method, &fields))
-        .count();
-    let targets = fields
-        .values()
-        .filter(|target| analysis.project_types.contains(&simple_name(target)))
-        .map(|target| simple_name(target))
-        .collect::<BTreeSet<_>>()
-        .len();
-    Some(DelegationStats {
-        methods: methods.len(),
-        delegates,
-        targets,
-    })
-}
+type StatsReader = fn(&DelegationAnalysis<'_>) -> Option<DelegationStats>;
 
 fn non_java_field_types(
     file: &SourceFile,
@@ -265,7 +238,10 @@ fn file_findings(analysis: &Analysis<'_>, read_stats: StatsReader) -> Vec<Findin
         .into_iter()
         .filter_map(|ty| {
             let name = model.type_name(file.at(ty))?;
-            let stats = read_stats(analysis, ty)?;
+            let stats = read_stats(&DelegationAnalysis {
+                analysis,
+                owner: ty,
+            })?;
             stats.is_middle_man().then(|| Finding {
                 smell_name: SMELL_NAME.to_string(),
                 file_path: file.rel.clone(),
@@ -276,48 +252,6 @@ fn file_findings(analysis: &Analysis<'_>, read_stats: StatsReader) -> Vec<Findin
             })
         })
         .collect()
-}
-
-fn java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationStats> {
-    let methods = model_for(LanguageId::Java).methods(analysis.file.at(ty));
-    if methods.is_empty() {
-        return None;
-    }
-    let delegates = methods
-        .iter()
-        .filter(|method| {
-            JavaDelegation {
-                analysis,
-                owner: ty,
-            }
-            .is_pure_delegate(**method)
-        })
-        .count();
-    Some(DelegationStats {
-        methods: methods.len(),
-        delegates,
-        targets: referenced_project_types(analysis, ty),
-    })
-}
-
-fn referenced_project_types(analysis: &Analysis<'_>, ty: Node<'_>) -> usize {
-    let mut names = BTreeSet::new();
-    for node in descendants(ty) {
-        if node.kind() == "type_identifier" {
-            let name = analysis
-                .file
-                .text(node)
-                .rsplit('.')
-                .next()
-                .unwrap_or(analysis.file.text(node));
-            if name != analysis.file.text(ty.child_by_field_name("name").unwrap())
-                && analysis.project_types.contains(name)
-            {
-                names.insert(name.to_owned());
-            }
-        }
-    }
-    names.len()
 }
 
 fn statement_call(statement: Node<'_>) -> Option<Node<'_>> {
@@ -340,11 +274,11 @@ fn first_named(node: Node<'_>) -> Option<Node<'_>> {
     node.named_children(&mut cursor).next()
 }
 
-struct JavaDelegation<'a> {
+struct DelegationAnalysis<'a> {
     analysis: &'a Analysis<'a>,
     owner: Node<'a>,
 }
-impl JavaDelegation<'_> {
+impl DelegationAnalysis<'_> {
     fn is_pure_delegate(&self, method: Node<'_>) -> bool {
         let Some(statements) = model_for(self.analysis.file.language).body_statements(method)
         else {
@@ -424,5 +358,75 @@ impl JavaDelegation<'_> {
                             .is_some_and(|name| self.analysis.file.text(name) == object_name)
                     })
             })
+    }
+}
+
+impl DelegationAnalysis<'_> {
+    fn non_java_stats(&self) -> Option<DelegationStats> {
+        let file = self.analysis.file;
+        let fields = non_java_field_types(file, self.owner);
+        if fields.is_empty() {
+            return None;
+        }
+        let methods = model_for(file.language).methods(file.at(self.owner));
+        if methods.is_empty() {
+            return None;
+        }
+        let delegates = methods
+            .iter()
+            .filter(|method| non_java_pure_delegate(self.analysis, **method, &fields))
+            .count();
+        let targets = fields
+            .values()
+            .filter(|target| self.analysis.project_types.contains(&simple_name(target)))
+            .map(|target| simple_name(target))
+            .collect::<BTreeSet<_>>()
+            .len();
+        Some(DelegationStats {
+            methods: methods.len(),
+            delegates,
+            targets,
+        })
+    }
+
+    fn java_stats(&self) -> Option<DelegationStats> {
+        let methods = model_for(LanguageId::Java).methods(self.analysis.file.at(self.owner));
+        if methods.is_empty() {
+            return None;
+        }
+        let delegates = methods
+            .iter()
+            .filter(|method| self.is_pure_delegate(**method))
+            .count();
+        Some(DelegationStats {
+            methods: methods.len(),
+            delegates,
+            targets: self.referenced_project_types(),
+        })
+    }
+
+    fn referenced_project_types(&self) -> usize {
+        let mut names = BTreeSet::new();
+        for node in descendants(self.owner) {
+            if node.kind() == "type_identifier" {
+                let name = self
+                    .analysis
+                    .file
+                    .text(node)
+                    .rsplit('.')
+                    .next()
+                    .unwrap_or(self.analysis.file.text(node));
+                if name
+                    != self
+                        .analysis
+                        .file
+                        .text(self.owner.child_by_field_name("name").unwrap())
+                    && self.analysis.project_types.contains(name)
+                {
+                    names.insert(name.to_owned());
+                }
+            }
+        }
+        names.len()
     }
 }
