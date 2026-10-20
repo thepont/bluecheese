@@ -19,7 +19,9 @@ cases remains to be checked.
 
 **Comments** is ported for JavaScript/TypeScript. It reports non-documentation
 comments with more than five words or a `TODO` marker; Java and Rust comments
-are not included.
+are not included in that query. A Rust query now reports long non-documentation
+comments and `TODO` markers; Java comments remain unavailable in the current
+CodeQL port.
 
 **Switch Statements** is also ported for Java switch statements and expressions,
 JavaScript/TypeScript switch statements, and Rust match expressions. The Rust
