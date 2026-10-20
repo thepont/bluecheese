@@ -27,7 +27,7 @@ struct ChildContext<'p, 'a> {
     methods: Vec<Node<'a>>,
 }
 
-struct ParentMethod<'a> {
+struct MethodQuery<'a> {
     file: &'a SourceFile,
     node: Node<'a>,
 }
@@ -94,7 +94,13 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
             let mut lines: Vec<_> = implementation_methods
                 .iter()
                 .copied()
-                .filter(|method| rust_is_refusal_stub(file, *method))
+                .filter(|method| {
+                    (MethodQuery {
+                        file: file,
+                        node: *method,
+                    })
+                    .rust_is_refusal_stub()
+                })
                 .filter(|method| {
                     let Some(name) = method.child_by_field_name("name") else {
                         return false;
@@ -126,16 +132,6 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
         }
     }
     findings
-}
-
-fn rust_is_refusal_stub(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(statements) = model_for(file.language).body_children(method) else {
-        return false;
-    };
-    statements.len() == 1
-        && statements[0].kind() == "macro_invocation"
-        && (file.text(statements[0]).starts_with("todo!")
-            || file.text(statements[0]).starts_with("unimplemented!"))
 }
 
 struct EcmaClass<'a> {
@@ -170,7 +166,17 @@ impl EcmaClass<'_> {
     }
 
     fn refuses(&self, method: Node<'_>, parent: &Self, parent_methods: &[Node<'_>]) -> bool {
-        if !(ecma_empty_body(self.file, method) || is_refusal_throw(self.file, method)) {
+        if !((MethodQuery {
+            file: self.file,
+            node: method,
+        })
+        .ecma_empty_body()
+            || (MethodQuery {
+                file: self.file,
+                node: method,
+            })
+            .is_refusal_throw())
+        {
             return false;
         }
         let Some(name) = method.child_by_field_name("name") else {
@@ -248,14 +254,6 @@ fn ecmascript_finding(child: &EcmaClass<'_>, classes: &[EcmaClass<'_>]) -> Optio
     })
 }
 
-fn ecma_empty_body(_file: &SourceFile, method: Node<'_>) -> bool {
-    method.child_by_field_name("body").is_some_and(|body| {
-        let mut cursor = body.walk();
-        body.named_children(&mut cursor)
-            .all(|node| node.kind() == "comment")
-    })
-}
-
 fn finding_for_type(project: &Project<'_>, index: usize) -> Option<Finding> {
     let ty = &project.types[index];
     if ty.node.kind() == "enum_declaration" {
@@ -273,9 +271,22 @@ fn finding_for_type(project: &Project<'_>, index: usize) -> Option<Finding> {
     };
     let mut lines = parent_empty_method_findings(&context, &parents);
     for method in &methods {
-        if has_override(ty.file, *method)
+        if (MethodQuery {
+            file: ty.file,
+            node: *method,
+        })
+        .has_override()
             && method.child_by_field_name("body").is_some()
-            && (is_empty_body(ty.file, *method) || is_refusal_throw(ty.file, *method))
+            && ((MethodQuery {
+                file: ty.file,
+                node: *method,
+            })
+            .is_empty_body()
+                || (MethodQuery {
+                    file: ty.file,
+                    node: *method,
+                })
+                .is_refusal_throw())
         {
             lines.push(model_for(LanguageId::Java).decl_line(*method));
         }
@@ -306,8 +317,16 @@ fn parent_empty_method_findings(context: &ChildContext<'_, '_>, parents: &[usize
                 .into_iter()
                 .filter_map(move |method| {
                     let file = project.types[*parent].file;
-                    (is_empty_body(file, method)
-                        && !has_override(file, method)
+                    ((MethodQuery {
+                        file: file,
+                        node: method,
+                    })
+                    .is_empty_body()
+                        && !(MethodQuery {
+                            file: file,
+                            node: method,
+                        })
+                        .has_override()
                         && !overrides(context, *parent, method))
                     .then(|| {
                         model_for(LanguageId::Java).decl_line(project.types[context.child].node)
@@ -390,21 +409,17 @@ fn overrides(context: &ChildContext<'_, '_>, parent: usize, parent_method: Node<
     let project = context.project;
     let parent_file = project.types[parent].file;
     context.methods.iter().any(|child_method| {
-        signature(project.types[context.child].file, *child_method)
-            == signature(parent_file, parent_method)
+        (MethodQuery {
+            file: project.types[context.child].file,
+            node: *child_method,
+        })
+        .signature()
+            == (MethodQuery {
+                file: parent_file,
+                node: parent_method,
+            })
+            .signature()
     })
-}
-
-fn signature(file: &SourceFile, method: Node<'_>) -> String {
-    let name = method
-        .child_by_field_name("name")
-        .map(|node| file.text(node))
-        .unwrap_or_default();
-    let params = method
-        .child_by_field_name("parameters")
-        .map(|node| file.text(node))
-        .unwrap_or_default();
-    format!("{name}{params}")
 }
 
 fn implicit_refusal(context: &ChildContext<'_, '_>, parent: usize) -> bool {
@@ -415,7 +430,11 @@ fn implicit_refusal(context: &ChildContext<'_, '_>, parent: usize) -> bool {
         .filter(|method| {
             (has_modifier(project.types[parent].file, *method, "public")
                 || has_modifier(project.types[parent].file, *method, "protected"))
-                && !is_object_method(project.types[parent].file, *method)
+                && !(MethodQuery {
+                    file: project.types[parent].file,
+                    node: *method,
+                })
+                .is_object_method()
         })
         .collect();
     if inherited.len() < 3 {
@@ -428,22 +447,28 @@ fn implicit_refusal(context: &ChildContext<'_, '_>, parent: usize) -> bool {
         .collect();
     let mut used = 0;
     for parent_method in &inherited {
-        let parent_sig = signature(project.types[parent].file, *parent_method);
-        if context
-            .methods
-            .iter()
-            .any(|method| signature(child_file, *method) == parent_sig)
-            || child_calls.iter().any(|call| {
-                call_matches(
-                    child_file,
-                    *call,
-                    ParentMethod {
-                        node: *parent_method,
-                        file: project.types[parent].file,
-                    },
-                )
+        let parent_sig = (MethodQuery {
+            file: project.types[parent].file,
+            node: *parent_method,
+        })
+        .signature();
+        if context.methods.iter().any(|method| {
+            (MethodQuery {
+                file: child_file,
+                node: *method,
             })
-        {
+            .signature()
+                == parent_sig
+        }) || child_calls.iter().any(|call| {
+            call_matches(
+                child_file,
+                *call,
+                MethodQuery {
+                    node: *parent_method,
+                    file: project.types[parent].file,
+                },
+            )
+        }) {
             used += 1;
         }
     }
@@ -451,12 +476,18 @@ fn implicit_refusal(context: &ChildContext<'_, '_>, parent: usize) -> bool {
     let new_methods = context
         .methods
         .iter()
-        .filter(|method| !has_override(child_file, **method))
+        .filter(|method| {
+            !(MethodQuery {
+                file: child_file,
+                node: **method,
+            })
+            .has_override()
+        })
         .count();
     ratio < 0.34 && new_methods >= 3
 }
 
-fn call_matches(child_file: &SourceFile, call: Node<'_>, parent: ParentMethod<'_>) -> bool {
+fn call_matches(child_file: &SourceFile, call: Node<'_>, parent: MethodQuery<'_>) -> bool {
     let Some(name) = call.child_by_field_name("name") else {
         return false;
     };
@@ -474,54 +505,6 @@ fn call_matches(child_file: &SourceFile, call: Node<'_>, parent: ParentMethod<'_
         .child_by_field_name("parameters")
         .map_or(0, |node| node.named_child_count());
     argument_count == parameter_count
-}
-
-fn is_empty_body(file: &SourceFile, method: Node<'_>) -> bool {
-    if method
-        .child_by_field_name("type")
-        .is_none_or(|ty| file.text(ty) != "void")
-    {
-        return false;
-    }
-    let Some(statements) = model_for(file.language).body_statements(method) else {
-        return false;
-    };
-    statements.is_empty()
-        || (statements.len() == 1
-            && statements[0].kind() == "return_statement"
-            && statements[0].named_child_count() == 0)
-}
-
-fn is_refusal_throw(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(statements) = model_for(file.language).body_statements(method) else {
-        return false;
-    };
-    statements.len() == 1
-        && statements[0].kind() == "throw_statement"
-        && (file.text(statements[0]).contains("UnsupportedOperation")
-            || file.text(statements[0]).contains("NotImplemented"))
-}
-
-fn has_override(file: &SourceFile, method: Node<'_>) -> bool {
-    descendants(method)
-        .into_iter()
-        .any(|node| node.kind() == "marker_annotation" && file.text(node).contains("Override"))
-}
-
-fn is_object_method(file: &SourceFile, method: Node<'_>) -> bool {
-    method.child_by_field_name("name").is_some_and(|name| {
-        matches!(
-            file.text(name),
-            "equals"
-                | "hashCode"
-                | "toString"
-                | "clone"
-                | "getClass"
-                | "notify"
-                | "notifyAll"
-                | "wait"
-        )
-    })
 }
 
 fn package_name(file: &SourceFile) -> String {
@@ -548,4 +531,90 @@ fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
                 .split_whitespace()
                 .any(|word| word == modifier)
         })
+}
+
+impl MethodQuery<'_> {
+    fn rust_is_refusal_stub(&self) -> bool {
+        let Some(statements) = model_for(self.file.language).body_children(self.node) else {
+            return false;
+        };
+        statements.len() == 1
+            && statements[0].kind() == "macro_invocation"
+            && (self.file.text(statements[0]).starts_with("todo!")
+                || self.file.text(statements[0]).starts_with("unimplemented!"))
+    }
+
+    fn signature(&self) -> String {
+        let name = self
+            .node
+            .child_by_field_name("name")
+            .map(|node| self.file.text(node))
+            .unwrap_or_default();
+        let params = self
+            .node
+            .child_by_field_name("parameters")
+            .map(|node| self.file.text(node))
+            .unwrap_or_default();
+        format!("{name}{params}")
+    }
+
+    fn is_empty_body(&self) -> bool {
+        if self
+            .node
+            .child_by_field_name("type")
+            .is_none_or(|ty| self.file.text(ty) != "void")
+        {
+            return false;
+        }
+        let Some(statements) = model_for(self.file.language).body_statements(self.node) else {
+            return false;
+        };
+        statements.is_empty()
+            || (statements.len() == 1
+                && statements[0].kind() == "return_statement"
+                && statements[0].named_child_count() == 0)
+    }
+
+    fn is_refusal_throw(&self) -> bool {
+        let Some(statements) = model_for(self.file.language).body_statements(self.node) else {
+            return false;
+        };
+        statements.len() == 1
+            && statements[0].kind() == "throw_statement"
+            && (self
+                .file
+                .text(statements[0])
+                .contains("UnsupportedOperation")
+                || self.file.text(statements[0]).contains("NotImplemented"))
+    }
+
+    fn has_override(&self) -> bool {
+        descendants(self.node).into_iter().any(|node| {
+            node.kind() == "marker_annotation" && self.file.text(node).contains("Override")
+        })
+    }
+
+    fn is_object_method(&self) -> bool {
+        self.node.child_by_field_name("name").is_some_and(|name| {
+            matches!(
+                self.file.text(name),
+                "equals"
+                    | "hashCode"
+                    | "toString"
+                    | "clone"
+                    | "getClass"
+                    | "notify"
+                    | "notifyAll"
+                    | "wait"
+            )
+        })
+    }
+
+    fn ecma_empty_body(&self) -> bool {
+        self.node.child_by_field_name("body").is_some_and(|body| {
+            let mut cursor = body.walk();
+            body.named_children(&mut cursor)
+                .all(|node| node.kind() == "comment")
+        })
+    }
 }
