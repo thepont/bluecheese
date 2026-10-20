@@ -1,0 +1,1 @@
+| MiddleMan.rs:12:1:15:1 | impl Facade { ... } | At least half of this impl's methods delegate through a source-defined field. |
