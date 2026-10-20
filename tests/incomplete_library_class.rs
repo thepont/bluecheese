@@ -235,6 +235,28 @@ fn reports_repeated_numeric_string_conversion_before_library_calls() {
 }
 
 #[test]
+fn reports_repeated_completion_projection_around_an_lrs_api() {
+    let findings = scan(
+        "import vendor.LrsClient;\n\
+         import vendor.Agent;\n\
+         import vendor.Activity;\n\
+         class CourseDashboard {\n\
+             boolean isComplete(LrsClient lrs, Agent user, Activity course) { return lrs.getStatements(user, course).stream().anyMatch(statement -> statement.result().completion()); }\n\
+         }\n\
+         class LearnerReport {\n\
+             boolean completed(LrsClient lrs, Agent user, Activity course) { return lrs.getStatements(user, course).stream().anyMatch(statement -> statement.result().completion()); }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("LrsClient"))
+    );
+}
+
+#[test]
 fn reports_duplicated_rust_extension_implementations_for_an_imported_type() {
     let file = parse(
         "date_helpers.rs",
