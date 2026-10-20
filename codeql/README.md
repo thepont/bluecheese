@@ -68,9 +68,9 @@ replace inherited behavior with an empty `void` body or an
 through unimplemented parent methods, JavaScript/TypeScript, or Rust trait
 stubs.
 
-**Large Class** has a Java query for classes with at least eight instance
-fields. The source detector's weighted method complexity and tight class
-cohesion branch is not included in this query.
+**Large Class** has Java, Rust, and JavaScript/TypeScript queries for types with
+at least eight instance fields. The source detector's weighted method
+complexity and tight class cohesion branch is not included in these queries.
 
 **Parallel Inheritance Hierarchies** has a Java query for same-file subclasses
 under separate source-defined parents that have matching three-character name
