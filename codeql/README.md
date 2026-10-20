@@ -46,6 +46,10 @@ and the Rust/JavaScript/TypeScript variants are not included yet.
 expose public instance fields. These queries do not yet detect accessor-only
 data classes.
 
+**Inappropriate Intimacy** has a Java query for direct field reads through a
+different source-defined class. The JavaScript/TypeScript and Rust heuristics
+are not represented yet.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
