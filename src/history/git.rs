@@ -6,7 +6,7 @@ use std::path::{Component, Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, ensure};
 
 use super::{Blob, Change, History, ObjectId};
 use crate::lang::SourceFile;
@@ -195,24 +195,52 @@ impl GitReader {
     }
 
     fn run(&mut self, args: &[&str]) -> Result<Vec<u8>> {
-        const OUTPUT_LIMIT: u64 = 16 * 1024 * 1024;
         ensure!(
             Instant::now() < self.deadline,
             "Git history analysis exceeded 60 seconds"
         );
-        let mut child = Command::new("git")
+        let mut command = Command::new("git");
+        command
             .arg("--no-pager")
             .arg("-C")
             .arg(&self.root)
             .args(args)
             .env("GIT_OPTIONAL_LOCKS", "0")
             .env_remove("GIT_DIR")
-            .env_remove("GIT_WORK_TREE")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()
-            .context("running local Git")?;
-        let stdout = child.stdout.take().context("reading local Git output")?;
+            .env_remove("GIT_WORK_TREE");
+        let mut process = GitProcess::spawn(&mut command)?;
+        let (status, bytes) = process.read(self.deadline)?;
+        ensure!(
+            status.success(),
+            "local Git command failed ({})",
+            args.first().unwrap_or(&"git")
+        );
+        Ok(bytes)
+    }
+}
+
+struct GitProcess {
+    child: Child,
+}
+
+impl GitProcess {
+    fn spawn(command: &mut Command) -> Result<Self> {
+        Ok(Self {
+            child: command
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()
+                .context("running local Git")?,
+        })
+    }
+
+    fn read(&mut self, deadline: Instant) -> Result<(ExitStatus, Vec<u8>)> {
+        const OUTPUT_LIMIT: u64 = 16 * 1024 * 1024;
+        let stdout = self
+            .child
+            .stdout
+            .take()
+            .context("reading local Git output")?;
         std::thread::scope(|scope| {
             let reader = scope.spawn(move || {
                 let mut bytes = Vec::new();
@@ -221,7 +249,7 @@ impl GitReader {
                     .read_to_end(&mut bytes)
                     .map(|_| bytes)
             });
-            let status = wait_for_git(&mut child, self.deadline);
+            let status = self.wait(deadline);
             let bytes = reader
                 .join()
                 .map_err(|_| anyhow::anyhow!("Git output reader failed"))??;
@@ -229,30 +257,34 @@ impl GitReader {
                 bytes.len() as u64 <= OUTPUT_LIMIT,
                 "Git output exceeds 16 MiB limit"
             );
-            ensure!(
-                status?.success(),
-                "local Git command failed ({})",
-                args.first().unwrap_or(&"git")
-            );
-            Ok(bytes)
+            Ok((status?, bytes))
         })
     }
-}
 
-fn wait_for_git(child: &mut Child, deadline: Instant) -> Result<ExitStatus> {
-    loop {
-        match child.try_wait() {
-            Ok(Some(status)) => return Ok(status),
-            Ok(None) if Instant::now() < deadline => std::thread::sleep(Duration::from_millis(2)),
-            outcome => {
-                let _ = child.kill();
-                let _ = child.wait();
-                if let Err(error) = outcome {
-                    return Err(error.into());
-                }
-                bail!("Git history analysis exceeded 60 seconds");
-            }
+    fn wait(&mut self, deadline: Instant) -> Result<ExitStatus> {
+        let status = self.poll(deadline);
+        if status.is_err() {
+            self.stop();
         }
+        status
+    }
+
+    fn poll(&mut self, deadline: Instant) -> Result<ExitStatus> {
+        loop {
+            if let Some(status) = self.child.try_wait()? {
+                return Ok(status);
+            }
+            ensure!(
+                Instant::now() < deadline,
+                "Git history analysis exceeded 60 seconds"
+            );
+            std::thread::sleep(Duration::from_millis(2));
+        }
+    }
+
+    fn stop(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
     }
 }
 
@@ -262,15 +294,13 @@ mod tests {
 
     #[test]
     fn an_expired_deadline_kills_and_reaps_a_blocked_git_process() {
-        let mut child = Command::new("git")
+        let mut command = Command::new("git");
+        command
             .args(["hash-object", "--stdin"])
-            .stdin(Stdio::piped())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .unwrap();
-        assert!(wait_for_git(&mut child, Instant::now()).is_err());
-        assert!(child.try_wait().unwrap().is_some());
+            .stdin(Stdio::piped());
+        let mut process = GitProcess::spawn(&mut command).unwrap();
+        assert!(process.wait(Instant::now()).is_err());
+        assert!(process.child.try_wait().unwrap().is_some());
     }
 
     #[test]
