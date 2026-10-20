@@ -82,9 +82,12 @@ are not included yet.
 expressions occur across at least three methods. Its repeated-action and
 low-cohesion branches are not included yet.
 
+**Temporary Field** has a Java query for uninitialized instance fields checked
+against `null` and accessed inside that `if` branch. It does not yet cover the
+primitive-field workflow and constructor-frequency heuristics.
+
 No CodeQL query is currently provided for **Alternative Classes with Different
-Interfaces**, **Duplicate Code**, **Incomplete Library Class**, or
-**Temporary Field**.
+Interfaces**, **Duplicate Code**, or **Incomplete Library Class**.
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.

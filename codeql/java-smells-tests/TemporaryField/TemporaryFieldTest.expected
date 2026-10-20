@@ -1,0 +1,2 @@
+| TemporaryField.java:2:10:2:16 | context | This field is read only in a null-guarded branch. |
+| TemporaryField.java:20:10:20:16 | context | This field is read only in a null-guarded branch. |
