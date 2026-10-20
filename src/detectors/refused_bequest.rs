@@ -292,7 +292,7 @@ fn finding_for_type(project: &Project<'_>, index: usize) -> Option<Finding> {
         }
     }
     for parent in parents {
-        if implicit_refusal(&context, parent) {
+        if context.implicit_refusal(parent) {
             lines.push(model_for(LanguageId::Java).decl_line(ty.node));
         }
     }
@@ -327,7 +327,7 @@ fn parent_empty_method_findings(context: &ChildContext<'_, '_>, parents: &[usize
                             node: method,
                         })
                         .has_override()
-                        && !overrides(context, *parent, method))
+                        && !context.overrides(*parent, method))
                     .then(|| {
                         model_for(LanguageId::Java).decl_line(project.types[context.child].node)
                     })
@@ -403,88 +403,6 @@ impl<'a> Project<'a> {
     fn methods(&self, index: usize) -> Vec<Node<'a>> {
         model_for(LanguageId::Java).methods(self.types[index].file, self.types[index].node)
     }
-}
-
-fn overrides(context: &ChildContext<'_, '_>, parent: usize, parent_method: Node<'_>) -> bool {
-    let project = context.project;
-    let parent_file = project.types[parent].file;
-    context.methods.iter().any(|child_method| {
-        (MethodQuery {
-            file: project.types[context.child].file,
-            node: *child_method,
-        })
-        .signature()
-            == (MethodQuery {
-                file: parent_file,
-                node: parent_method,
-            })
-            .signature()
-    })
-}
-
-fn implicit_refusal(context: &ChildContext<'_, '_>, parent: usize) -> bool {
-    let project = context.project;
-    let inherited: Vec<_> = project
-        .methods(parent)
-        .into_iter()
-        .filter(|method| {
-            (has_modifier(project.types[parent].file, *method, "public")
-                || has_modifier(project.types[parent].file, *method, "protected"))
-                && !(MethodQuery {
-                    file: project.types[parent].file,
-                    node: *method,
-                })
-                .is_object_method()
-        })
-        .collect();
-    if inherited.len() < 3 {
-        return false;
-    }
-    let child_file = project.types[context.child].file;
-    let child_calls: Vec<_> = descendants(project.types[context.child].node)
-        .into_iter()
-        .filter(|node| node.kind() == "method_invocation")
-        .collect();
-    let mut used = 0;
-    for parent_method in &inherited {
-        let parent_sig = (MethodQuery {
-            file: project.types[parent].file,
-            node: *parent_method,
-        })
-        .signature();
-        if context.methods.iter().any(|method| {
-            (MethodQuery {
-                file: child_file,
-                node: *method,
-            })
-            .signature()
-                == parent_sig
-        }) || child_calls.iter().any(|call| {
-            call_matches(
-                child_file,
-                *call,
-                MethodQuery {
-                    node: *parent_method,
-                    file: project.types[parent].file,
-                },
-            )
-        }) {
-            used += 1;
-        }
-    }
-    let ratio = used as f64 / inherited.len() as f64;
-    let new_methods = context
-        .methods
-        .iter()
-        .filter(|method| {
-            !(MethodQuery {
-                file: child_file,
-                node: **method,
-            })
-            .has_override()
-        })
-        .count();
-    ratio < 0.34 && new_methods >= 3
 }
 
 fn call_matches(child_file: &SourceFile, call: Node<'_>, parent: MethodQuery<'_>) -> bool {
@@ -616,5 +534,89 @@ impl MethodQuery<'_> {
             body.named_children(&mut cursor)
                 .all(|node| node.kind() == "comment")
         })
+    }
+}
+
+impl ChildContext<'_, '_> {
+    fn overrides(&self, parent: usize, parent_method: Node<'_>) -> bool {
+        let project = self.project;
+        let parent_file = project.types[parent].file;
+        self.methods.iter().any(|child_method| {
+            (MethodQuery {
+                file: project.types[self.child].file,
+                node: *child_method,
+            })
+            .signature()
+                == (MethodQuery {
+                    file: parent_file,
+                    node: parent_method,
+                })
+                .signature()
+        })
+    }
+
+    fn implicit_refusal(&self, parent: usize) -> bool {
+        let project = self.project;
+        let inherited: Vec<_> = project
+            .methods(parent)
+            .into_iter()
+            .filter(|method| {
+                (has_modifier(project.types[parent].file, *method, "public")
+                    || has_modifier(project.types[parent].file, *method, "protected"))
+                    && !(MethodQuery {
+                        file: project.types[parent].file,
+                        node: *method,
+                    })
+                    .is_object_method()
+            })
+            .collect();
+        if inherited.len() < 3 {
+            return false;
+        }
+        let child_file = project.types[self.child].file;
+        let child_calls: Vec<_> = descendants(project.types[self.child].node)
+            .into_iter()
+            .filter(|node| node.kind() == "method_invocation")
+            .collect();
+        let mut used = 0;
+        for parent_method in &inherited {
+            let parent_sig = (MethodQuery {
+                file: project.types[parent].file,
+                node: *parent_method,
+            })
+            .signature();
+            if self.methods.iter().any(|method| {
+                (MethodQuery {
+                    file: child_file,
+                    node: *method,
+                })
+                .signature()
+                    == parent_sig
+            }) || child_calls.iter().any(|call| {
+                call_matches(
+                    child_file,
+                    *call,
+                    MethodQuery {
+                        node: *parent_method,
+                        file: project.types[parent].file,
+                    },
+                )
+            }) {
+                used += 1;
+            }
+        }
+        let ratio = used as f64 / inherited.len() as f64;
+        let new_methods = self
+            .methods
+            .iter()
+            .filter(|method| {
+                !(MethodQuery {
+                    file: child_file,
+                    node: **method,
+                })
+                .has_override()
+            })
+            .count();
+        ratio < 0.34 && new_methods >= 3
     }
 }
