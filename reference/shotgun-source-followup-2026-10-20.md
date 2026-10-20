@@ -1,5 +1,37 @@
 # Shotgun Surgery source follow-up: Java metadata and further public examples
 
+## Update: Discord.js duplicate static catalogue fixed
+
+The existing parallel-declaration rule now identifies `MessageTypes` in both
+`src/util/Constants.js:580` and `typings/enums.d.ts:89` at the pinned Discord.js
+snapshot below. These are two locations of one duplicated catalogue. The earlier
+zero-source-findings result in this document describes the implementation before
+this fix.
+
+Behaviour commit: `9bf99b7`; behaviour-preserving extraction: `b8356ba`.
+The fix recognises top-level `exports.Name = [...]` and
+`module.exports.Name = [...]`, numeric TypeScript enums, and explicit `null`
+slots in those runtime arrays. Enum/list identities use the same normalisation.
+Known numeric encodings must agree: reserved slots and explicit/implicit values
+are preserved rather than discarded to obtain a match. Ordinary symbolic name
+lists retain their existing membership comparison.
+
+The regression suite contains the actual upstream `MessageTypes` declarations
+with attribution and licence. Controls cover shifted values, collapsed gaps,
+reordered labels, duplicate array labels, holes/spreads, dynamic enum expressions,
+unsafe integer values, signed/radix literals, ordinary instance assignments and
+shadowed CommonJS names (including imports and destructuring). No public code is
+executed. General helper wrappers such as `createEnum(...)` and computed enum
+expressions remain outside this bounded declaration check.
+
+The full suite passes 322 tests with the same pre-existing self-scan test
+explicitly filtered. Strict Clippy and formatting pass. All 22 source detectors
+return zero findings in the changed production files. This fixes source
+recognition of the original duplicate-static pattern; the history rule remains
+unchanged.
+
+## Earlier evaluation
+
 The Java metadata gap is fixed. On jEdit's complete pre-refactor snapshot,
 source analysis now identifies the focused `VFSBrowser.filesActivated` method.
 It produces seven related metadata findings at six distinct method locations:

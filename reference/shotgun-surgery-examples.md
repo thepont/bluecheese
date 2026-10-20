@@ -5,6 +5,10 @@
 See [the source follow-up](shotgun-source-followup-2026-10-20.md) for the
 verified jEdit metadata detection, recurring Discord.js enum co-changes,
 Phoenix's error-code registry extraction, and Enforma's threshold-only control.
+The duplicate-static follow-up now also fixes Discord.js `MessageTypes`: the
+source rule finds its JavaScript and TypeScript declarations while preserving
+numeric values and reserved slots. The earlier zero-hit count remains in the
+report as a before-fix result.
 
 ## Historical co-change rerun
 

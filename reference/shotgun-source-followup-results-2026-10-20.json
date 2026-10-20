@@ -609,5 +609,44 @@
       "findings": []
     },
     "interpretation": "Current shared-callee/body-change implementation; a single supporting commit suffices. Not a test of independently discovered recurring co-change."
+  },
+  "duplicateStaticFix": {
+    "behaviourCommit": "9bf99b7",
+    "refactoringCommit": "b8356ba",
+    "publicSnapshot": "1e0603551573e7bab65b9f8c325081507849bdbb",
+    "sourceFiles": 307,
+    "parseError": null,
+    "cataloguesMatched": 1,
+    "locationsMatched": 2,
+    "findings": [
+      {
+        "smellName": "Shotgun Surgery",
+        "className": "MessageTypes",
+        "lineNumbers": [
+          580
+        ],
+        "relativeFilePath": "src/util/Constants.js",
+        "additionalInfo": "Source evidence: parallel membership declarations for messagetype with complete literal set {\"APPLICATION_COMMAND\", \"AUTO_MODERATION_ACTION\", \"CALL\", \"CHANNEL_FOLLOW_ADD\", \"CHANNEL_ICON_CHANGE\", \"CHANNEL_NAME_CHANGE\", \"CHANNEL_PINNED_MESSAGE\", \"CONTEXT_MENU_COMMAND\", \"DEFAULT\", \"GUILD_DISCOVERY_DISQUALIFIED\", \"GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING\", \"GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING\", \"GUILD_DISCOVERY_REQUALIFIED\", \"GUILD_INVITE_REMINDER\", \"GUILD_MEMBER_JOIN\", \"RECIPIENT_ADD\", \"RECIPIENT_REMOVE\", \"REPLY\", \"ROLE_SUBSCRIPTION_PURCHASE\", \"THREAD_CREATED\", \"THREAD_STARTER_MESSAGE\", \"USER_PREMIUM_GUILD_SUBSCRIPTION\", \"USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1\", \"USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2\", \"USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3\"}. Locations: src/util/Constants.js:580, typings/enums.d.ts:89. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated."
+      },
+      {
+        "smellName": "Shotgun Surgery",
+        "className": "MessageTypes",
+        "lineNumbers": [
+          89
+        ],
+        "relativeFilePath": "typings/enums.d.ts",
+        "additionalInfo": "Source evidence: parallel membership declarations for messagetype with complete literal set {\"APPLICATION_COMMAND\", \"AUTO_MODERATION_ACTION\", \"CALL\", \"CHANNEL_FOLLOW_ADD\", \"CHANNEL_ICON_CHANGE\", \"CHANNEL_NAME_CHANGE\", \"CHANNEL_PINNED_MESSAGE\", \"CONTEXT_MENU_COMMAND\", \"DEFAULT\", \"GUILD_DISCOVERY_DISQUALIFIED\", \"GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING\", \"GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING\", \"GUILD_DISCOVERY_REQUALIFIED\", \"GUILD_INVITE_REMINDER\", \"GUILD_MEMBER_JOIN\", \"RECIPIENT_ADD\", \"RECIPIENT_REMOVE\", \"REPLY\", \"ROLE_SUBSCRIPTION_PURCHASE\", \"THREAD_CREATED\", \"THREAD_STARTER_MESSAGE\", \"USER_PREMIUM_GUILD_SUBSCRIPTION\", \"USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1\", \"USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2\", \"USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3\"}. Locations: src/util/Constants.js:580, typings/enums.d.ts:89. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated."
+      }
+    ],
+    "numericEncoding": "Known enum values and array indices must agree; explicit null slots retained",
+    "jeditRawFindings": 41,
+    "jeditFindingsUnchanged": true,
+    "testsPassed": 322,
+    "testsFiltered": 1,
+    "filteredReason": "Previously recorded self-scan failure in incomplete_library_class.rs",
+    "strictClippy": "passed",
+    "formatting": "passed",
+    "changedProductionFileSmellFindings": 0,
+    "cliSha256": "63284b401a19fd0d1a7f21da73b8465d4135bdae678c2d87f84452872aea8060"
   }
 }
