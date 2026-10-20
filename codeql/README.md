@@ -70,10 +70,14 @@ prefixes. CodeQL resolves parent types project-wide, while this query's
 name-pairing is a simpler approximation of the source detector's greedy
 matching heuristic.
 
-The other BlueCheese detectors have not yet been ported. A CodeQL database
-contains one language, so rules that compare code across languages need a
-separate multi-database design. Rules that depend on Git history also need
-history data to be supplied to the analysis.
+No CodeQL query is currently provided for **Alternative Classes with Different
+Interfaces**, **Comments**, **Divergent Change**, **Duplicate Code**,
+**Incomplete Library Class**, **Shotgun Surgery**, or **Temporary Field**.
+Several other ports above cover only a subset of the source detector's
+heuristics or languages. A CodeQL database contains one language, so rules
+that compare code across languages need a separate multi-database design.
+Rules that depend on Git history also need history data to be supplied to the
+analysis.
 
 ## Run query tests
 
