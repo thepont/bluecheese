@@ -1,0 +1,2 @@
+| JavaScriptSwitchStatements.js:3:5:8:5 | switch  ... ;\\n    } | This method contains a switch statement. |
+| SwitchStatements.ts:3:5:8:5 | switch  ... ;\\n    } | This method contains a switch statement. |

@@ -17,6 +17,12 @@ Rust's statement count mirrors the existing adapter; Java and JavaScript use
 their language libraries' complexity metrics, so metric-level parity on edge
 cases remains to be checked.
 
+**Switch Statements** is also ported for Java switch statements and expressions,
+JavaScript/TypeScript switch statements, and Rust match expressions. The Rust
+query currently reports every match expression, including forwarding
+matches that BlueCheese filters. Java's type-code `if`/`else if` ladders are not
+yet represented in the CodeQL rules.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
