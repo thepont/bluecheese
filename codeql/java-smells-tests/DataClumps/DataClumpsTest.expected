@@ -1,0 +1,3 @@
+| DataClumps.java:2:8:2:12 | first | This method repeats a parameter group used by another method. |
+| DataClumps.java:4:8:4:13 | second | This method repeats a parameter group used by another method. |
+| DataClumps.java:6:8:6:12 | third | This method repeats a parameter group used by another method. |

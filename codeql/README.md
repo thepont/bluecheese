@@ -38,6 +38,10 @@ than one resolved source type reference. It currently omits Java interfaces,
 Rust traits, and TypeScript interfaces; the repository heuristic counts
 name-based references in a narrower package/file scope.
 
+**Data Clumps** has a Java query for methods in one class that repeat at least
+two parameter names with matching types. Repeated call-site argument groups
+and the Rust/JavaScript/TypeScript variants are not included yet.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
