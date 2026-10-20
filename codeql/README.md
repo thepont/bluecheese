@@ -42,6 +42,10 @@ name-based references in a narrower package/file scope.
 two parameter names with matching types. Repeated call-site argument groups
 and the Rust/JavaScript/TypeScript variants are not included yet.
 
+**Data Class** has Java, JavaScript/TypeScript, and Rust queries for types that
+expose public instance fields. These queries do not yet detect accessor-only
+data classes.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
