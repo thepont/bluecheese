@@ -122,20 +122,8 @@ pub(crate) fn projection_reads<'a>(
 
 impl<'a> Project<'a> {
     fn case_value(&self, site: CallSite<'a>, access: Node<'a>, target: usize) -> Option<String> {
-        let comparison = access.parent()?;
         let file = self.types[site.owner].file;
-        if comparison.kind() != "binary_expression"
-            || file.text(comparison.child_by_field_name("operator")?) != "=="
-        {
-            return None;
-        }
-        let left = comparison.child_by_field_name("left")?;
-        let right = comparison.child_by_field_name("right")?;
-        let value = if left.id() == access.id() {
-            right
-        } else {
-            left
-        };
+        let value = equality_value(file.at(access))?;
         if value.kind() != "field_access" {
             return None;
         }
@@ -325,6 +313,25 @@ impl<'a> Project<'a> {
         }
         Some(score)
     }
+}
+
+fn equality_value(source: crate::lang::SourceNode<'_>) -> Option<Node<'_>> {
+    let comparison = source.node().parent()?;
+    if comparison.kind() != "binary_expression"
+        || source
+            .file()
+            .text(comparison.child_by_field_name("operator")?)
+            != "=="
+    {
+        return None;
+    }
+    let left = comparison.child_by_field_name("left")?;
+    let right = comparison.child_by_field_name("right")?;
+    Some(if left.id() == source.node().id() {
+        right
+    } else {
+        left
+    })
 }
 
 #[derive(Clone, Copy)]
