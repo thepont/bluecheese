@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
+use crate::lang::java::has_modifier;
 use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
@@ -631,17 +632,6 @@ fn package_name(file: &SourceFile) -> String {
         .unwrap_or_default()
 }
 
-fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
-    let mut cursor = node.walk();
-    node.named_children(&mut cursor)
-        .find(|child| child.kind() == "modifiers")
-        .is_some_and(|modifiers| {
-            file.text(modifiers)
-                .split_whitespace()
-                .any(|word| word == modifier)
-        })
-}
-
 impl<'a> AccessContext<'_, 'a> {
     fn is_external_field_access(&self, access: Node<'a>) -> bool {
         let ty = &self.analysis.types[self.owner];
@@ -673,8 +663,8 @@ impl<'a> AccessContext<'_, 'a> {
             .field_declarations(target_index)
             .into_iter()
             .any(|declaration| {
-                if has_modifier(target_decl.file, declaration, "static")
-                    && has_modifier(target_decl.file, declaration, "final")
+                if has_modifier(target_decl.file.at(declaration), "static")
+                    && has_modifier(target_decl.file.at(declaration), "final")
                 {
                     return false;
                 }

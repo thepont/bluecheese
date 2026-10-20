@@ -1,6 +1,7 @@
 //! Port of StaticNose's strict Data Class rule.
 
 use crate::finding::Finding;
+use crate::lang::java::has_modifier;
 use crate::lang::{LanguageId, SourceFile, model_for};
 use tree_sitter::Node;
 
@@ -33,7 +34,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                     additional_info: String::new(),
                 });
             }
-            if ty.kind() != "class_declaration" || has_modifier(file, ty, "abstract") {
+            if ty.kind() != "class_declaration" || has_modifier(file.at(ty), "abstract") {
                 return None;
             }
 
@@ -41,7 +42,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             if !constructors.is_empty()
                 && constructors
                     .iter()
-                    .all(|ctor| has_modifier(file, *ctor, "private"))
+                    .all(|ctor| has_modifier(file.at(*ctor), "private"))
             {
                 return None;
             }
@@ -53,9 +54,9 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                     let Some(declaration) = field.parent() else {
                         return false;
                     };
-                    has_modifier(file, declaration, "public")
-                        && !has_modifier(file, declaration, "static")
-                        && !has_modifier(file, declaration, "final")
+                    has_modifier(file.at(declaration), "public")
+                        && !has_modifier(file.at(declaration), "static")
+                        && !has_modifier(file.at(declaration), "final")
                 })
                 .count();
 
@@ -151,25 +152,6 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
 
 fn has_non_java_modifier(text: &str, modifier: &str) -> bool {
     text.split(|ch: char| !ch.is_alphanumeric() && ch != '_')
-        .any(|word| word == modifier)
-}
-
-fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
-    let Some(modifiers) = node.child_by_field_name("modifiers") else {
-        let mut cursor = node.walk();
-        let Some(modifiers) = node
-            .named_children(&mut cursor)
-            .find(|child| child.kind() == "modifiers")
-        else {
-            return false;
-        };
-        return file
-            .text(modifiers)
-            .split_whitespace()
-            .any(|word| word == modifier);
-    };
-    file.text(modifiers)
-        .split_whitespace()
         .any(|word| word == modifier)
 }
 

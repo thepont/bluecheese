@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 
 use crate::finding::Finding;
+use crate::lang::java::has_modifier;
 use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
@@ -415,17 +416,6 @@ fn package_name(file: &SourceFile) -> String {
         .unwrap_or_default()
 }
 
-fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
-    let mut cursor = node.walk();
-    node.named_children(&mut cursor)
-        .find(|child| child.kind() == "modifiers")
-        .is_some_and(|modifiers| {
-            file.text(modifiers)
-                .split_whitespace()
-                .any(|word| word == modifier)
-        })
-}
-
 impl MethodQuery<'_> {
     fn refuses_default_method(&self, parents: &[Node<'_>]) -> bool {
         if !self.rust_is_refusal_stub() {
@@ -553,8 +543,8 @@ impl ChildContext<'_, '_> {
             .methods(parent)
             .into_iter()
             .filter(|method| {
-                (has_modifier(project.types[parent].file, *method, "public")
-                    || has_modifier(project.types[parent].file, *method, "protected"))
+                (has_modifier(project.types[parent].file.at(*method), "public")
+                    || has_modifier(project.types[parent].file.at(*method), "protected"))
                     && !(MethodQuery {
                         file: project.types[parent].file,
                         node: *method,

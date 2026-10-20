@@ -8,6 +8,8 @@ pub mod calls;
 mod metrics;
 mod types;
 
+pub use types::has_modifier;
+
 use tree_sitter::{Language, Node};
 
 use crate::lang::{LanguageId, LanguageModel, SourceFile, SourceNode};

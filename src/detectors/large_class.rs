@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
+use crate::lang::java::has_modifier;
 use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
@@ -165,7 +166,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
 }
 
 fn is_accessor(file: &SourceFile, method: Node<'_>) -> bool {
-    if has_modifier(file, method, "static") {
+    if has_modifier(file.at(method), "static") {
         return false;
     }
     let Some(name) = method.child_by_field_name("name") else {
@@ -328,15 +329,4 @@ fn add_same_instance_usage(
 
 fn method_key(method: Node<'_>) -> String {
     format!("{}:{}", method.start_byte(), method.end_byte())
-}
-
-fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
-    let mut cursor = node.walk();
-    node.named_children(&mut cursor)
-        .find(|child| child.kind() == "modifiers")
-        .is_some_and(|modifiers| {
-            file.text(modifiers)
-                .split_whitespace()
-                .any(|word| word == modifier)
-        })
 }

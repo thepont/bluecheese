@@ -3,7 +3,7 @@
 
 use tree_sitter::Node;
 
-use crate::lang::SourceFile;
+use crate::lang::{SourceFile, SourceNode};
 use crate::walk::ancestor_while;
 
 /// Spoon `CtType` implementations that appear in `getAllTypes()`.
@@ -139,13 +139,7 @@ pub fn parameters(node: Node<'_>) -> usize {
 /// The annotation may be nested in the method's modifiers, and may be written
 /// with a qualified name, which Spoon reduces to its simple name.
 pub fn is_override(file: &SourceFile, node: Node<'_>) -> bool {
-    // `modifiers` is an unnamed child of a declaration in this grammar, not a
-    // field, so it is found the same way `decl_line` finds it.
-    let mut cursor = node.walk();
-    let Some(modifiers) = node
-        .children(&mut cursor)
-        .find(|child| child.kind() == "modifiers")
-    else {
+    let Some(modifiers) = declaration_modifiers(node) else {
         return false;
     };
 
@@ -155,6 +149,26 @@ pub fn is_override(file: &SourceFile, node: Node<'_>) -> bool {
             && modifier
                 .child_by_field_name("name")
                 .is_some_and(|name| file.text(name).rsplit('.').next() == Some("Override"))
+    })
+}
+
+/// Java modifier membership, shared by declaration-based detectors.
+pub fn has_modifier(source: SourceNode<'_>, modifier: &str) -> bool {
+    declaration_modifiers(source.node()).is_some_and(|modifiers| {
+        source
+            .file()
+            .text(modifiers)
+            .split_whitespace()
+            .any(|word| word == modifier)
+    })
+}
+
+/// Modifiers can be an unnamed declaration child rather than a grammar field.
+fn declaration_modifiers(node: Node<'_>) -> Option<Node<'_>> {
+    node.child_by_field_name("modifiers").or_else(|| {
+        let mut cursor = node.walk();
+        node.children(&mut cursor)
+            .find(|child| child.kind() == "modifiers")
     })
 }
 
