@@ -102,10 +102,11 @@ classes with at least two methods whose statement and expression node-class
 counts match. It ignores identifier and literal values, but does not preserve
 the exact AST ordering and nesting used by the source detector.
 
-**Duplicate Code** has a Java query for same-class methods with matching
-statement and expression node-class counts and at least three statements. It
-does not preserve AST ordering or nesting, and does not cover cross-language
-duplicates.
+**Duplicate Code** has Java, Rust, and JavaScript/TypeScript queries for
+same-owner methods with at least three statements. Java and JavaScript/TypeScript
+compare statement and expression node-class counts; Rust compares only total
+statement and expression counts. None preserve AST ordering or nesting, and
+cross-language duplicates are not covered.
 
 **Incomplete Library Class** has a Java query for same-file static helper
 methods that take the same imported type, call a method on that parameter, and

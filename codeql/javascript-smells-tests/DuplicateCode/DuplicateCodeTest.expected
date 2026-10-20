@@ -1,0 +1,1 @@
+| DuplicateCode.js:2:3:6:3 | first(v ... ed;\\n  } | This method has the same statement and expression structure as another method in its class. |
