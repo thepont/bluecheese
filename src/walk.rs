@@ -9,11 +9,8 @@ pub fn descendants<'tree>(node: Node<'tree>) -> Vec<Node<'tree>> {
     let mut stack = vec![node];
     while let Some(n) = stack.pop() {
         out.push(n);
-        // Push children in reverse so pop() yields them in source order.
         let children: Vec<Node<'tree>> = n.children(&mut cursor).collect();
-        for child in children.into_iter().rev() {
-            stack.push(child);
-        }
+        stack.extend(children.into_iter().rev());
     }
     out
 }
