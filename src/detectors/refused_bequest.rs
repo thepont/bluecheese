@@ -87,32 +87,15 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
                 continue;
             };
             let trait_methods = model.methods(file.at(trait_type));
-            let implementation_methods: Vec<_> = descendants(implementation)
+            let mut lines: Vec<_> = descendants(implementation)
                 .into_iter()
                 .filter(|node| node.kind() == "function_item")
-                .collect();
-            let mut lines: Vec<_> = implementation_methods
-                .iter()
-                .copied()
                 .filter(|method| {
                     (MethodQuery {
                         file,
                         node: *method,
                     })
-                    .rust_is_refusal_stub()
-                })
-                .filter(|method| {
-                    let Some(name) = method.child_by_field_name("name") else {
-                        return false;
-                    };
-                    trait_methods.iter().any(|parent| {
-                        parent
-                            .child_by_field_name("name")
-                            .is_some_and(|parent_name| {
-                                file.text(parent_name) == file.text(name)
-                                    && parent.child_by_field_name("body").is_some()
-                            })
-                    })
+                    .refuses_default_method(&trait_methods)
                 })
                 .map(|method| file.line(method))
                 .collect();
@@ -444,6 +427,23 @@ fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
 }
 
 impl MethodQuery<'_> {
+    fn refuses_default_method(&self, parents: &[Node<'_>]) -> bool {
+        if !self.rust_is_refusal_stub() {
+            return false;
+        }
+        let Some(name) = self.node.child_by_field_name("name") else {
+            return false;
+        };
+        parents.iter().any(|parent| {
+            parent
+                .child_by_field_name("name")
+                .is_some_and(|parent_name| {
+                    self.file.text(parent_name) == self.file.text(name)
+                        && parent.child_by_field_name("body").is_some()
+                })
+        })
+    }
+
     fn rust_is_refusal_stub(&self) -> bool {
         let Some(statements) = model_for(self.file.language).body_children(self.node) else {
             return false;
