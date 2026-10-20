@@ -1,0 +1,1 @@
+| FeatureEnvy.java:8:7:8:22 | usesRemoteFields | This method reads three or more fields from one other object. |
