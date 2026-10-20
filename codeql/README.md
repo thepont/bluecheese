@@ -33,6 +33,11 @@ JavaScript/TypeScript also recognizes
 `has*`. The Rust port uses explicit method-call syntax and does not infer
 chains through overloaded operators.
 
+**Speculative Generality** has a Java query for abstract classes with no more
+than one resolved source type reference. It currently omits Java interfaces,
+Rust traits, and TypeScript interfaces; the repository heuristic counts
+name-based references in a narrower package/file scope.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need

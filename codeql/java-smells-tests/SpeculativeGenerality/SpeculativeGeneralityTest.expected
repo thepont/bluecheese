@@ -1,0 +1,2 @@
+| SpeculativeGenerality.java:1:16:1:32 | UnusedAbstraction | This abstract class has few references and may be speculative. |
+| SpeculativeGenerality.java:3:16:3:37 | LightlyUsedAbstraction | This abstract class has few references and may be speculative. |
