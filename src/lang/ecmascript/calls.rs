@@ -304,7 +304,8 @@ impl<'a> TypeResolver<'_, 'a> {
             let owner = &self.project.owners[owner_index];
             let file = self.project.files[owner.file];
             for field in descendants(owner.node).into_iter().filter(|node| {
-                super::owner(*node).id() == owner.node.id() && field_binding(file, *node, name)
+                super::owner(*node).id() == owner.node.id()
+                    && (BindingQuery { file, name }).field_binding(*node)
             }) {
                 if owner_index != index && field.kind() == "required_parameter" {
                     continue;
@@ -607,38 +608,6 @@ fn annotation_name<'a>(file: &'a SourceFile, annotation: Node<'_>) -> Option<&'a
         .map(|node| file.text(node))
 }
 
-fn field_binding(file: &SourceFile, node: Node<'_>, name: &str) -> bool {
-    if node.kind() == "assignment_expression" {
-        return constructor_field_assignment(file, node, name);
-    }
-    if ["public_field_definition", "field_definition"].contains(&node.kind()) {
-        return node
-            .child_by_field_name("name")
-            .or_else(|| node.child_by_field_name("property"))
-            .is_some_and(|n| file.text(n) == name);
-    }
-    node.kind() == "required_parameter"
-        && children(node)
-            .iter()
-            .any(|n| n.kind() == "accessibility_modifier")
-        && binding_name(file, node) == Some(name)
-}
-
-fn constructor_field_assignment(file: &SourceFile, node: Node<'_>, name: &str) -> bool {
-    let Some(left) = node.child_by_field_name("left") else {
-        return false;
-    };
-    left.kind() == "member_expression"
-        && left
-            .child_by_field_name("object")
-            .is_some_and(|object| object.kind() == "this")
-        && left
-            .child_by_field_name("property")
-            .is_some_and(|property| file.text(property) == name)
-        && enclosing_function(node)
-            .is_some_and(|method| function_name(file, method).as_deref() == Some("constructor"))
-}
-
 fn binding_name<'a>(file: &'a SourceFile, node: Node<'_>) -> Option<&'a str> {
     if node.kind() == "identifier" {
         return Some(file.text(node));
@@ -708,5 +677,40 @@ impl BindingQuery<'_> {
             scope = current.parent();
         }
         None
+    }
+}
+
+impl BindingQuery<'_> {
+    fn field_binding(&self, node: Node<'_>) -> bool {
+        if node.kind() == "assignment_expression" {
+            return self.constructor_field_assignment(node);
+        }
+        if ["public_field_definition", "field_definition"].contains(&node.kind()) {
+            return node
+                .child_by_field_name("name")
+                .or_else(|| node.child_by_field_name("property"))
+                .is_some_and(|n| self.file.text(n) == self.name);
+        }
+        node.kind() == "required_parameter"
+            && children(node)
+                .iter()
+                .any(|n| n.kind() == "accessibility_modifier")
+            && binding_name(self.file, node) == Some(self.name)
+    }
+
+    fn constructor_field_assignment(&self, node: Node<'_>) -> bool {
+        let Some(left) = node.child_by_field_name("left") else {
+            return false;
+        };
+        left.kind() == "member_expression"
+            && left
+                .child_by_field_name("object")
+                .is_some_and(|object| object.kind() == "this")
+            && left
+                .child_by_field_name("property")
+                .is_some_and(|property| self.file.text(property) == self.name)
+            && enclosing_function(node).is_some_and(|method| {
+                function_name(self.file, method).as_deref() == Some("constructor")
+            })
     }
 }
