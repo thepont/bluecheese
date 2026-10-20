@@ -44,21 +44,22 @@ pub fn body<'a>(ty: Node<'a>) -> Option<Node<'a>> {
 /// at the next token (e.g. the return type).
 pub fn decl_line(node: Node<'_>) -> usize {
     let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if child.kind() == "modifiers" {
-            let mut modifiers_cursor = child.walk();
-            for g in child.children(&mut modifiers_cursor) {
-                if matches!(g.kind(), "annotation" | "marker_annotation") {
-                    continue;
-                }
-                return g.start_position().row + 1;
-            }
-            // Only annotations in `modifiers`; the position starts at the next child.
-            continue;
-        }
-        return child.start_position().row + 1;
+    node.children(&mut cursor)
+        .find_map(declaration_token)
+        .unwrap_or(node)
+        .start_position()
+        .row
+        + 1
+}
+
+fn declaration_token(child: Node<'_>) -> Option<Node<'_>> {
+    if child.kind() != "modifiers" {
+        return Some(child);
     }
-    node.start_position().row + 1
+    let mut cursor = child.walk();
+    child
+        .children(&mut cursor)
+        .find(|modifier| !matches!(modifier.kind(), "annotation" | "marker_annotation"))
 }
 
 /// Methods declared directly in `ty`. Spoon's `CtType.getMethods()` returns
@@ -68,11 +69,7 @@ pub fn decl_line(node: Node<'_>) -> usize {
 /// is transparently descended into.
 pub fn methods<'a>(ty: Node<'a>) -> Vec<Node<'a>> {
     let mut out = Vec::new();
-    // Every declaration `all_types()` returns has a body: a class, interface,
-    // enum, record or annotation without braces is not Java. Treating that as
-    // optional would turn a grammar change into a type that looks like it has no
-    // methods at all, which is indistinguishable from a clean type.
-    let described = body(ty).expect("a type declaration has a body");
+    let described = declared_type_body(ty);
     collect_declarations(described, &["method_declaration"], &mut out);
     out
 }
@@ -105,13 +102,19 @@ fn collect_declarations<'a>(body: Node<'a>, kinds: &[&str], out: &mut Vec<Node<'
 /// position, and the reference tool does not report one.
 pub fn constructors<'a>(ty: Node<'a>) -> Vec<Node<'a>> {
     let mut out = Vec::new();
-    let described = body(ty).expect("a type declaration has a body");
+    let described = declared_type_body(ty);
     collect_declarations(
         described,
         &["constructor_declaration", "compact_constructor_declaration"],
         &mut out,
     );
     out
+}
+
+/// Every Java type declaration has braces. A missing body is a grammar contract
+/// failure, rather than evidence that the type declares no members.
+fn declared_type_body(ty: Node<'_>) -> Node<'_> {
+    body(ty).expect("a type declaration has a body")
 }
 
 /// Parameters a caller must supply (`CtExecutable.getParameters().size()`).
