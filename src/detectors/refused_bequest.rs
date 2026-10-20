@@ -96,7 +96,7 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
                 .copied()
                 .filter(|method| {
                     (MethodQuery {
-                        file: file,
+                        file,
                         node: *method,
                     })
                     .rust_is_refusal_stub()
@@ -318,12 +318,12 @@ fn parent_empty_method_findings(context: &ChildContext<'_, '_>, parents: &[usize
                 .filter_map(move |method| {
                     let file = project.types[*parent].file;
                     ((MethodQuery {
-                        file: file,
+                        file,
                         node: method,
                     })
                     .is_empty_body()
                         && !(MethodQuery {
-                            file: file,
+                            file,
                             node: method,
                         })
                         .has_override()
