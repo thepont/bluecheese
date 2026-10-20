@@ -7,7 +7,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java, rust};
+use crate::lang::{LanguageId, LanguageModel, SourceFile, SourceNode, java, rust};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -51,14 +51,14 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         };
         for method in java::JAVA.methods(file.at(ty)) {
             let (Some((type_name, receiver)), Some(body)) = (
-                extension_parameter(file, method),
+                extension_parameter(file.at(method)),
                 method.child_by_field_name("body"),
             ) else {
                 continue;
             };
             if !imported.contains(&type_name)
                 || local.contains(&type_name)
-                || !extends_receiver(file, method, &receiver)
+                || !extends_receiver(file.at(method), &receiver)
             {
                 continue;
             }
@@ -136,7 +136,7 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
             continue;
         }
         for method in direct_rust_functions(body) {
-            if !rust_extension_method(file, method) {
+            if !rust_extension_method(file.at(method)) {
                 continue;
             }
             let Some(method_body) = method.child_by_field_name("body") else {
@@ -214,15 +214,21 @@ fn direct_rust_functions(body: Node<'_>) -> Vec<Node<'_>> {
         .collect()
 }
 
-fn rust_extension_method(file: &SourceFile, method: Node<'_>) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+fn rust_extension_method(source: SourceNode<'_>) -> bool {
+    let Some(body) = source.node().child_by_field_name("body") else {
         return false;
     };
     descendants(body).into_iter().any(|node| {
         node.kind() == "call_expression"
             && node
                 .child_by_field_name("function")
-                .is_some_and(|function| file.text(function).trim_start().starts_with("self."))
+                .is_some_and(|function| {
+                    source
+                        .file()
+                        .text(function)
+                        .trim_start()
+                        .starts_with("self.")
+                })
     })
 }
 
@@ -460,36 +466,42 @@ fn imported_types(file: &SourceFile) -> BTreeSet<String> {
         .collect()
 }
 
-fn extension_parameter(file: &SourceFile, method: Node<'_>) -> Option<(String, String)> {
-    if !is_static(file, method) {
+fn extension_parameter(source: SourceNode<'_>) -> Option<(String, String)> {
+    if !is_static(source) {
         return None;
     }
-    let parameters = method.child_by_field_name("parameters")?;
+    let parameters = source.node().child_by_field_name("parameters")?;
     let mut cursor = parameters.walk();
     let parameter = parameters
         .named_children(&mut cursor)
         .find(|node| node.kind() == "formal_parameter")?;
     let type_node = parameter.child_by_field_name("type")?;
     let name_node = parameter.child_by_field_name("name")?;
-    let type_text = file.text(type_node);
+    let type_text = source.file().text(type_node);
     let type_name = type_text.rsplit('.').next()?.trim_end_matches("[]");
-    Some((type_name.to_owned(), file.text(name_node).to_owned()))
+    Some((
+        type_name.to_owned(),
+        source.file().text(name_node).to_owned(),
+    ))
 }
 
-fn is_static(file: &SourceFile, method: Node<'_>) -> bool {
-    let mut cursor = method.walk();
-    method
+fn is_static(source: SourceNode<'_>) -> bool {
+    let mut cursor = source.node().walk();
+    source
+        .node()
         .named_children(&mut cursor)
         .find(|child| child.kind() == "modifiers")
         .is_some_and(|modifiers| {
-            file.text(modifiers)
+            source
+                .file()
+                .text(modifiers)
                 .split_whitespace()
                 .any(|word| word == "static")
         })
 }
 
-fn extends_receiver(file: &SourceFile, method: Node<'_>, receiver_name: &str) -> bool {
-    let Some(body) = method.child_by_field_name("body") else {
+fn extends_receiver(source: SourceNode<'_>, receiver_name: &str) -> bool {
+    let Some(body) = source.node().child_by_field_name("body") else {
         return false;
     };
     descendants(body).into_iter().any(|node| {
@@ -497,6 +509,6 @@ fn extends_receiver(file: &SourceFile, method: Node<'_>, receiver_name: &str) ->
             return false;
         }
         node.child_by_field_name("object")
-            .is_some_and(|object| file.text(object) == receiver_name)
+            .is_some_and(|object| source.file().text(object) == receiver_name)
     })
 }
