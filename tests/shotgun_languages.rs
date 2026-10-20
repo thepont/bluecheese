@@ -99,3 +99,22 @@ fn typed_rust_locals_resolve_without_leaking_between_blocks() {
         assert_eq!(findings[0].class_name, "Shared");
     }
 }
+
+#[test]
+fn generic_rust_call_syntax_preserves_qualified_and_typed_receivers() {
+    for (signature, invocation) in [
+        ("fn work<T>() {}", "Shared::work::<u8>()"),
+        ("fn work<T>(&self) {}", "value.work::<u8>()"),
+    ] {
+        let findings = scan(
+            "calls.rs",
+            &format!(
+                "struct Shared; impl Shared {{ {signature} }}
+             struct First; impl First {{ fn call(value: &Shared) {{ {invocation}; }} }}
+             struct Second; impl Second {{ fn call(value: &Shared) {{ {invocation}; }} }}"
+            ),
+        );
+        assert_eq!(findings.len(), 1, "{invocation}");
+        assert_eq!(findings[0].class_name, "Shared");
+    }
+}

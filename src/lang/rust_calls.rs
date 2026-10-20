@@ -96,32 +96,18 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
 
 impl Method<'_> {
     fn call_name(&self, function: Node<'_>) -> Option<(&str, Option<&str>)> {
-        let file = self.file;
-        match function.kind() {
-            "identifier" => Some((file.text(function), None)),
-            "scoped_identifier" => {
-                let name = function.child_by_field_name("name")?;
-                let path = function.child_by_field_name("path")?;
-                let qualifier = file.text(path).rsplit("::").next()?;
-                Some((
-                    file.text(name),
-                    Some(if qualifier == "Self" {
-                        &self.owner_name
-                    } else {
-                        qualifier
-                    }),
-                ))
-            }
-            "field_expression" => {
-                let field = function.child_by_field_name("field")?;
-                let receiver = function.child_by_field_name("value")?;
-                Some((file.text(field), Some(self.receiver_type(receiver)?)))
-            }
-            "generic_function" => function
+        if function.kind() == "generic_function" {
+            return function
                 .named_child(0)
-                .and_then(|child| self.call_name(child)),
-            _ => None,
+                .and_then(|child| self.call_name(child));
         }
+        let syntax = CALL_SYNTAX
+            .iter()
+            .find(|syntax| syntax.kind == function.kind())?;
+        Some((
+            self.file.text(syntax.name(function)?),
+            syntax.qualifier(self, function)?,
+        ))
     }
 
     fn receiver_type(&self, receiver: Node<'_>) -> Option<&str> {
@@ -181,5 +167,57 @@ impl Method<'_> {
             ty = ty.child_by_field_name("name")?;
         }
         (ty.kind() == "type_identifier").then(|| self.file.text(ty))
+    }
+}
+
+struct CallSyntax {
+    kind: &'static str,
+    name_field: Option<&'static str>,
+    path_field: Option<&'static str>,
+    receiver_field: Option<&'static str>,
+}
+
+const CALL_SYNTAX: &[CallSyntax] = &[
+    CallSyntax {
+        kind: "identifier",
+        name_field: None,
+        path_field: None,
+        receiver_field: None,
+    },
+    CallSyntax {
+        kind: "scoped_identifier",
+        name_field: Some("name"),
+        path_field: Some("path"),
+        receiver_field: None,
+    },
+    CallSyntax {
+        kind: "field_expression",
+        name_field: Some("field"),
+        path_field: None,
+        receiver_field: Some("value"),
+    },
+];
+
+impl CallSyntax {
+    fn name<'tree>(&self, function: Node<'tree>) -> Option<Node<'tree>> {
+        self.name_field
+            .map_or(Some(function), |field| function.child_by_field_name(field))
+    }
+
+    fn qualifier<'a>(&self, caller: &'a Method<'_>, function: Node<'_>) -> Option<Option<&'a str>> {
+        if let Some(field) = self.path_field {
+            let path = function.child_by_field_name(field)?;
+            let qualifier = caller.file.text(path).rsplit("::").next()?;
+            return Some(Some(if qualifier == "Self" {
+                &caller.owner_name
+            } else {
+                qualifier
+            }));
+        }
+        if let Some(field) = self.receiver_field {
+            let receiver = function.child_by_field_name(field)?;
+            return Some(Some(caller.receiver_type(receiver)?));
+        }
+        Some(None)
     }
 }
