@@ -15,6 +15,7 @@ mod accessors;
 pub mod coupling;
 pub mod ecmascript;
 pub mod java;
+pub(crate) mod projections;
 pub mod rust;
 pub mod rust_calls;
 pub(crate) mod rust_dispatch;

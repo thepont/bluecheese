@@ -90,6 +90,49 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
     coupling::count(&methods, &edges)
 }
 
+pub(crate) fn projection_reads<'a>(
+    files: &'a [SourceFile],
+    reads: &mut crate::lang::projections::Reads<'a>,
+) {
+    let project = Project::new(files);
+    for method in &project.methods {
+        let owner = &project.types[method.owner];
+        let file = owner.file;
+        let site = CallSite {
+            owner: method.owner,
+            method: method.node,
+            depth: 0,
+        };
+        for call in descendants(method.node)
+            .into_iter()
+            .filter(|node| node.kind() == "method_invocation")
+        {
+            let Some(target_index) = project.resolve_call(site, call) else {
+                continue;
+            };
+            let target_method = &project.methods[target_index];
+            if target_method.owner == method.owner
+                || !target_method.parameters.is_empty()
+                || !crate::lang::projections::is_getter(&target_method.name)
+            {
+                continue;
+            }
+            let Some(receiver) = call.child_by_field_name("object") else {
+                continue;
+            };
+            let target = &project.types[target_method.owner];
+            reads.record(crate::lang::projections::MemberRead {
+                usage: file.at(call),
+                consumer: file.at(method.node),
+                target: target.file.at(target.node),
+                target_name: target.qualified.clone(),
+                receiver: file.text(receiver).into(),
+                member: target_method.name.clone(),
+            });
+        }
+    }
+}
+
 impl<'a> Project<'a> {
     fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
         JavaExpressionResolver {

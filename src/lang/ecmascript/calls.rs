@@ -53,6 +53,53 @@ enum Target {
     Namespace(usize),
 }
 
+pub(crate) fn projection_reads<'a>(
+    files: &'a [SourceFile],
+    reads: &mut crate::lang::projections::Reads<'a>,
+) {
+    let project = Project::new(files);
+    for (caller, method) in project.methods.iter().enumerate() {
+        let file = project.files[project.file_index(caller)];
+        for member in descendants(method.node)
+            .into_iter()
+            .filter(|node| node.kind() == "member_expression")
+        {
+            if enclosing_function(member).is_none_or(|scope| scope.id() != method.node.id()) {
+                continue;
+            }
+            let Some(receiver) = member.child_by_field_name("object") else {
+                continue;
+            };
+            let Some(Target::Class(target)) =
+                project.expression(Context { caller, depth: 0 }, receiver)
+            else {
+                continue;
+            };
+            if target == method.owner {
+                continue;
+            }
+            let Some(name) = member
+                .child_by_field_name("property")
+                .map(|node| file.text(node))
+            else {
+                continue;
+            };
+            if !project.projection_member(target, file.at(member)) {
+                continue;
+            }
+            let target = &project.owners[target];
+            reads.record(crate::lang::projections::MemberRead {
+                usage: file.at(member),
+                consumer: file.at(method.node),
+                target: project.files[target.file].at(target.node),
+                target_name: target.name.clone(),
+                receiver: file.text(receiver).into(),
+                member: name.into(),
+            });
+        }
+    }
+}
+
 pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCoupling> {
     let project = Project::new(files);
     let edges = project.edges();
@@ -76,6 +123,54 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
 }
 
 impl<'a> Project<'a> {
+    fn projection_member(&self, target: usize, source: crate::lang::SourceNode<'a>) -> bool {
+        let member = source.node();
+        let Some(property) = member.child_by_field_name("property") else {
+            return false;
+        };
+        let name = source.file().text(property);
+        if member.parent().is_some_and(|parent| {
+            parent.kind() == "call_expression"
+                && parent
+                    .child_by_field_name("function")
+                    .is_some_and(|function| function.id() == member.id())
+        }) {
+            return crate::lang::projections::is_getter(name)
+                && member
+                    .parent()
+                    .and_then(|call| call.child_by_field_name("arguments"))
+                    .is_some_and(|args| children(args).is_empty())
+                && self.type_resolver().method_named(target, name).is_some();
+        }
+        let owner = &self.owners[target];
+        let file = self.files[owner.file];
+        owner
+            .node
+            .child_by_field_name("body")
+            .into_iter()
+            .flat_map(children)
+            .chain(
+                children(owner.node)
+                    .into_iter()
+                    .filter(|_| owner.node.kind() == "object"),
+            )
+            .any(|field| {
+                [
+                    "property_signature",
+                    "public_field_definition",
+                    "field_definition",
+                    "pair",
+                    "shorthand_property_identifier",
+                ]
+                .contains(&field.kind())
+                    && field
+                        .child_by_field_name("name")
+                        .or_else(|| field.child_by_field_name("property"))
+                        .or_else(|| field.child_by_field_name("key"))
+                        .is_some_and(|key| file.text(key) == name)
+            })
+    }
+
     fn type_resolver(&self) -> TypeResolver<'_, 'a> {
         TypeResolver {
             project: self,

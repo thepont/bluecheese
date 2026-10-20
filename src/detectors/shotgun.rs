@@ -5,8 +5,10 @@
 use crate::finding::Finding;
 use crate::lang::{SourceFile, coupling};
 
+mod bundles;
 mod source;
-pub use source::source_evidence;
+pub use bundles::BundleRules;
+pub use source::{source_evidence, source_evidence_with};
 
 pub const SMELL_NAME: &str = "Shotgun Surgery";
 

@@ -15,7 +15,7 @@ struct Args {
     #[arg(short = 's', long = "smell")]
     smell: String,
 
-    /// Use source evidence without Git history (parallel catalogues for Shotgun Surgery).
+    /// Use source evidence without Git history (parallel catalogues and member bundles).
     #[arg(long, conflicts_with = "reference")]
     source_only: bool,
 
@@ -57,9 +57,9 @@ fn main() -> anyhow::Result<()> {
             if args.reference {
                 "reference incoming-coupling metric; no history validation"
             } else if args.source_only {
-                "parallel source declarations only; candidates require review"
+                "parallel source declarations and member bundles; candidates require review"
             } else {
-                "parallel source declarations first; Git body co-change fallback (up to 128 non-merge commits)"
+                "source declarations and member bundles first; Git body co-change fallback (up to 128 non-merge commits)"
             }
         );
     }

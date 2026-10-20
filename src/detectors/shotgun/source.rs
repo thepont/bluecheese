@@ -24,6 +24,14 @@ struct Declaration<'a> {
 }
 
 pub fn source_evidence(files: &[SourceFile]) -> Result<Vec<Finding>> {
+    source_evidence_with(files, &super::BundleRules::default())
+}
+
+/// Analyse declaration copies and repeated representations with validated bundle rules.
+pub fn source_evidence_with(
+    files: &[SourceFile],
+    rules: &super::BundleRules,
+) -> Result<Vec<Finding>> {
     let mut groups = BTreeMap::<Catalogue, Vec<Declaration<'_>>>::new();
     for file in files {
         ensure!(
@@ -70,6 +78,7 @@ pub fn source_evidence(files: &[SourceFile]) -> Result<Vec<Finding>> {
             });
         }
     }
+    findings.extend(super::bundles::detect(files, rules)?);
     Ok(findings)
 }
 
@@ -226,7 +235,7 @@ fn domain(source: SourceNode<'_>) -> Vec<String> {
     domain
 }
 
-fn generated(file: &SourceFile) -> bool {
+pub(super) fn generated(file: &SourceFile) -> bool {
     let mut cursor = file.root().walk();
     file.root()
         .named_children(&mut cursor)

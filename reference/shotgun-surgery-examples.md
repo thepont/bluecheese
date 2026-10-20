@@ -4,7 +4,14 @@
 
 The CLI and `Project::detect` now try source evidence for `-s shotgun` first:
 parallel enum/literal-list declarations with matching identity, explicit domain
-and complete membership in multiple files. This supports disconnected Java,
+and complete membership in multiple files, plus repeated member bundles that
+construct representations of a resolved type. Bundle defaults require three
+distinct shared members, three independent consumers and at least 60% common
+membership in each participating projection. Single-field reads and pairs do
+not qualify. JavaScript/TypeScript properties and getter calls, and Java getter
+calls are supported; Rust member bundles are not yet supported.
+
+The declaration check supports disconnected Java,
 Rust, JavaScript and TypeScript declarations without call edges or Git. Findings
 show every location and remain candidates: independent concepts can share names.
 Generated copies identified by leading generation comments do not count as

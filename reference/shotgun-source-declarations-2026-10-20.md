@@ -86,3 +86,55 @@ Evidence logs are local under `/tmp/bluecheese-source-*.log`; application result
 are under `/tmp/bluecheese-source-application/`. Existing public-project counts
 in the public-example notebook remain reference-metric results; they do not
 measure precision or recall of the new declaration check.
+
+## Follow-up: repeated member bundles
+
+The source evidence path now also checks repeated representations of one
+resolved type. JavaScript/TypeScript property reads and zero-argument getter
+calls, including mixed JS/TS imports, and Java zero-argument getter calls use
+the existing adapter resolvers. Unresolved targets are omitted; types are not
+joined by matching names. Java direct field reads, Rust member bundles,
+destructuring, computed keys, JSX output and exhaustive enum branching are not
+covered by this initial bundle check.
+
+Reads must participate in an explicit representation: JS/TS object/array
+expressions or template strings, or Java array initializers/constructor calls.
+Separate expressions and differently named receiver instances are not pooled.
+The detector requires a common set of at least three distinct members across
+three independent functions/methods, constituting at least 60% of each matched
+projection's members. Partial overlap is supported. Similarity does not chain
+transitively: a group needs a real common set. Repeated projections inside one
+consumer count once. Generated consumers and own-type implementations do not
+count as independent sites. Assignments and updates are not read evidence.
+
+These defaults prevent repeated reads of one field or a pair from triggering,
+even when those reads cover 100% of a small type or appear in ten consumers.
+Ordinary method calls such as `start`, `stop` and `reset` are not getters. A
+large collection of unrelated reads without a representation is also excluded.
+
+`BundleRules::new(min_members, min_consumers, min_overlap_percent)` and
+`shotgun::source_evidence_with` expose validated library configuration. At least
+three members, two consumers, and an overlap percentage in 1..=100 are required.
+The overlap percentage measures the common set against each projection, not
+against a type's possibly incomplete declared member surface. The CLI uses the
+defaults in both default and `--source-only` modes; `--reference` is unchanged.
+
+Intersection closure is bounded to 4,096 candidate common sets per resolved
+type. Exceeding that budget returns an explicit incomplete-analysis error,
+never a partial or empty clean report.
+
+Sixteen integration tests cover overlapping partial representations, Java
+getters, mixed-language imports/aliases, local JS objects, tiny complete types,
+single reads/pairs, repetition, unrelated types/instances, commands, writes,
+generated consumers, configuration boundaries, non-transitive overlap, default
+CLI behaviour without Git and the analysis budget. The initial suite was
+observed red (three positives missing, seven controls passing); the overlap and
+write regressions were also observed failing before implementation fixes.
+
+This is our source heuristic, not a rule reproduced from HIST. In
+[HIST, §2.2.2](https://fpalomba.github.io/pdf/Journals/J1.pdf), Shotgun Surgery is
+detected using historical co-change association rules. The paper discusses
+frequent accessor use under Feature Envy; it does not specify these bundle
+thresholds. Passing the controls establishes behaviour on those examples, not
+a public-project false-positive rate. Legitimately separate representations
+sharing three or more members can still be reported as review candidates.
