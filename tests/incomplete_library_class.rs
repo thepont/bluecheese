@@ -487,3 +487,111 @@ fn ignores_javascript_prototype_patches_with_different_implementations() {
             .is_empty()
     );
 }
+
+#[test]
+fn reports_equivalent_rust_lrs_completion_pipelines_with_stream_and_loop_syntax() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::LrsClient;\n\
+         use vendor::Agent;\n\
+         use vendor::Activity;\n\
+         struct CourseDashboard;\n\
+         impl CourseDashboard {\n\
+             fn is_complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }\n\
+         struct LearnerReport;\n\
+         impl LearnerReport {\n\
+             fn completed(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 for statement in lrs.get_statements(user, course) {\n\
+                     if statement.result().completion() { return true; }\n\
+                 }\n\
+                 false\n\
+             }\n\
+         }",
+    );
+
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "CourseDashboard")
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "LearnerReport")
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("LrsClient"))
+    );
+}
+
+#[test]
+fn does_not_merge_rust_lrs_completion_and_success_projections() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::LrsClient;\n\
+         use vendor::Agent;\n\
+         use vendor::Activity;\n\
+         struct CourseDashboard;\n\
+         impl CourseDashboard {\n\
+             fn is_complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }\n\
+         struct QuizReport;\n\
+         impl QuizReport {\n\
+             fn passed(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 for statement in lrs.get_statements(user, course) {\n\
+                     if statement.result().success() { return true; }\n\
+                 }\n\
+                 false\n\
+             }\n\
+         }",
+    );
+
+    assert!(
+        bluecheese::detect(&[file], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn does_not_pair_a_rust_lrs_query_with_completion_from_an_unrelated_collection() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::LrsClient;\n\
+         use vendor::Agent;\n\
+         use vendor::Activity;\n\
+         use vendor::Statement;\n\
+         struct CourseDashboard;\n\
+         impl CourseDashboard {\n\
+             fn is_complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }\n\
+         struct LearnerReport;\n\
+         impl LearnerReport {\n\
+             fn completed(lrs: &LrsClient, user: &Agent, course: &Activity, cached: &[Statement]) -> bool {\n\
+                 lrs.get_statements(user, course);\n\
+                 for statement in cached {\n\
+                     if statement.result().completion() { return true; }\n\
+                 }\n\
+                 false\n\
+             }\n\
+         }",
+    );
+
+    assert!(
+        bluecheese::detect(&[file], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}

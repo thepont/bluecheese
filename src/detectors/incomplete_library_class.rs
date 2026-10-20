@@ -478,7 +478,7 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         }
     }
 
-    repeated_extension_owners(groups)
+    let mut findings = repeated_extension_owners(groups)
         .into_iter()
         .map(|((class_name, target_name), line)| Finding {
             smell_name: SMELL_NAME.to_owned(),
@@ -491,7 +491,206 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
                 target_name
             ),
         })
+        .collect::<Vec<_>>();
+    findings.extend(rust_completion_pipeline_findings(
+        file,
+        &imported,
+        &local_types,
+    ));
+    findings
+}
+
+fn rust_completion_pipeline_findings(
+    file: &SourceFile,
+    imported: &BTreeSet<String>,
+    local_types: &BTreeSet<String>,
+) -> Vec<Finding> {
+    let mut groups = ExtensionGroups::new();
+    for implementation in descendants(file.root())
+        .into_iter()
+        .filter(|node| node.kind() == "impl_item" && node.child_by_field_name("trait").is_none())
+    {
+        let (Some(owner_type), Some(body)) = (
+            implementation.child_by_field_name("type"),
+            implementation.child_by_field_name("body"),
+        ) else {
+            continue;
+        };
+        let Some(owner_name) = simple_rust_type(file.text(owner_type)) else {
+            continue;
+        };
+        if !local_types.contains(&owner_name) {
+            continue;
+        }
+        for method in direct_rust_functions(body) {
+            let Some(method_body) = method.child_by_field_name("body") else {
+                continue;
+            };
+            let Some((client_type, shape)) =
+                rust_completion_pipeline_shape(file, method, method_body, imported)
+            else {
+                continue;
+            };
+            groups
+                .entry((client_type, shape))
+                .or_default()
+                .entry(owner_name.clone())
+                .or_insert(method.start_position().row + 1);
+        }
+    }
+
+    repeated_extension_owners(groups)
+        .into_iter()
+        .map(|((class_name, type_name), line)| Finding {
+            smell_name: SMELL_NAME.to_owned(),
+            file_path: file.rel.clone(),
+            class_name,
+            line_numbers: vec![line],
+            relative_file_path: file.rel.clone(),
+            additional_info: format!(
+                "repeated LRS completion projection around imported type {}",
+                type_name
+            ),
+        })
         .collect()
+}
+
+fn rust_completion_pipeline_shape(
+    file: &SourceFile,
+    method: Node<'_>,
+    body: Node<'_>,
+    imported: &BTreeSet<String>,
+) -> Option<(String, Vec<String>)> {
+    let return_type = method.child_by_field_name("return_type")?;
+    if file.text(return_type).trim() != "bool" {
+        return None;
+    }
+    let parameters = method.child_by_field_name("parameters")?;
+    let mut cursor = parameters.walk();
+    let (client_type, receiver, parameter_shape) = parameters
+        .named_children(&mut cursor)
+        .filter_map(|parameter| {
+            let type_node = parameter.child_by_field_name("type")?;
+            let raw_type = file.text(type_node);
+            let normalized_type = raw_type
+                .trim()
+                .trim_start_matches('&')
+                .trim_start_matches("mut ");
+            let type_name = simple_rust_type(normalized_type)?;
+            if !imported.contains(&type_name) {
+                return None;
+            }
+            let pattern = parameter
+                .child_by_field_name("pattern")
+                .filter(|node| node.kind() == "identifier")?;
+            Some((
+                type_name,
+                file.text(pattern).to_owned(),
+                file.text(type_node).replace(' ', ""),
+            ))
+        })
+        .next()?;
+
+    let calls = descendants(body)
+        .into_iter()
+        .filter(|node| node.kind() == "call_expression")
+        .collect::<Vec<_>>();
+    let has_result_completion = calls.iter().any(|call| {
+        rust_method_call_name(file, *call).as_deref() == Some("completion")
+            && rust_method_receiver(*call).is_some_and(|result| {
+                rust_method_call_name(file, result).as_deref() == Some("result")
+            })
+    });
+    if !has_result_completion || !rust_uses_completion_aggregation(file, body, &calls, &receiver) {
+        return None;
+    }
+
+    let shape = vec![
+        "lrs-completion-projection".to_owned(),
+        "return:bool".to_owned(),
+        "query:get_statements".to_owned(),
+        "method:result.completion".to_owned(),
+        format!("param:{}", parameter_shape),
+    ];
+    Some((client_type, shape))
+}
+
+fn rust_uses_completion_aggregation(
+    file: &SourceFile,
+    body: Node<'_>,
+    calls: &[Node<'_>],
+    receiver: &str,
+) -> bool {
+    let stream_any = calls.iter().any(|call| {
+        if rust_method_call_name(file, *call).as_deref() != Some("any") {
+            return false;
+        }
+        let Some(iter_call) = rust_method_receiver(*call) else {
+            return false;
+        };
+        rust_method_call_name(file, iter_call).as_deref() == Some("iter")
+            && rust_method_receiver(iter_call)
+                .is_some_and(|query| rust_is_lrs_query(file, query, receiver))
+            && descendants(*call).into_iter().any(|node| {
+                node.kind() == "call_expression"
+                    && rust_method_call_name(file, node).as_deref() == Some("completion")
+            })
+    });
+    if stream_any {
+        return true;
+    }
+
+    descendants(body)
+        .into_iter()
+        .filter(|node| node.kind() == "for_expression")
+        .any(|loop_node| {
+            let (Some(query), Some(loop_body)) = (
+                loop_node.child_by_field_name("value"),
+                loop_node.child_by_field_name("body"),
+            ) else {
+                return false;
+            };
+            if !rust_is_lrs_query(file, query, receiver) {
+                return false;
+            }
+            descendants(loop_body)
+                .into_iter()
+                .filter(|node| node.kind() == "if_expression")
+                .any(|condition| {
+                    let has_completion =
+                        condition
+                            .child_by_field_name("condition")
+                            .is_some_and(|cond| {
+                                descendants(cond).into_iter().any(|node| {
+                                    node.kind() == "call_expression"
+                                        && rust_method_call_name(file, node).as_deref()
+                                            == Some("completion")
+                                })
+                            });
+                    let returns_true = condition
+                        .child_by_field_name("consequence")
+                        .is_some_and(|branch| file.text(branch).contains("return true"));
+                    has_completion && returns_true
+                })
+        })
+}
+
+fn rust_is_lrs_query(file: &SourceFile, call: Node<'_>, receiver: &str) -> bool {
+    rust_method_call_name(file, call).as_deref() == Some("get_statements")
+        && rust_method_receiver(call).is_some_and(|value| file.text(value).trim() == receiver)
+}
+
+fn rust_method_call_name<'a>(file: &SourceFile, call: Node<'a>) -> Option<String> {
+    let function = call.child_by_field_name("function")?;
+    (function.kind() == "field_expression")
+        .then(|| function.child_by_field_name("field"))
+        .flatten()
+        .map(|field| file.text(field).to_owned())
+}
+
+fn rust_method_receiver<'a>(call: Node<'a>) -> Option<Node<'a>> {
+    call.child_by_field_name("function")?
+        .child_by_field_name("value")
 }
 
 fn rust_imported_types(file: &SourceFile) -> BTreeSet<String> {
