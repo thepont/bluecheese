@@ -11,6 +11,14 @@ pub struct Projection<'a> {
     pub members: BTreeSet<String>,
 }
 
+impl Projection<'_> {
+    pub fn shares(&self, common: &BTreeSet<String>, min_overlap_percent: u8) -> bool {
+        common.is_subset(&self.members)
+            && common.len() as u128 * 100
+                >= self.members.len() as u128 * u128::from(min_overlap_percent)
+    }
+}
+
 pub struct MemberRead<'a> {
     pub usage: SourceNode<'a>,
     pub consumer: SourceNode<'a>,
@@ -28,6 +36,27 @@ struct GroupKey {
     receiver: String,
 }
 
+impl MemberRead<'_> {
+    fn group_key(&self) -> Option<GroupKey> {
+        if is_written(self.usage) {
+            return None;
+        }
+        let representation = representation(self.usage, self.consumer)?;
+        Some(GroupKey {
+            target: (
+                self.target.file().rel.clone(),
+                self.target.node().start_byte(),
+            ),
+            consumer: (
+                self.consumer.file().rel.clone(),
+                self.consumer.node().start_byte(),
+            ),
+            representation,
+            receiver: self.receiver.clone(),
+        })
+    }
+}
+
 #[derive(Default)]
 pub struct Reads<'a> {
     groups: BTreeMap<GroupKey, Projection<'a>>,
@@ -35,23 +64,8 @@ pub struct Reads<'a> {
 
 impl<'a> Reads<'a> {
     pub fn record(&mut self, read: MemberRead<'a>) {
-        if is_written(read.usage) {
+        let Some(key) = read.group_key() else {
             return;
-        }
-        let Some(representation) = representation(read.usage, read.consumer) else {
-            return;
-        };
-        let key = GroupKey {
-            target: (
-                read.target.file().rel.clone(),
-                read.target.node().start_byte(),
-            ),
-            consumer: (
-                read.consumer.file().rel.clone(),
-                read.consumer.node().start_byte(),
-            ),
-            representation,
-            receiver: read.receiver,
         };
         self.groups
             .entry(key)

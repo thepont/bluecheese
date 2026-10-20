@@ -47,12 +47,6 @@ impl BundleRules {
             min_overlap_percent,
         })
     }
-
-    fn accepts(&self, common: &BTreeSet<String>, projection: &Projection<'_>) -> bool {
-        common.is_subset(&projection.members)
-            && common.len() as u128 * 100
-                >= projection.members.len() as u128 * u128::from(self.min_overlap_percent)
-    }
 }
 
 pub(super) fn detect(files: &[SourceFile], rules: &BundleRules) -> Result<Vec<Finding>> {
@@ -84,7 +78,7 @@ fn type_findings(projections: &[Projection<'_>], rules: &BundleRules) -> Result<
     for common in cores {
         let consumers: BTreeMap<_, _> = projections
             .iter()
-            .filter(|projection| rules.accepts(&common, projection))
+            .filter(|projection| projection.shares(&common, rules.min_overlap_percent))
             .map(|projection| {
                 (
                     (
