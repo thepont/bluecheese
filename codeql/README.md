@@ -70,9 +70,13 @@ prefixes. CodeQL resolves parent types project-wide, while this query's
 name-pairing is a simpler approximation of the source detector's greedy
 matching heuristic.
 
+**Shotgun Surgery** has a Java query for methods called by at least two
+distinct methods from at least two other classes. Rust and JavaScript/TypeScript
+are not included yet.
+
 No CodeQL query is currently provided for **Alternative Classes with Different
 Interfaces**, **Comments**, **Divergent Change**, **Duplicate Code**,
-**Incomplete Library Class**, **Shotgun Surgery**, or **Temporary Field**.
+**Incomplete Library Class**, or **Temporary Field**.
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.
