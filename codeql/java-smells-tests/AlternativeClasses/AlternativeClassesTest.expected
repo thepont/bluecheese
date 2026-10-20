@@ -1,0 +1,2 @@
+| AlternativeClasses.java:1:7:1:22 | FirstAlternative | This class shares method-body structure with another class in this file. |
+| AlternativeClasses.java:15:7:15:23 | SecondAlternative | This class shares method-body structure with another class in this file. |

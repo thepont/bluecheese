@@ -86,8 +86,13 @@ low-cohesion branches are not included yet.
 against `null` and accessed inside that `if` branch. It does not yet cover the
 primitive-field workflow and constructor-frequency heuristics.
 
-No CodeQL query is currently provided for **Alternative Classes with Different
-Interfaces**, **Duplicate Code**, or **Incomplete Library Class**.
+**Alternative Classes with Different Interfaces** has a Java query for same-file
+classes with at least two methods whose statement and expression node-class
+counts match. It ignores identifier and literal values, but does not preserve
+the exact AST ordering and nesting used by the source detector.
+
+No CodeQL query is currently provided for **Duplicate Code** or
+**Incomplete Library Class**.
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.
