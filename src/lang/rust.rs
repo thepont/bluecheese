@@ -90,7 +90,6 @@ impl LanguageModel for RustModel {
 
     fn types<'a>(&self, file: &'a SourceFile) -> Vec<Node<'a>> {
         let root = file.root();
-        // The file itself acts as the module, so free functions are analysable.
         let mut out = vec![root];
         let mut cursor = root.walk();
         for child in root.named_children(&mut cursor) {
@@ -143,60 +142,12 @@ impl LanguageModel for RustModel {
     }
 
     fn methods<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
-        let SourceNode { file, node: ty } = source;
-        let mut out = Vec::new();
-
-        // Free functions: direct children of the file.
-        if ty.kind() == "source_file" {
-            let mut cursor = ty.walk();
-            for child in ty.named_children(&mut cursor) {
-                if child.kind() == "function_item" {
-                    out.push(child);
-                }
-            }
-            return out;
+        if source.node().kind() == "source_file" {
+            return free_functions(source.node());
         }
-
-        // Methods of a type: functions inside `impl` blocks targeting it.
-        //
-        // Every type `types()` returns above the file itself is a struct, enum,
-        // trait or union, all of which name themselves, so the name is there.
-        // Asking for it as an option and skipping when it is absent would be a
-        // branch no input can reach.
-        let name = self
-            .type_name(file.at(ty))
-            .expect("a type returned by types() has a name");
-        for node in descendants(file.root()) {
-            if node.kind() != "impl_item" {
-                continue;
-            }
-            // A malformed `impl Foo` with no braces has a target but no
-            // body, so both fields are required and either absence means
-            // the same thing: there is nothing here to collect.
-            let (Some(target), Some(body)) = (
-                node.child_by_field_name("type"),
-                node.child_by_field_name("body"),
-            ) else {
-                continue;
-            };
-            if !impl_targets(file.text(target), name) {
-                continue;
-            }
-            out.extend(functions_in(body));
-        }
-
-        // Default methods declared in the trait itself. Every trait has a body
-        // — a trait with none is not valid Rust — so this is not an optional
-        // step, and a missing body would be a grammar change worth hearing
-        // about rather than a trait that quietly has no methods.
-        if ty.kind() == "trait_item" {
-            let described = ty
-                .child_by_field_name("body")
-                .expect("a trait_item has a body");
-            out.extend(functions_in(described));
-        }
-
-        out
+        let mut methods = implementation_methods(source);
+        methods.extend(trait_default_methods(source.node()));
+        methods
     }
 
     fn constructors<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
@@ -326,4 +277,41 @@ fn impl_targets(target: &str, name: &str) -> bool {
     let base = target.split('<').next().unwrap_or(target);
     let base = base.rsplit("::").next().unwrap_or(base);
     base.trim() == name
+}
+
+fn free_functions(root: Node<'_>) -> Vec<Node<'_>> {
+    let mut cursor = root.walk();
+    root.named_children(&mut cursor)
+        .filter(|node| node.kind() == "function_item")
+        .collect()
+}
+
+fn implementation_methods(source: SourceNode<'_>) -> Vec<Node<'_>> {
+    let name = RUST
+        .type_name(source)
+        .expect("a type returned by types() has a name");
+    descendants(source.file().root())
+        .into_iter()
+        .filter(|node| node.kind() == "impl_item")
+        .filter_map(|node| implementation_body(source.file().at(node), name))
+        .flat_map(functions_in)
+        .collect()
+}
+
+/// An impl needs both its target and body; incomplete syntax contributes no methods.
+fn implementation_body<'a>(source: SourceNode<'a>, name: &str) -> Option<Node<'a>> {
+    let target = source.node().child_by_field_name("type")?;
+    let body = source.node().child_by_field_name("body")?;
+    impl_targets(source.file().text(target), name).then_some(body)
+}
+
+/// Traits always have a body; absence indicates a grammar contract failure.
+fn trait_default_methods(ty: Node<'_>) -> Vec<Node<'_>> {
+    if ty.kind() != "trait_item" {
+        return Vec::new();
+    }
+    functions_in(
+        ty.child_by_field_name("body")
+            .expect("a trait_item has a body"),
+    )
 }
