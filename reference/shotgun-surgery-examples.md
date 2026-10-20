@@ -2,12 +2,22 @@
 
 ## Current application reporting contract
 
-The CLI now requires local Git-history evidence for `-s shotgun`. Static
-coupling remains available with `--source-only`, and the existing `detect`
-library function retains that reference heuristic. `Project::detect` uses the
-history-backed application contract.
+The CLI and `Project::detect` now try source evidence for `-s shotgun` first:
+parallel enum/literal-list declarations with matching identity, explicit domain
+and complete membership in multiple files. This supports disconnected Java,
+Rust, JavaScript and TypeScript declarations without call edges or Git. Findings
+show every location and remain candidates: independent concepts can share names.
+Generated copies identified by leading generation comments do not count as
+manual authorities. Explicit packages/modules/namespaces keep domains separate.
+See [the implementation report](shotgun-source-declarations-2026-10-20.md) for
+coverage, legitimate counterexamples and limits.
 
-A candidate must have two resolved external calling classes and an existing
+If source evidence is found, history is not evaluated. Otherwise the default
+requires local Git history. `--source-only` runs only the new source check;
+`--reference` runs the original incoming-coupling metric. The existing `detect`
+library function retains that reference heuristic.
+
+In the history fallback, a candidate must have two resolved external calling classes and an existing
 callee whose body changed together with existing callers in at least two
 other source files. Reports include the supporting commit IDs. The bounded
 window is 128 non-merge commits; declaration/signature changes, added/deleted
@@ -17,8 +27,8 @@ semantic proof or a reproduction of HIST's association rules. Missing history
 and historical parse failures are errors, not clean reports.
 
 The historical public-project tables below measure the source-only heuristic.
-Use `--source-only` when reproducing those commands and numbers. They do not
-establish the performance of the new history-backed mode on public examples.
+Use `--reference` when reproducing those commands and numbers. They do not
+establish the performance of either new evidence mode on public examples.
 
 Investigated 2026-10-20. This is an evidence notebook, not a list of confirmed
 defects in current releases. Keep adding examples here, including weak leads
@@ -69,7 +79,7 @@ fields, interface contracts and cyclic input. Java parity remains unchanged.
 Reproduce the controlled checks:
 
 ```sh
-cargo run --locked -- -f tests/fixtures/multilingual -s shotgun --source-only
+cargo run --locked -- -f tests/fixtures/multilingual -s shotgun --reference
 cargo run --locked -- -f tests/fixtures/multilingual -s dup-code
 cargo test --locked --test ecmascript --test cross_language_duplicates
 ```
@@ -349,8 +359,8 @@ git -C /tmp/shotgun-tomcat log --no-merges --format=fuller --stat -- \
   java/org/apache/coyote/AsyncStateMachine.java
 git -C /tmp/shotgun-tomcat show cf4fae533cb303c97031b68ec652d6624207df21
 git -C /tmp/shotgun-tomcat show c1dc59e99108f24b041d37fb4de8ae5da75e135c
-target/debug/bluecheese -f /tmp/shotgun-tomcat/java -s shotgun --source-only
-target/debug/bluecheese -f tests/fixtures/smellbench/main/java/shotgun -s shotgun --source-only
+target/debug/bluecheese -f /tmp/shotgun-tomcat/java -s shotgun --reference
+target/debug/bluecheese -f tests/fixtures/smellbench/main/java/shotgun -s shotgun --reference
 
 git clone https://github.com/team-propra/roommate.git /tmp/shotgun-roommate
 git -C /tmp/shotgun-roommate show 3f1348ec8bd79dfaabd2ecb17d70059722271dc0
@@ -358,7 +368,7 @@ mkdir -p /tmp/shotgun-roommate-before
 git -C /tmp/shotgun-roommate archive \
   604bb07ea52692bd84bdf330c5365e77f45c5d59 src/main/java |
   tar -x -C /tmp/shotgun-roommate-before
-target/debug/bluecheese -f /tmp/shotgun-roommate-before -s shotgun --source-only
+target/debug/bluecheese -f /tmp/shotgun-roommate-before -s shotgun --reference
 
 git clone https://github.com/guidesmiths/clean-code-school.git /tmp/shotgun-school
 git -C /tmp/shotgun-school show e88f760414faac08e1f91b211c37f4daad4b4211

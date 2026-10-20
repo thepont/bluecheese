@@ -31,11 +31,13 @@ docker run --rm -v /tmp/StaticNose:/app -w /app maven:3.9-eclipse-temurin-25 \
 
 ## Shotgun Surgery port
 
-`bluecheese -f <source> -s shotgun` implements StaticNose's default static
+`bluecheese -f <source> -s shotgun --reference` implements StaticNose's default static
 coupling rule for Java: at least two distinct calling methods in at least two
 external classes; interface-contract methods are excluded. It reports the
 callee's declaration and CM, CC and Fan-Out metrics. This is a source snapshot
-analysis, with no Git-history input and no Rust call-resolution support.
+analysis, with no Git-history input. The application default instead uses
+parallel source declarations, falling back to Git-history evidence; see the
+[current reporting contract](shotgun-surgery-examples.md).
 
 Reference inspected and built: StaticNose
 `de3c2ef15c2c9fc6973eb78280e77e1ea30b5be5`,

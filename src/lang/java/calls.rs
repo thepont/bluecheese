@@ -589,7 +589,7 @@ fn type_references(node: Node<'_>) -> Vec<Node<'_>> {
         .collect()
 }
 
-fn package_name(file: &SourceFile) -> String {
+pub(crate) fn package_name(file: &SourceFile) -> String {
     named_children(file.root())
         .into_iter()
         .find(|n| n.kind() == "package_declaration")

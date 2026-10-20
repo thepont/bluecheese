@@ -109,10 +109,25 @@ pub struct Project {
 }
 
 impl Project {
-    /// Analyse the loaded project, requiring history for Shotgun Surgery.
+    /// Use parallel source declarations first; otherwise require Git evidence
+    /// for Shotgun Surgery. These are alternative evidence paths, not a union.
     pub fn detect(&self, smell: &str) -> Result<Vec<crate::finding::Finding>> {
         if smell == "shotgun" {
-            crate::history::detect(&self.root, &self.files)
+            let source = self.detect_source(smell)?;
+            if source.is_empty() {
+                crate::history::detect(&self.root, &self.files)
+            } else {
+                Ok(source)
+            }
+        } else {
+            crate::detect(&self.files, smell)
+        }
+    }
+
+    /// Analyse source without requiring a repository or using coupling as a smell.
+    pub fn detect_source(&self, smell: &str) -> Result<Vec<crate::finding::Finding>> {
+        if smell == "shotgun" {
+            crate::detectors::shotgun::source_evidence(&self.files)
         } else {
             crate::detect(&self.files, smell)
         }

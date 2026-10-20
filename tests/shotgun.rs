@@ -133,7 +133,7 @@ fn shotgun_is_available_at_the_command_line() {
             common::fixtures().join("smellbench").to_str().unwrap(),
             "-s",
             "shotgun",
-            "--source-only",
+            "--reference",
         ])
         .output()
         .expect("run CLI");

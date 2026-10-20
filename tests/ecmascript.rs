@@ -195,7 +195,7 @@ fn cli_accepts_a_mixed_javascript_typescript_project() {
             tree.path().to_str().unwrap(),
             "-s",
             "shotgun",
-            "--source-only",
+            "--reference",
         ])
         .output()
         .expect("run CLI");

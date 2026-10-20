@@ -1,8 +1,12 @@
-//! StaticNose's source-only incoming coupling heuristic. Shared services can
-//! satisfy these thresholds even after responsibilities have been centralised.
+//! Source membership evidence and StaticNose's reference incoming coupling
+//! metric. Shared services can satisfy the reference thresholds even after
+//! responsibilities have been centralised; it is not application smell evidence.
 
 use crate::finding::Finding;
 use crate::lang::{SourceFile, coupling};
+
+mod source;
+pub use source::source_evidence;
 
 pub const SMELL_NAME: &str = "Shotgun Surgery";
 

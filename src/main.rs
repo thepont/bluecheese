@@ -15,9 +15,13 @@ struct Args {
     #[arg(short = 's', long = "smell")]
     smell: String,
 
-    /// Use source-only reference heuristics, including static coupling for Shotgun Surgery.
-    #[arg(long)]
+    /// Use source evidence without Git history (parallel catalogues for Shotgun Surgery).
+    #[arg(long, conflicts_with = "reference")]
     source_only: bool,
+
+    /// Use historical reference heuristics (incoming coupling for Shotgun Surgery).
+    #[arg(long)]
+    reference: bool,
 
     /// Report format.
     #[arg(short = 'r', long = "report-format", default_value = "json")]
@@ -50,16 +54,20 @@ fn main() -> anyhow::Result<()> {
     if args.smell == "shotgun" {
         eprintln!(
             "shotgun evidence: {}",
-            if args.source_only {
-                "source-only coupling heuristic; no history validation"
+            if args.reference {
+                "reference incoming-coupling metric; no history validation"
+            } else if args.source_only {
+                "parallel source declarations only; candidates require review"
             } else {
-                "body co-change in up to 128 non-merge commits; candidates require review"
+                "parallel source declarations first; Git body co-change fallback (up to 128 non-merge commits)"
             }
         );
     }
 
-    let findings = if args.source_only {
+    let findings = if args.reference {
         bluecheese::detect(&project.files, &args.smell)?
+    } else if args.source_only {
+        project.detect_source(&args.smell)?
     } else {
         project.detect(&args.smell)?
     };

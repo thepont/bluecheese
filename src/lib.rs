@@ -61,7 +61,7 @@ const PORTED_SMELLS: [&str; DETECTORS.len()] = detector_labels();
 
 /// Run a single detector by its smell label.
 /// This retains source-only reference heuristics for corpus comparisons. Use
-/// [`lang::Project::detect`] for application reports that require history evidence.
+/// [`lang::Project::detect`] for source-evidence reports with a history fallback.
 ///
 /// Fails when the smell is one the book names but no detector has been ported
 /// for yet, and when the label is not a smell of the book at all. Both have to

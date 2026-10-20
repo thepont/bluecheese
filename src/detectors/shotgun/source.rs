@@ -1,0 +1,239 @@
+//! Parallel, independently written membership declarations. Names and complete
+//! literal sets are evidence for review, not proof of shared business meaning.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use anyhow::{Result, ensure};
+use tree_sitter::Node;
+
+use crate::finding::Finding;
+use crate::lang::{LanguageId, SourceFile, SourceNode};
+use crate::walk::descendants;
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+struct Catalogue {
+    domain: Vec<String>,
+    identity: String,
+    members: BTreeSet<String>,
+}
+
+struct Declaration<'a> {
+    file: &'a SourceFile,
+    name: &'a str,
+    line: usize,
+}
+
+pub fn source_evidence(files: &[SourceFile]) -> Result<Vec<Finding>> {
+    let mut groups = BTreeMap::<Catalogue, Vec<Declaration<'_>>>::new();
+    for file in files {
+        ensure!(
+            !file.root().has_error(),
+            "cannot establish complete Shotgun Surgery source evidence: parse errors in {}",
+            file.rel
+        );
+        if generated(file) {
+            continue;
+        }
+        for node in descendants(file.root()) {
+            if let Some((catalogue, declaration)) = catalogue(file.at(node)) {
+                groups.entry(catalogue).or_default().push(declaration);
+            }
+        }
+    }
+    let mut findings = Vec::new();
+    for (catalogue, declarations) in groups {
+        if declarations
+            .iter()
+            .map(|d| &d.file.rel)
+            .collect::<BTreeSet<_>>()
+            .len()
+            < 2
+        {
+            continue;
+        }
+        let locations = declarations
+            .iter()
+            .map(|d| format!("{}:{}", d.file.rel, d.line))
+            .collect::<Vec<_>>()
+            .join(", ");
+        for declaration in &declarations {
+            findings.push(Finding {
+                smell_name: super::SMELL_NAME.into(),
+                file_path: declaration.file.path.to_string_lossy().into_owned(),
+                relative_file_path: declaration.file.rel.clone(),
+                class_name: declaration.name.into(),
+                line_numbers: vec![declaration.line],
+                additional_info: format!(
+                    "Source evidence: parallel membership declarations for {} with complete literal set {:?}. Locations: {locations}. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+                    catalogue.identity, catalogue.members
+                ),
+            });
+        }
+    }
+    Ok(findings)
+}
+
+fn catalogue(source: SourceNode<'_>) -> Option<(Catalogue, Declaration<'_>)> {
+    let SourceNode { file, node } = source;
+    let is_enum = matches!(node.kind(), "enum_declaration" | "enum_item");
+    let members = if is_enum {
+        enum_members(file.at(node.child_by_field_name("body")?))?
+    } else if matches!(
+        node.kind(),
+        "variable_declarator" | "const_item" | "static_item"
+    ) {
+        list_members(file.at(node.child_by_field_name("value")?))?
+    } else {
+        return None;
+    };
+    if members.len() < 2 {
+        return None;
+    }
+    let name_node = node.child_by_field_name("name")?;
+    if !matches!(name_node.kind(), "identifier" | "type_identifier") {
+        return None;
+    }
+    let name = file.text(name_node);
+    let mut identity: String = name
+        .chars()
+        .filter(|c| c.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect();
+    if !is_enum && identity.ends_with('s') && !identity.ends_with("ss") {
+        identity.pop();
+    }
+    Some((
+        Catalogue {
+            domain: domain(source),
+            identity,
+            members,
+        },
+        Declaration {
+            file,
+            name,
+            line: file.line(node),
+        },
+    ))
+}
+
+fn enum_members(source: SourceNode<'_>) -> Option<BTreeSet<String>> {
+    let mut members = BTreeSet::new();
+    for member in children(source) {
+        if member.kind() != "enum_body_declarations" {
+            members.insert(enum_member(source.file().at(member))?);
+        }
+    }
+    Some(members)
+}
+
+fn enum_member(source: SourceNode<'_>) -> Option<String> {
+    let SourceNode { file, node } = source;
+    if node.kind() == "property_identifier" {
+        return Some(source.text().into());
+    }
+    if node.kind() == "enum_assignment" {
+        return literal(file.at(node.child_by_field_name("value")?));
+    }
+    if !matches!(node.kind(), "enum_constant" | "enum_variant")
+        || ["body", "arguments", "value"]
+            .iter()
+            .any(|field| node.child_by_field_name(field).is_some())
+    {
+        return None;
+    }
+    Some(file.text(node.child_by_field_name("name")?).into())
+}
+
+fn list_members(source: SourceNode<'_>) -> Option<BTreeSet<String>> {
+    let SourceNode {
+        file,
+        node: mut value,
+    } = source;
+    if value.kind() == "as_expression" {
+        value = value.named_child(0)?;
+    }
+    if !matches!(
+        value.kind(),
+        "array" | "array_expression" | "array_initializer"
+    ) {
+        return None;
+    }
+    let mut members = BTreeSet::new();
+    let mut expects_member = true;
+    let mut cursor = value.walk();
+    for item in value.children(&mut cursor) {
+        if file.at(item).model().is_comment(item) || matches!(item.kind(), "[" | "]" | "{" | "}") {
+            continue;
+        }
+        if item.kind() == "," {
+            if expects_member {
+                return None;
+            }
+            expects_member = true;
+        } else {
+            members.insert(literal(file.at(item))?);
+            expects_member = false;
+        }
+    }
+    Some(members)
+}
+
+/// Escapes and raw strings require language-specific decoding before comparison;
+/// this initial source check accepts only unescaped quoted strings.
+fn literal(source: SourceNode<'_>) -> Option<String> {
+    let SourceNode { file, node } = source;
+    if !matches!(node.kind(), "string" | "string_literal") {
+        return None;
+    }
+    let raw = file.text(node);
+    let quote = raw.chars().next()?;
+    if !matches!(quote, '\'' | '"') || !raw.ends_with(quote) || raw.len() < 2 {
+        return None;
+    }
+    let content = &raw[1..raw.len() - 1];
+    if content.is_empty() || content.contains('\\') {
+        return None;
+    }
+    Some(content.into())
+}
+
+fn children(source: SourceNode<'_>) -> Vec<Node<'_>> {
+    let SourceNode { file, node } = source;
+    let mut cursor = node.walk();
+    node.named_children(&mut cursor)
+        .filter(|child| !file.at(*child).model().is_comment(*child))
+        .collect()
+}
+
+fn domain(source: SourceNode<'_>) -> Vec<String> {
+    let SourceNode { file, node } = source;
+    let mut domain = Vec::new();
+    if file.language == LanguageId::Java {
+        let package = crate::lang::java::calls::package_name(file);
+        if !package.is_empty() {
+            domain.push(package);
+        }
+    }
+    let mut parent = node.parent();
+    while let Some(scope) = parent {
+        if matches!(scope.kind(), "internal_module" | "mod_item")
+            && let Some(name) = scope.child_by_field_name("name")
+        {
+            domain.push(file.text(name).into());
+        }
+        parent = scope.parent();
+    }
+    domain
+}
+
+fn generated(file: &SourceFile) -> bool {
+    let mut cursor = file.root().walk();
+    file.root()
+        .named_children(&mut cursor)
+        .take_while(|node| file.at(*node).model().is_comment(*node))
+        .any(|comment| {
+            let text = file.text(comment).to_ascii_lowercase();
+            text.contains("@generated")
+                || (text.contains("generated") && text.contains("do not edit"))
+        })
+}

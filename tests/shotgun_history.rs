@@ -256,13 +256,13 @@ fn an_unborn_repository_is_not_reported_as_clean() {
 }
 
 #[test]
-fn cli_defaults_to_history_and_retains_an_explicit_source_only_comparison() {
+fn cli_defaults_to_history_and_retains_an_explicit_reference_comparison() {
     let repo = Repository::new();
-    let run = |source_only: bool| {
+    let run = |reference: bool| {
         let mut command = Command::new(env!("CARGO_BIN_EXE_bluecheese"));
         command.arg("-f").arg(repo.0.path()).args(["-s", "shotgun"]);
-        if source_only {
-            command.arg("--source-only");
+        if reference {
+            command.arg("--reference");
         }
         command.output().unwrap()
     };
