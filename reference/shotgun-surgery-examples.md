@@ -1,5 +1,11 @@
 # Public shotgun surgery examples
 
+## Java metadata fix and additional examples (2026-10-20)
+
+See [the source follow-up](shotgun-source-followup-2026-10-20.md) for the
+verified jEdit metadata detection, recurring Discord.js enum co-changes,
+Phoenix's error-code registry extraction, and Enforma's threshold-only control.
+
 ## Historical co-change rerun
 
 The [2026-10-20 co-change evaluation](shotgun-cochange-evaluation-2026-10-20.md)
@@ -15,12 +21,14 @@ Raw per-case results are in [the JSON](shotgun-cochange-results-2026-10-20.json)
 
 The CLI and `Project::detect` now try source evidence for `-s shotgun` first:
 parallel enum/literal-list declarations with matching identity, explicit domain
-and complete membership in multiple files, plus repeated member bundles that
-construct representations of a resolved type. Bundle defaults require three
+and complete membership in multiple files, plus repeated member bundles of a
+resolved type. Java also supports imperative reads across a method. Bundle defaults require three
 distinct shared members, three independent consumers and at least 60% common
-membership in each participating projection. Single-field reads and pairs do
-not qualify. JavaScript/TypeScript properties and getter calls, and Java getter
-calls are supported; Rust member bundles are not yet supported.
+membership in each participating projection. Ordinary single-field reads and
+pairs do not qualify. Repeated Java handling of the same discriminator's named
+class constants is a separate path, requiring two common cases and the same
+consumer/overlap defaults. JavaScript/TypeScript properties and getter calls,
+and Java fields/getters are supported; Rust member bundles are not yet supported.
 
 The declaration check supports disconnected Java,
 Rust, JavaScript and TypeScript declarations without call edges or Git. Findings

@@ -1,0 +1,592 @@
+{
+  "date": "2026-10-20",
+  "behaviourCommit": "37b1dfe",
+  "refactoringCommits": [
+    "da796d4",
+    "88d8828",
+    "93343c8"
+  ],
+  "scope": "source evidence only; not a recall benchmark",
+  "cases": {
+    "jedit": {
+      "commit": "7ea901a294b7ca96e39971c919974fa4d7d4a1a6",
+      "scope": "org/",
+      "inventory": {
+        "Java": 253
+      },
+      "findings": [
+        {
+          "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+          "className": "tabSizes",
+          "lineNumbers": [
+            93
+          ],
+          "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+          "className": "tabSizes",
+          "lineNumbers": [
+            71
+          ],
+          "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/DisplayManager.java",
+          "className": "org.gjt.sp.jedit.Buffer",
+          "lineNumbers": [
+            442
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.Buffer (gjt/sp/jedit/Buffer.java:71), common members {\"getFoldHandler\", \"getIndentSize\", \"getLineCount\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/DisplayManager.java:442, gjt/sp/jedit/textarea/TextAreaPainter.java:896, gjt/sp/jedit/textarea/TextAreaPainter.java:1041. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/TextAreaPainter.java",
+          "className": "org.gjt.sp.jedit.Buffer",
+          "lineNumbers": [
+            896
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.Buffer (gjt/sp/jedit/Buffer.java:71), common members {\"getFoldHandler\", \"getIndentSize\", \"getLineCount\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/DisplayManager.java:442, gjt/sp/jedit/textarea/TextAreaPainter.java:896, gjt/sp/jedit/textarea/TextAreaPainter.java:1041. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/TextAreaPainter.java",
+          "className": "org.gjt.sp.jedit.Buffer",
+          "lineNumbers": [
+            1041
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.Buffer (gjt/sp/jedit/Buffer.java:71), common members {\"getFoldHandler\", \"getIndentSize\", \"getLineCount\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/DisplayManager.java:442, gjt/sp/jedit/textarea/TextAreaPainter.java:896, gjt/sp/jedit/textarea/TextAreaPainter.java:1041. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/Abbrevs.java",
+          "className": "org.gjt.sp.jedit.View",
+          "lineNumbers": [
+            73
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.View (gjt/sp/jedit/View.java:84), common members {\"getBuffer\", \"getStatus\", \"getTextArea\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/Abbrevs.java:73, gjt/sp/jedit/gui/InputHandler.java:309, gjt/sp/jedit/search/SearchAndReplace.java:420, gjt/sp/jedit/search/SearchBar.java:170. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/gui/InputHandler.java",
+          "className": "org.gjt.sp.jedit.View",
+          "lineNumbers": [
+            204
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.View (gjt/sp/jedit/View.java:84), common members {\"getBuffer\", \"getMacroRecorder\", \"getStatus\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/gui/InputHandler.java:204, gjt/sp/jedit/gui/InputHandler.java:309, gjt/sp/jedit/gui/InputHandler.java:368. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/gui/InputHandler.java",
+          "className": "org.gjt.sp.jedit.View",
+          "lineNumbers": [
+            309
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.View (gjt/sp/jedit/View.java:84), common members {\"getBuffer\", \"getMacroRecorder\", \"getStatus\"}; 3/4 members in this projection. Independent consumers: gjt/sp/jedit/gui/InputHandler.java:204, gjt/sp/jedit/gui/InputHandler.java:309, gjt/sp/jedit/gui/InputHandler.java:368. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/gui/InputHandler.java",
+          "className": "org.gjt.sp.jedit.View",
+          "lineNumbers": [
+            368
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.View (gjt/sp/jedit/View.java:84), common members {\"getBuffer\", \"getMacroRecorder\", \"getStatus\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/gui/InputHandler.java:204, gjt/sp/jedit/gui/InputHandler.java:309, gjt/sp/jedit/gui/InputHandler.java:368. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/search/SearchAndReplace.java",
+          "className": "org.gjt.sp.jedit.View",
+          "lineNumbers": [
+            420
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.View (gjt/sp/jedit/View.java:84), common members {\"getBuffer\", \"getStatus\", \"getTextArea\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/Abbrevs.java:73, gjt/sp/jedit/gui/InputHandler.java:309, gjt/sp/jedit/search/SearchAndReplace.java:420, gjt/sp/jedit/search/SearchBar.java:170. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/search/SearchBar.java",
+          "className": "org.gjt.sp.jedit.View",
+          "lineNumbers": [
+            170
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.View (gjt/sp/jedit/View.java:84), common members {\"getBuffer\", \"getStatus\", \"getTextArea\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/Abbrevs.java:73, gjt/sp/jedit/gui/InputHandler.java:309, gjt/sp/jedit/search/SearchAndReplace.java:420, gjt/sp/jedit/search/SearchBar.java:170. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSFileNameField.java",
+          "className": "org.gjt.sp.jedit.browser.VFSBrowser",
+          "lineNumbers": [
+            73
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.browser.VFSBrowser (gjt/sp/jedit/browser/VFSBrowser.java:49), common members {\"getBrowserView\", \"getDirectory\", \"getMode\"}; 3/4 members in this projection. Independent consumers: gjt/sp/jedit/browser/VFSFileNameField.java:73, gjt/sp/jedit/browser/VFSFileNameField.java:208, gjt/sp/jedit/browser/VFSFileNameField.java:242. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSFileNameField.java",
+          "className": "org.gjt.sp.jedit.browser.VFSBrowser",
+          "lineNumbers": [
+            208
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.browser.VFSBrowser (gjt/sp/jedit/browser/VFSBrowser.java:49), common members {\"getBrowserView\", \"getDirectory\", \"getMode\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/VFSFileNameField.java:73, gjt/sp/jedit/browser/VFSFileNameField.java:208, gjt/sp/jedit/browser/VFSFileNameField.java:242. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSFileNameField.java",
+          "className": "org.gjt.sp.jedit.browser.VFSBrowser",
+          "lineNumbers": [
+            242
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.browser.VFSBrowser (gjt/sp/jedit/browser/VFSBrowser.java:49), common members {\"getBrowserView\", \"getDirectory\", \"getMode\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/VFSFileNameField.java:73, gjt/sp/jedit/browser/VFSFileNameField.java:208, gjt/sp/jedit/browser/VFSFileNameField.java:242. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/FileCellRenderer.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            55
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/4 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSDirectoryEntryTable.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            398
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSFileChooserDialog.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            327
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/io/VFS.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            940
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/FileCellRenderer.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            168
+          ],
+          "additionalInfo": "Source evidence: repeated case handling of type of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"DIRECTORY\", \"FILESYSTEM\"}; 2/2 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:168, gjt/sp/jedit/browser/VFSBrowser.java:783, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSBrowser.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            783
+          ],
+          "additionalInfo": "Source evidence: repeated case handling of type of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"DIRECTORY\", \"FILESYSTEM\"}; 2/2 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:168, gjt/sp/jedit/browser/VFSBrowser.java:783, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/io/VFS.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            940
+          ],
+          "additionalInfo": "Source evidence: repeated case handling of type of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"DIRECTORY\", \"FILESYSTEM\"}; 2/2 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:168, gjt/sp/jedit/browser/VFSBrowser.java:783, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/ChunkCache.java",
+          "className": "org.gjt.sp.jedit.textarea.ChunkCache.LineInfo",
+          "lineNumbers": [
+            64
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.ChunkCache.LineInfo (gjt/sp/jedit/textarea/ChunkCache.java:766), common members {\"length\", \"offset\", \"physicalLine\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/ChunkCache.java:64, gjt/sp/jedit/textarea/ChunkCache.java:368, gjt/sp/jedit/textarea/JEditTextArea.java:853, gjt/sp/jedit/textarea/JEditTextArea.java:915. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/ChunkCache.java",
+          "className": "org.gjt.sp.jedit.textarea.ChunkCache.LineInfo",
+          "lineNumbers": [
+            368
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.ChunkCache.LineInfo (gjt/sp/jedit/textarea/ChunkCache.java:766), common members {\"length\", \"offset\", \"physicalLine\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/ChunkCache.java:64, gjt/sp/jedit/textarea/ChunkCache.java:368, gjt/sp/jedit/textarea/JEditTextArea.java:853, gjt/sp/jedit/textarea/JEditTextArea.java:915. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.ChunkCache.LineInfo",
+          "lineNumbers": [
+            853
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.ChunkCache.LineInfo (gjt/sp/jedit/textarea/ChunkCache.java:766), common members {\"length\", \"offset\", \"physicalLine\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/ChunkCache.java:64, gjt/sp/jedit/textarea/ChunkCache.java:368, gjt/sp/jedit/textarea/JEditTextArea.java:853, gjt/sp/jedit/textarea/JEditTextArea.java:915. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.ChunkCache.LineInfo",
+          "lineNumbers": [
+            915
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.ChunkCache.LineInfo (gjt/sp/jedit/textarea/ChunkCache.java:766), common members {\"length\", \"offset\", \"physicalLine\"}; 3/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/ChunkCache.java:64, gjt/sp/jedit/textarea/ChunkCache.java:368, gjt/sp/jedit/textarea/JEditTextArea.java:853, gjt/sp/jedit/textarea/JEditTextArea.java:915. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/BufferChangeHandler.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            226
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            1755
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            3756
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            4026
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            4154
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            4979
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            5500
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            5773
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/Selection.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            569
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/SelectionManager.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            109
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/SelectionManager.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            260
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"startLine\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:260, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/textarea/SelectionManager.java",
+          "className": "org.gjt.sp.jedit.textarea.Selection",
+          "lineNumbers": [
+            316
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.textarea.Selection (gjt/sp/jedit/textarea/Selection.java:46), common members {\"end\", \"endLine\", \"start\", \"startLine\"}; 4/4 members in this projection. Independent consumers: gjt/sp/jedit/textarea/BufferChangeHandler.java:226, gjt/sp/jedit/textarea/JEditTextArea.java:1755, gjt/sp/jedit/textarea/JEditTextArea.java:3756, gjt/sp/jedit/textarea/JEditTextArea.java:4026, gjt/sp/jedit/textarea/JEditTextArea.java:4154, gjt/sp/jedit/textarea/JEditTextArea.java:4979, gjt/sp/jedit/textarea/JEditTextArea.java:5500, gjt/sp/jedit/textarea/JEditTextArea.java:5773, gjt/sp/jedit/textarea/Selection.java:569, gjt/sp/jedit/textarea/SelectionManager.java:109, gjt/sp/jedit/textarea/SelectionManager.java:316. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "objectweb/asm/CodeWriter.java",
+          "className": "org.objectweb.asm.Label",
+          "lineNumbers": [
+            735
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.objectweb.asm.Label (objectweb/asm/Label.java:32), common members {\"owner\", \"position\", \"resolved\"}; 3/3 members in this projection. Independent consumers: objectweb/asm/CodeWriter.java:735, objectweb/asm/CodeWriter.java:932, objectweb/asm/CodeWriter.java:1019, objectweb/asm/CodeWriter.java:1046. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "objectweb/asm/CodeWriter.java",
+          "className": "org.objectweb.asm.Label",
+          "lineNumbers": [
+            932
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.objectweb.asm.Label (objectweb/asm/Label.java:32), common members {\"owner\", \"position\", \"resolved\"}; 3/3 members in this projection. Independent consumers: objectweb/asm/CodeWriter.java:735, objectweb/asm/CodeWriter.java:932, objectweb/asm/CodeWriter.java:1019, objectweb/asm/CodeWriter.java:1046. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "objectweb/asm/CodeWriter.java",
+          "className": "org.objectweb.asm.Label",
+          "lineNumbers": [
+            1019
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.objectweb.asm.Label (objectweb/asm/Label.java:32), common members {\"owner\", \"position\", \"resolved\"}; 3/3 members in this projection. Independent consumers: objectweb/asm/CodeWriter.java:735, objectweb/asm/CodeWriter.java:932, objectweb/asm/CodeWriter.java:1019, objectweb/asm/CodeWriter.java:1046. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "objectweb/asm/CodeWriter.java",
+          "className": "org.objectweb.asm.Label",
+          "lineNumbers": [
+            1046
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.objectweb.asm.Label (objectweb/asm/Label.java:32), common members {\"owner\", \"position\", \"resolved\"}; 3/3 members in this projection. Independent consumers: objectweb/asm/CodeWriter.java:735, objectweb/asm/CodeWriter.java:932, objectweb/asm/CodeWriter.java:1019, objectweb/asm/CodeWriter.java:1046. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        }
+      ],
+      "focusedTarget": {
+        "file": "gjt/sp/jedit/browser/VFSBrowser.java",
+        "method": "filesActivated",
+        "line": 783,
+        "matched": true
+      },
+      "metadataFindings": [
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/FileCellRenderer.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            55
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/4 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSDirectoryEntryTable.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            398
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSFileChooserDialog.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            327
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/io/VFS.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            940
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"name\", \"path\", \"type\"}; 3/3 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:55, gjt/sp/jedit/browser/VFSDirectoryEntryTable.java:398, gjt/sp/jedit/browser/VFSFileChooserDialog.java:327, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/FileCellRenderer.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            168
+          ],
+          "additionalInfo": "Source evidence: repeated case handling of type of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"DIRECTORY\", \"FILESYSTEM\"}; 2/2 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:168, gjt/sp/jedit/browser/VFSBrowser.java:783, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/browser/VFSBrowser.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            783
+          ],
+          "additionalInfo": "Source evidence: repeated case handling of type of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"DIRECTORY\", \"FILESYSTEM\"}; 2/2 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:168, gjt/sp/jedit/browser/VFSBrowser.java:783, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "gjt/sp/jedit/io/VFS.java",
+          "className": "org.gjt.sp.jedit.io.VFS.DirectoryEntry",
+          "lineNumbers": [
+            940
+          ],
+          "additionalInfo": "Source evidence: repeated case handling of type of org.gjt.sp.jedit.io.VFS.DirectoryEntry (gjt/sp/jedit/io/VFS.java:591), common members {\"DIRECTORY\", \"FILESYSTEM\"}; 2/2 members in this projection. Independent consumers: gjt/sp/jedit/browser/FileCellRenderer.java:168, gjt/sp/jedit/browser/VFSBrowser.java:783, gjt/sp/jedit/io/VFS.java:940. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        }
+      ]
+    },
+    "discordjs": {
+      "commit": "1e0603551573e7bab65b9f8c325081507849bdbb",
+      "scope": "repository root",
+      "inventory": {
+        "JavaScript": 303,
+        "TypeScript": 4
+      },
+      "findings": []
+    },
+    "phoenix": {
+      "commit": "96cba712e1502b3cf4e31e1fe5c3cf933d2b2941",
+      "scope": "apps/web/src/",
+      "inventory": {
+        "TypeScript": 65,
+        "Tsx": 66
+      },
+      "findings": []
+    },
+    "android": {
+      "commit": "862ffa0efd58922b8ec119bf6fa6695c316423f7",
+      "scope": "repository root",
+      "inventory": {
+        "Java": 67
+      },
+      "findings": [
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1097
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mDetached\", \"mHasMenu\", \"mMenuVisible\"}; 3/3 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1097, v4/java/android/support/v4/app/FragmentManager.java:1116, v4/java/android/support/v4/app/FragmentManager.java:1169, v4/java/android/support/v4/app/FragmentManager.java:1185. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1116
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mDetached\", \"mHasMenu\", \"mMenuVisible\"}; 3/5 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1097, v4/java/android/support/v4/app/FragmentManager.java:1116, v4/java/android/support/v4/app/FragmentManager.java:1169, v4/java/android/support/v4/app/FragmentManager.java:1185. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1131
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mAdded\", \"mHasMenu\", \"mMenuVisible\"}; 3/5 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1169, v4/java/android/support/v4/app/FragmentManager.java:1185. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1150
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mAdded\", \"mHasMenu\", \"mMenuVisible\"}; 3/5 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1169, v4/java/android/support/v4/app/FragmentManager.java:1185. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1169
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mAdded\", \"mHasMenu\", \"mMenuVisible\"}; 3/4 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1169, v4/java/android/support/v4/app/FragmentManager.java:1185. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1185
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mAdded\", \"mHasMenu\", \"mMenuVisible\"}; 3/4 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1169, v4/java/android/support/v4/app/FragmentManager.java:1185. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1805
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mHasMenu\", \"mHidden\", \"mMenuVisible\"}; 3/3 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1805, v4/java/android/support/v4/app/FragmentManager.java:1836, v4/java/android/support/v4/app/FragmentManager.java:1850, v4/java/android/support/v4/app/FragmentManager.java:1878. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1836
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mHasMenu\", \"mHidden\", \"mMenuVisible\"}; 3/3 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1805, v4/java/android/support/v4/app/FragmentManager.java:1836, v4/java/android/support/v4/app/FragmentManager.java:1850, v4/java/android/support/v4/app/FragmentManager.java:1878. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1850
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mHasMenu\", \"mHidden\", \"mMenuVisible\"}; 3/3 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1805, v4/java/android/support/v4/app/FragmentManager.java:1836, v4/java/android/support/v4/app/FragmentManager.java:1850, v4/java/android/support/v4/app/FragmentManager.java:1878. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        },
+        {
+          "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+          "className": "android.support.v4.app.Fragment",
+          "lineNumbers": [
+            1878
+          ],
+          "additionalInfo": "Source evidence: repeated member bundle of android.support.v4.app.Fragment (v4/java/android/support/v4/app/Fragment.java:151), common members {\"mHasMenu\", \"mHidden\", \"mMenuVisible\"}; 3/3 members in this projection. Independent consumers: v4/java/android/support/v4/app/FragmentManager.java:1131, v4/java/android/support/v4/app/FragmentManager.java:1150, v4/java/android/support/v4/app/FragmentManager.java:1805, v4/java/android/support/v4/app/FragmentManager.java:1836, v4/java/android/support/v4/app/FragmentManager.java:1850, v4/java/android/support/v4/app/FragmentManager.java:1878. These consumers may require coordinated edits; review intentional handling. History was not evaluated."
+        }
+      ]
+    },
+    "enforma": {
+      "commit": "4bc7c173b2bd9593ca4cb52264f7a96f626340e2",
+      "scope": "repository root",
+      "inventory": {
+        "JavaScript": 1,
+        "TypeScript": 68
+      },
+      "findings": []
+    }
+  },
+  "recurrence": {
+    "discordjs": [
+      {
+        "commit": "428798374f4c3c2128b844d476627762dd45edf4",
+        "value": "AUTO_MODERATION_ACTION"
+      },
+      {
+        "commit": "0afa405f5a967ed5d82cfeffedc84d444c034924",
+        "value": "ROLE_SUBSCRIPTION_PURCHASE"
+      }
+    ],
+    "files": [
+      "src/util/Constants.js",
+      "typings/enums.d.ts"
+    ],
+    "catalogue": "MessageTypes",
+    "verification": "matching actual additions in both diffs"
+  },
+  "thresholdOnlyExperiment": {
+    "ordinaryMemberMinimum": 2,
+    "productionMinimum": 3,
+    "enformaFindings": 0,
+    "ordinaryPairFindings": 3,
+    "prototype": "isolated owned-source copy; only default min_members changed",
+    "productionEnformaFindings": 0,
+    "productionOrdinaryPairFindings": 0
+  },
+  "limitations": [
+    "Other jEdit candidates unreviewed",
+    "Android target adapter remains missed",
+    "Phoenix recurring co-change not established",
+    "History rule and default-mode short circuit unchanged"
+  ],
+  "validation": {
+    "finalCodeCommit": "93343c8",
+    "cliSha256": "4b595528ca9dfe392d966942c1df851d4c7627f8065296b0ee8b474df7b89a1e",
+    "testsPassed": 318,
+    "testsFiltered": 1,
+    "filteredTest": "the_projects_own_source_is_free_of_every_smell_the_tool_can_detect",
+    "reason": "pre-existing data-clumps findings in src/detectors/incomplete_library_class.rs; not modified by this work",
+    "strictClippy": "passed",
+    "formatting": "passed for changed Rust files",
+    "sourceDetectorsChecked": 22,
+    "changedProductionFileSmellFindings": 0,
+    "finalSourceReruns": {
+      "jedit": {
+        "identicalToBehaviourImplementation": true,
+        "rawFindings": 41
+      },
+      "discordjs": {
+        "identicalToBehaviourImplementation": true,
+        "rawFindings": 0
+      },
+      "phoenix": {
+        "identicalToBehaviourImplementation": true,
+        "rawFindings": 0
+      },
+      "android": {
+        "identicalToBehaviourImplementation": true,
+        "rawFindings": 10
+      }
+    }
+  }
+}
