@@ -150,14 +150,10 @@ impl LanguageModel for RustModel {
         methods
     }
 
-    fn constructors<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
-        let SourceNode {
-            file: _file,
-            node: _ty,
-        } = source;
-        // Rust has no constructors: `fn new` is an ordinary function returning
-        // the type, and nothing in the grammar marks it as special. A type
-        // therefore has none, and the constructor threshold never applies.
+    /// Rust has no constructors: `fn new` is an ordinary function returning
+    /// the type, and nothing in the grammar marks it as special. A type
+    /// therefore has none, and the constructor threshold never applies.
+    fn constructors<'a>(&self, _source: SourceNode<'a>) -> Vec<Node<'a>> {
         Vec::new()
     }
 
