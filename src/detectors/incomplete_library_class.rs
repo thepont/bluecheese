@@ -40,7 +40,7 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         .filter_map(|ty| java::JAVA.type_name(file.at(ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
 
-    let mut groups = BTreeMap::<(String, Vec<String>), BTreeMap<String, usize>>::new();
+    let mut groups = ExtensionGroups::new();
     for ty in java::JAVA
         .types(file)
         .into_iter()
@@ -73,16 +73,7 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         }
     }
 
-    let mut findings = BTreeMap::<(String, String), usize>::new();
-    for ((type_name, _), owners) in groups {
-        if owners.len() < MIN_EXTENSIONS {
-            continue;
-        }
-        for (owner, line) in owners {
-            findings.entry((owner, type_name.clone())).or_insert(line);
-        }
-    }
-    findings
+    repeated_extension_owners(groups)
         .into_iter()
         .map(|((class_name, type_name), line)| Finding {
             smell_name: SMELL_NAME.to_owned(),
@@ -111,7 +102,7 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         .filter_map(|ty| rust::RUST.type_name(file.at(*ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
 
-    let mut groups = BTreeMap::<(String, Vec<String>), BTreeMap<String, usize>>::new();
+    let mut groups = ExtensionGroups::new();
     for implementation in descendants(file.root())
         .into_iter()
         .filter(|node| node.kind() == "impl_item")
@@ -153,18 +144,7 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         }
     }
 
-    let mut findings = BTreeMap::<(String, String), usize>::new();
-    for ((target_name, _), traits) in groups {
-        if traits.len() < MIN_EXTENSIONS {
-            continue;
-        }
-        for (trait_name, line) in traits {
-            findings
-                .entry((trait_name, target_name.clone()))
-                .or_insert(line);
-        }
-    }
-    findings
+    repeated_extension_owners(groups)
         .into_iter()
         .map(|((class_name, target_name), line)| Finding {
             smell_name: SMELL_NAME.to_owned(),
@@ -511,4 +491,19 @@ fn extends_receiver(source: SourceNode<'_>, receiver_name: &str) -> bool {
         node.child_by_field_name("object")
             .is_some_and(|object| source.file().text(object) == receiver_name)
     })
+}
+
+type ExtensionGroups = BTreeMap<(String, Vec<String>), BTreeMap<String, usize>>;
+
+fn repeated_extension_owners(groups: ExtensionGroups) -> BTreeMap<(String, String), usize> {
+    let mut findings = BTreeMap::<(String, String), usize>::new();
+    for ((type_name, _), owners) in groups {
+        if owners.len() < MIN_EXTENSIONS {
+            continue;
+        }
+        for (owner, line) in owners {
+            findings.entry((owner, type_name.clone())).or_insert(line);
+        }
+    }
+    findings
 }
