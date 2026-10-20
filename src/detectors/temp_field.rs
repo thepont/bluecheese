@@ -37,20 +37,25 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             let methods = java::JAVA.methods(file, ty);
             let constructors = java::JAVA.constructors(file, ty);
             let declared_fields = fields(file, ty);
+            let usage = FieldUsage {
+                file,
+                methods: &methods,
+            };
             let mut lines = declared_fields
                 .iter()
                 .filter(|field| {
-                    is_nullable_guarded(file, field, &methods)
+                    usage.is_nullable_guarded(field)
                         || (field.primitive
-                            && references_only_in_branches(file, &field.name, &methods)
-                            && !has_unconditional_write(file, &field.name, &methods)
-                            && !is_created_as_branch_local_object(file, &field.name, &methods))
+                            && usage.references_only_in_branches(&field.name)
+                            && !usage.has_unconditional_write(&field.name)
+                            && !usage.is_created_as_branch_local_object(&field.name))
                 })
                 .map(|field| file.line(field.node))
                 .collect::<BTreeSet<_>>();
             if lines.is_empty() && constructors.len() >= 2 {
                 lines.extend(
-                    rarely_used_fields(file, &declared_fields, &methods)
+                    usage
+                        .rarely_used_fields(&declared_fields)
                         .into_iter()
                         .map(|field| file.line(field)),
                 );
@@ -108,130 +113,6 @@ fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<DeclaredField<'a>> {
         .collect()
 }
 
-fn references_only_in_branches(file: &SourceFile, name: &str, methods: &[Node<'_>]) -> bool {
-    let mut saw_reference = false;
-    for method in methods {
-        let Some(body) = method.child_by_field_name("body") else {
-            continue;
-        };
-        for reference in descendants(body)
-            .into_iter()
-            .filter(|node| node.kind() == "identifier" && file.text(*node) == name)
-        {
-            if is_write_target(reference) {
-                continue;
-            }
-            saw_reference = true;
-            if !inside_if_consequence(reference, *method) {
-                return false;
-            }
-        }
-    }
-    saw_reference
-}
-
-fn has_unconditional_write(file: &SourceFile, name: &str, methods: &[Node<'_>]) -> bool {
-    methods.iter().any(|method| {
-        descendants(*method).into_iter().any(|node| {
-            node.kind() == "identifier"
-                && file.text(node) == name
-                && is_write_target(node)
-                && !inside_if_consequence(node, *method)
-        })
-    })
-}
-
-fn is_created_as_branch_local_object(file: &SourceFile, name: &str, methods: &[Node<'_>]) -> bool {
-    methods.iter().any(|method| {
-        descendants(*method).into_iter().any(|node| {
-            if node.kind() != "identifier" || file.text(node) != name || !is_write_target(node) {
-                return false;
-            }
-            let Some(assignment) = assignment_for(node) else {
-                return false;
-            };
-            let Some(value) = assignment.child_by_field_name("right") else {
-                return false;
-            };
-            inside_if_consequence(node, *method)
-                && descendants(value)
-                    .into_iter()
-                    .any(|child| child.kind() == "object_creation_expression")
-        })
-    })
-}
-
-fn is_nullable_guarded(file: &SourceFile, field: &DeclaredField<'_>, methods: &[Node<'_>]) -> bool {
-    let name = field.name.as_str();
-    if field.node.child_by_field_name("value").is_some() {
-        return false;
-    }
-    methods.iter().any(|method| {
-        descendants(*method)
-            .into_iter()
-            .filter(|node| node.kind() == "if_statement")
-            .any(|branch| {
-                let (Some(condition), Some(consequence)) = (
-                    branch.child_by_field_name("condition"),
-                    branch.child_by_field_name("consequence"),
-                ) else {
-                    return false;
-                };
-                let condition_nodes = descendants(condition);
-                condition_nodes
-                    .iter()
-                    .any(|node| node.kind() == "identifier" && file.text(*node) == name)
-                    && condition_nodes
-                        .iter()
-                        .any(|node| matches!(node.kind(), "null_literal" | "null"))
-                    && descendants(consequence)
-                        .iter()
-                        .any(|node| node.kind() == "identifier" && file.text(*node) == name)
-            })
-    })
-}
-
-fn rarely_used_fields<'a>(
-    file: &SourceFile,
-    fields: &[DeclaredField<'a>],
-    methods: &[Node<'a>],
-) -> Vec<Node<'a>> {
-    let use_counts = fields
-        .iter()
-        .map(|field| {
-            let name = field.name.as_str();
-            let methods_using_field = methods
-                .iter()
-                .filter(|method| {
-                    descendants(**method)
-                        .into_iter()
-                        .any(|node| node.kind() == "identifier" && file.text(node) == name)
-                })
-                .count();
-            (name, methods_using_field)
-        })
-        .collect::<Vec<_>>();
-    let common = use_counts
-        .iter()
-        .map(|(_, count)| *count)
-        .max()
-        .unwrap_or(0);
-    if common < 2 {
-        return Vec::new();
-    }
-    fields
-        .iter()
-        .filter(|field| {
-            field.primitive
-                && use_counts
-                    .iter()
-                    .find(|(field_name, _)| *field_name == field.name.as_str())
-                    .is_some_and(|(_, count)| *count > 0 && *count < common)
-        })
-        .map(|field| field.node)
-        .collect()
-}
-
 fn is_write_target(node: Node<'_>) -> bool {
     assignment_for(node).is_some()
 }
@@ -271,4 +152,134 @@ fn inside_if_consequence(mut node: Node<'_>, method: Node<'_>) -> bool {
         node = parent;
     }
     false
+}
+
+struct FieldUsage<'a> {
+    file: &'a SourceFile,
+    methods: &'a [Node<'a>],
+}
+impl<'a> FieldUsage<'a> {
+    fn references_only_in_branches(&self, name: &str) -> bool {
+        let mut saw_reference = false;
+        for method in self.methods {
+            let Some(body) = method.child_by_field_name("body") else {
+                continue;
+            };
+            for reference in descendants(body)
+                .into_iter()
+                .filter(|node| node.kind() == "identifier" && self.file.text(*node) == name)
+            {
+                if is_write_target(reference) {
+                    continue;
+                }
+                saw_reference = true;
+                if !inside_if_consequence(reference, *method) {
+                    return false;
+                }
+            }
+        }
+        saw_reference
+    }
+
+    fn has_unconditional_write(&self, name: &str) -> bool {
+        self.methods.iter().any(|method| {
+            descendants(*method).into_iter().any(|node| {
+                node.kind() == "identifier"
+                    && self.file.text(node) == name
+                    && is_write_target(node)
+                    && !inside_if_consequence(node, *method)
+            })
+        })
+    }
+
+    fn is_created_as_branch_local_object(&self, name: &str) -> bool {
+        self.methods.iter().any(|method| {
+            descendants(*method).into_iter().any(|node| {
+                if node.kind() != "identifier"
+                    || self.file.text(node) != name
+                    || !is_write_target(node)
+                {
+                    return false;
+                }
+                let Some(assignment) = assignment_for(node) else {
+                    return false;
+                };
+                let Some(value) = assignment.child_by_field_name("right") else {
+                    return false;
+                };
+                inside_if_consequence(node, *method)
+                    && descendants(value)
+                        .into_iter()
+                        .any(|child| child.kind() == "object_creation_expression")
+            })
+        })
+    }
+
+    fn is_nullable_guarded(&self, field: &DeclaredField<'_>) -> bool {
+        let name = field.name.as_str();
+        if field.node.child_by_field_name("value").is_some() {
+            return false;
+        }
+        self.methods.iter().any(|method| {
+            descendants(*method)
+                .into_iter()
+                .filter(|node| node.kind() == "if_statement")
+                .any(|branch| {
+                    let (Some(condition), Some(consequence)) = (
+                        branch.child_by_field_name("condition"),
+                        branch.child_by_field_name("consequence"),
+                    ) else {
+                        return false;
+                    };
+                    let condition_nodes = descendants(condition);
+                    condition_nodes
+                        .iter()
+                        .any(|node| node.kind() == "identifier" && self.file.text(*node) == name)
+                        && condition_nodes
+                            .iter()
+                            .any(|node| matches!(node.kind(), "null_literal" | "null"))
+                        && descendants(consequence).iter().any(|node| {
+                            node.kind() == "identifier" && self.file.text(*node) == name
+                        })
+                })
+        })
+    }
+
+    fn rarely_used_fields(&self, fields: &[DeclaredField<'a>]) -> Vec<Node<'a>> {
+        let use_counts = fields
+            .iter()
+            .map(|field| {
+                let name = field.name.as_str();
+                let methods_using_field = self
+                    .methods
+                    .iter()
+                    .filter(|method| {
+                        descendants(**method)
+                            .into_iter()
+                            .any(|node| node.kind() == "identifier" && self.file.text(node) == name)
+                    })
+                    .count();
+                (name, methods_using_field)
+            })
+            .collect::<Vec<_>>();
+        let common = use_counts
+            .iter()
+            .map(|(_, count)| *count)
+            .max()
+            .unwrap_or(0);
+        if common < 2 {
+            return Vec::new();
+        }
+        fields
+            .iter()
+            .filter(|field| {
+                field.primitive
+                    && use_counts
+                        .iter()
+                        .find(|(field_name, _)| *field_name == field.name.as_str())
+                        .is_some_and(|(_, count)| *count > 0 && *count < common)
+            })
+            .map(|field| field.node)
+            .collect()
+    }
 }
