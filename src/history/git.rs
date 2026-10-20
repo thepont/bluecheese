@@ -20,10 +20,7 @@ pub struct GitHistory {
 
 impl GitHistory {
     pub fn open(root: &Path, files: &[SourceFile]) -> Result<Self> {
-        let mut reader = GitReader {
-            root: root.to_owned(),
-            deadline: Instant::now() + Duration::from_secs(60),
-        };
+        let mut reader = GitReader::new(root);
         let output = reader.run(&["rev-parse", "--show-toplevel"])
             .context("Shotgun Surgery requires local Git history; use --source-only for the static coupling heuristic")?;
         let output = String::from_utf8(output)?;
@@ -46,10 +43,7 @@ impl GitHistory {
             project_paths.insert(file.rel.clone(), path);
         }
         Ok(Self {
-            reader: {
-                reader.root = repo;
-                reader
-            },
+            reader: reader.in_repository(repo),
             project_paths,
         })
     }
@@ -188,6 +182,18 @@ struct GitReader {
 }
 
 impl GitReader {
+    fn new(root: &Path) -> Self {
+        Self {
+            root: root.to_owned(),
+            deadline: Instant::now() + Duration::from_secs(60),
+        }
+    }
+
+    fn in_repository(mut self, root: PathBuf) -> Self {
+        self.root = root;
+        self
+    }
+
     fn run(&mut self, args: &[&str]) -> Result<Vec<u8>> {
         const OUTPUT_LIMIT: u64 = 16 * 1024 * 1024;
         ensure!(
