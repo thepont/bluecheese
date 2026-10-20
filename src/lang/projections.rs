@@ -18,6 +18,24 @@ pub enum ProjectionKind {
     Cases(String),
 }
 
+impl ProjectionKind {
+    pub fn minimum_members(&self, ordinary_minimum: usize) -> usize {
+        if let Self::Cases(_) = self {
+            2
+        } else {
+            ordinary_minimum
+        }
+    }
+
+    pub fn evidence_label(&self) -> String {
+        if let Self::Cases(member) = self {
+            format!("repeated case handling of {member}")
+        } else {
+            "repeated member bundle".into()
+        }
+    }
+}
+
 impl Projection<'_> {
     pub fn shares(&self, common: &BTreeSet<String>, min_overlap_percent: u8) -> bool {
         common.is_subset(&self.members)
@@ -43,6 +61,23 @@ struct GroupKey {
     representation: usize,
     receiver: String,
     kind: ProjectionKind,
+}
+
+impl GroupKey {
+    fn record<'a>(self, groups: &mut BTreeMap<Self, Projection<'a>>, read: MemberRead<'a>) {
+        let kind = self.kind.clone();
+        groups
+            .entry(self)
+            .or_insert_with(|| Projection {
+                consumer: read.consumer,
+                target: read.target,
+                target_name: read.target_name,
+                members: BTreeSet::new(),
+                kind,
+            })
+            .members
+            .insert(read.member);
+    }
 }
 
 impl MemberRead<'_> {
@@ -77,7 +112,7 @@ impl<'a> Reads<'a> {
         let Some(key) = read.group_key() else {
             return;
         };
-        self.record_group(key, read);
+        key.record(&mut self.groups, read);
     }
 
     pub fn record_case(&mut self, read: MemberRead<'a>, value: String) {
@@ -86,28 +121,13 @@ impl<'a> Reads<'a> {
         };
         key.kind = ProjectionKind::Cases(read.member.clone());
         key.representation = read.consumer.node().start_byte();
-        self.record_group(
-            key,
+        key.record(
+            &mut self.groups,
             MemberRead {
                 member: value,
                 ..read
             },
         );
-    }
-
-    fn record_group(&mut self, key: GroupKey, read: MemberRead<'a>) {
-        let kind = key.kind.clone();
-        self.groups
-            .entry(key)
-            .or_insert_with(|| Projection {
-                consumer: read.consumer,
-                target: read.target,
-                target_name: read.target_name,
-                members: BTreeSet::new(),
-                kind,
-            })
-            .members
-            .insert(read.member);
     }
 
     pub fn into_projections(self) -> Vec<Projection<'a>> {
