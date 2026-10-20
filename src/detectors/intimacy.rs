@@ -22,7 +22,8 @@ struct Analyzer<'a> {
     by_name: BTreeMap<String, Vec<usize>>,
 }
 
-struct AccessContext {
+struct AccessContext<'index, 'source> {
+    analysis: &'index Analyzer<'source>,
     owner: usize,
     vars: BTreeMap<String, String>,
 }
@@ -53,10 +54,11 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             }
             let callable = callable.unwrap_or(ty.node);
             let context = AccessContext {
+                analysis: &analysis,
                 owner,
                 vars: analysis.variable_types(owner, callable),
             };
-            if analysis.is_external_field_access(&context, access) {
+            if context.is_external_field_access(access) {
                 lines.push(ty.file.line(access));
             }
         }
@@ -404,52 +406,6 @@ impl<'a> Analyzer<'a> {
         variables
     }
 
-    fn is_external_field_access(&self, context: &AccessContext, access: Node<'a>) -> bool {
-        let ty = &self.types[context.owner];
-        let Some(target) = access.child_by_field_name("object") else {
-            return false;
-        };
-        let Some(field) = access.child_by_field_name("field") else {
-            return false;
-        };
-        let target_type = JavaExpressionReader {
-            analysis: self,
-            context,
-            depth: 0,
-        }
-        .expression_type(target);
-        let Some(target_index) =
-            target_type.and_then(|name| self.resolve_type(context.owner, &name))
-        else {
-            return false;
-        };
-        if target_index == context.owner
-            || self.same_top_level(context.owner, target_index)
-            || self.types[target_index].is_enum
-        {
-            return false;
-        }
-        let target_decl = &self.types[target_index];
-        self.field_declarations(target_index)
-            .into_iter()
-            .any(|declaration| {
-                if has_modifier(target_decl.file, declaration, "static")
-                    && has_modifier(target_decl.file, declaration, "final")
-                {
-                    return false;
-                }
-                let mut cursor = declaration.walk();
-                declaration
-                    .named_children(&mut cursor)
-                    .filter(|node| node.kind() == "variable_declarator")
-                    .any(|variable| {
-                        variable
-                            .child_by_field_name("name")
-                            .is_some_and(|name| target_decl.file.text(name) == ty.file.text(field))
-                    })
-            })
-    }
-
     fn resolve_type(&self, owner: usize, type_name: &str) -> Option<usize> {
         let simple = type_name
             .trim_end_matches("[]")
@@ -508,7 +464,7 @@ impl<'a> Analyzer<'a> {
 #[derive(Clone, Copy)]
 struct JavaExpressionReader<'analysis, 'source> {
     analysis: &'analysis Analyzer<'source>,
-    context: &'analysis AccessContext,
+    context: &'analysis AccessContext<'analysis, 'source>,
     depth: usize,
 }
 
@@ -671,4 +627,53 @@ fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
                 .split_whitespace()
                 .any(|word| word == modifier)
         })
+}
+
+impl<'a> AccessContext<'_, 'a> {
+    fn is_external_field_access(&self, access: Node<'a>) -> bool {
+        let ty = &self.analysis.types[self.owner];
+        let Some(target) = access.child_by_field_name("object") else {
+            return false;
+        };
+        let Some(field) = access.child_by_field_name("field") else {
+            return false;
+        };
+        let target_type = JavaExpressionReader {
+            analysis: self.analysis,
+            context: self,
+            depth: 0,
+        }
+        .expression_type(target);
+        let Some(target_index) =
+            target_type.and_then(|name| self.analysis.resolve_type(self.owner, &name))
+        else {
+            return false;
+        };
+        if target_index == self.owner
+            || self.analysis.same_top_level(self.owner, target_index)
+            || self.analysis.types[target_index].is_enum
+        {
+            return false;
+        }
+        let target_decl = &self.analysis.types[target_index];
+        self.analysis
+            .field_declarations(target_index)
+            .into_iter()
+            .any(|declaration| {
+                if has_modifier(target_decl.file, declaration, "static")
+                    && has_modifier(target_decl.file, declaration, "final")
+                {
+                    return false;
+                }
+                let mut cursor = declaration.walk();
+                declaration
+                    .named_children(&mut cursor)
+                    .filter(|node| node.kind() == "variable_declarator")
+                    .any(|variable| {
+                        variable
+                            .child_by_field_name("name")
+                            .is_some_and(|name| target_decl.file.text(name) == ty.file.text(field))
+                    })
+            })
+    }
 }
