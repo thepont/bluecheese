@@ -1,0 +1,1 @@
+| TypeCodeLadders.java:3:5:3:18 | if (...) | This conditional ladder branches on the same type-code variable repeatedly. |

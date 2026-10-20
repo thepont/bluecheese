@@ -26,8 +26,9 @@ CodeQL port.
 **Switch Statements** is also ported for Java switch statements and expressions,
 JavaScript/TypeScript switch statements, and Rust match expressions. The Rust
 query currently reports every match expression, including forwarding
-matches that BlueCheese filters. Java's type-code `if`/`else if` ladders are not
-yet represented in the CodeQL rules.
+matches that BlueCheese filters. A Java query now detects direct `if`/`else if`
+chains of three or more equality tests against the same variable; method-call
+equality checks and nested `else` blocks are not included.
 
 **Primitive Obsession** is ported for Java classes, TypeScript classes, and
 Rust structs: a type is reported when it has at least four explicitly typed
