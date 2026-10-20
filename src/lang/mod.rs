@@ -364,22 +364,8 @@ impl Scope {
     /// project's own declaration of what is not its source beats any guess of ours.
     /// An explicit [`Scope`] then overrides it, in both directions.
     fn candidate_paths(&self, root: &Path) -> Result<Vec<PathBuf>> {
-        let mut overrides = ignore::overrides::OverrideBuilder::new(root);
-        for pattern in &self.exclude {
-            // Overrides are inverted relative to gitignore: a plain glob whitelists
-            // a path and `!` drops it. The sign therefore flips here, and only here.
-            overrides
-                .add(&format!("!{pattern}"))
-                .with_context(|| format!("invalid exclude pattern '{pattern}'"))?;
-        }
-        for pattern in &self.include {
-            overrides
-                .add(pattern)
-                .with_context(|| format!("invalid include pattern '{pattern}'"))?;
-        }
-
         let walker = ignore::WalkBuilder::new(root)
-            .overrides(overrides.build()?)
+            .overrides(self.overrides(root)?)
             .filter_entry(|entry| !is_pruned(entry))
             .build();
 
@@ -390,6 +376,24 @@ impl Scope {
             .collect();
         paths.sort();
         Ok(paths)
+    }
+
+    /// Compile and validate scope patterns. Override syntax inverts gitignore:
+    /// a plain glob includes a path, while a leading `!` excludes it.
+    fn overrides(&self, root: &Path) -> Result<ignore::overrides::Override> {
+        let mut overrides = ignore::overrides::OverrideBuilder::new(root);
+        for pattern in &self.exclude {
+            overrides
+                .add(&format!("!{pattern}"))
+                .with_context(|| format!("invalid exclude pattern '{pattern}'"))?;
+        }
+        for pattern in &self.include {
+            overrides
+                .add(pattern)
+                .with_context(|| format!("invalid include pattern '{pattern}'"))?;
+        }
+
+        Ok(overrides.build()?)
     }
 }
 
