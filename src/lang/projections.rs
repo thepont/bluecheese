@@ -1,4 +1,4 @@
-//! Resolved member reads grouped by the expression constructing a representation.
+//! Resolved member reads grouped by representation, or imperative Java consumer.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -9,6 +9,13 @@ pub struct Projection<'a> {
     pub target: SourceNode<'a>,
     pub target_name: String,
     pub members: BTreeSet<String>,
+    pub kind: ProjectionKind,
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ProjectionKind {
+    Members,
+    Cases(String),
 }
 
 impl Projection<'_> {
@@ -19,6 +26,7 @@ impl Projection<'_> {
     }
 }
 
+#[derive(Clone)]
 pub struct MemberRead<'a> {
     pub usage: SourceNode<'a>,
     pub consumer: SourceNode<'a>,
@@ -34,6 +42,7 @@ struct GroupKey {
     consumer: (String, usize),
     representation: usize,
     receiver: String,
+    kind: ProjectionKind,
 }
 
 impl MemberRead<'_> {
@@ -53,6 +62,7 @@ impl MemberRead<'_> {
             ),
             representation,
             receiver: self.receiver.clone(),
+            kind: ProjectionKind::Members,
         })
     }
 }
@@ -67,6 +77,26 @@ impl<'a> Reads<'a> {
         let Some(key) = read.group_key() else {
             return;
         };
+        self.record_group(key, read);
+    }
+
+    pub fn record_case(&mut self, read: MemberRead<'a>, value: String) {
+        let Some(mut key) = read.group_key() else {
+            return;
+        };
+        key.kind = ProjectionKind::Cases(read.member.clone());
+        key.representation = read.consumer.node().start_byte();
+        self.record_group(
+            key,
+            MemberRead {
+                member: value,
+                ..read
+            },
+        );
+    }
+
+    fn record_group(&mut self, key: GroupKey, read: MemberRead<'a>) {
+        let kind = key.kind.clone();
         self.groups
             .entry(key)
             .or_insert_with(|| Projection {
@@ -74,6 +104,7 @@ impl<'a> Reads<'a> {
                 target: read.target,
                 target_name: read.target_name,
                 members: BTreeSet::new(),
+                kind,
             })
             .members
             .insert(read.member);
@@ -102,7 +133,10 @@ pub fn is_getter(name: &str) -> bool {
 fn representation(usage: SourceNode<'_>, consumer: SourceNode<'_>) -> Option<usize> {
     let mut parent = usage.node().parent();
     while let Some(node) = parent {
-        if node.id() == consumer.node().id() || super::ecmascript::is_function(node) {
+        if node.id() == consumer.node().id() {
+            return (usage.file().language == super::LanguageId::Java).then_some(node.start_byte());
+        }
+        if super::ecmascript::is_function(node) || node.kind() == "lambda_expression" {
             return None;
         }
         if matches!(

@@ -27,7 +27,7 @@ pub fn source_evidence(files: &[SourceFile]) -> Result<Vec<Finding>> {
     source_evidence_with(files, &super::BundleRules::default())
 }
 
-/// Analyse declaration copies and repeated representations with validated bundle rules.
+/// Analyse declaration copies, member bundles and repeated discriminator cases.
 pub fn source_evidence_with(
     files: &[SourceFile],
     rules: &super::BundleRules,

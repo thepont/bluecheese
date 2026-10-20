@@ -1,4 +1,4 @@
-//! Repeated projections of resolved types; shared members are review evidence.
+//! Repeated reads and explicit case handling of resolved types.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -6,9 +6,11 @@ use anyhow::{Result, ensure};
 
 use crate::finding::Finding;
 use crate::lang::SourceFile;
-use crate::lang::projections::Projection;
+use crate::lang::projections::{Projection, ProjectionKind};
 
-/// Defaults intentionally exclude isolated reads and pairs, even on tiny types.
+/// Ordinary bundles exclude isolated reads and pairs, even on tiny types.
+/// Explicit handling of the same discriminator uses a two-case minimum;
+/// consumer-count and overlap settings apply to both evidence paths.
 pub struct BundleRules {
     min_members: usize,
     min_consumers: usize,
@@ -52,7 +54,11 @@ impl BundleRules {
 pub(super) fn detect(files: &[SourceFile], rules: &BundleRules) -> Result<Vec<Finding>> {
     let mut by_type = BTreeMap::<_, Vec<_>>::new();
     for projection in crate::lang::projections::collect(files) {
-        if projection.members.len() < rules.min_members
+        let min_members = match projection.kind {
+            ProjectionKind::Members => rules.min_members,
+            ProjectionKind::Cases(_) => 2,
+        };
+        if projection.members.len() < min_members
             || super::source::generated(projection.consumer.file())
         {
             continue;
@@ -61,6 +67,7 @@ pub(super) fn detect(files: &[SourceFile], rules: &BundleRules) -> Result<Vec<Fi
             .entry((
                 projection.target.file().rel.clone(),
                 projection.target.node().start_byte(),
+                projection.kind.clone(),
             ))
             .or_default()
             .push(projection);
@@ -73,7 +80,11 @@ pub(super) fn detect(files: &[SourceFile], rules: &BundleRules) -> Result<Vec<Fi
 }
 
 fn type_findings(projections: &[Projection<'_>], rules: &BundleRules) -> Result<Vec<Finding>> {
-    let cores = common_cores(projections, rules.min_members)?;
+    let min_members = match projections[0].kind {
+        ProjectionKind::Members => rules.min_members,
+        ProjectionKind::Cases(_) => 2,
+    };
+    let cores = common_cores(projections, min_members)?;
     let mut findings = BTreeMap::new();
     for common in cores {
         let consumers: BTreeMap<_, _> = projections
@@ -145,6 +156,10 @@ fn common_cores(
 
 fn finding(projection: &Projection<'_>, common: &BTreeSet<String>, locations: &str) -> Finding {
     let source = projection.consumer;
+    let evidence = match &projection.kind {
+        ProjectionKind::Members => "repeated member bundle".into(),
+        ProjectionKind::Cases(member) => format!("repeated case handling of {member}"),
+    };
     Finding {
         smell_name: super::SMELL_NAME.into(),
         file_path: source.file().path.to_string_lossy().into_owned(),
@@ -152,7 +167,7 @@ fn finding(projection: &Projection<'_>, common: &BTreeSet<String>, locations: &s
         class_name: projection.target_name.clone(),
         line_numbers: vec![source.line()],
         additional_info: format!(
-            "Source evidence: repeated member bundle of {} ({}:{}), common members {:?}; {}/{} members in this projection. Independent consumers: {locations}. These representations may require coordinated edits; review intentional projections. History was not evaluated.",
+            "Source evidence: {evidence} of {} ({}:{}), common members {:?}; {}/{} members in this projection. Independent consumers: {locations}. These consumers may require coordinated edits; review intentional handling. History was not evaluated.",
             projection.target_name,
             projection.target.file().rel,
             projection.target.line(),

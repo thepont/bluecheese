@@ -185,6 +185,153 @@ fn java_getter_projections_use_resolved_declaring_types() {
     );
 }
 
+fn java_metadata_scan(body: &str) -> Vec<Finding> {
+    let tree = TempTree::new("java-metadata");
+    tree.write("VFS.java", "class VFS { static class DirectoryEntry { public String name, path, symlinkPath; public int type; } }");
+    for index in 0..3 {
+        tree.write(
+            &format!("Browser{index}.java"),
+            &format!(
+                "class Browser{index} {{ Object render(VFS.DirectoryEntry file) {{ {body} }} }}"
+            ),
+        );
+    }
+    load_project(tree.path())
+        .unwrap()
+        .detect_source("shotgun")
+        .unwrap()
+}
+
+#[test]
+fn java_direct_metadata_reads_include_imperative_representations() {
+    for body in [
+        "return new Object[] {file.name, file.path, file.type};",
+        "if (file.type == 0) setFont(plainFont); String path = file.path; setText(file.name); return this;",
+    ] {
+        let findings = java_metadata_scan(body);
+        assert_eq!(findings.len(), 3, "{body}");
+        for finding in findings {
+            assert_eq!(finding.class_name, "VFS.DirectoryEntry");
+            for member in ["name", "path", "type"] {
+                assert!(finding.additional_info.contains(member));
+            }
+        }
+    }
+}
+
+#[test]
+fn java_metadata_reads_do_not_count_writes_pairs_or_unresolved_members() {
+    for body in [
+        "return new Object[] {file.name, file.path};",
+        "file.type = 0; file.name = file.path; return file.path;",
+        "file.type++; return new Object[] {file.name, file.path};",
+        "return new Object[] {file.name, file.path, file.missing};",
+        "return new Object[] {unknown.name, unknown.path, unknown.type};",
+    ] {
+        assert!(java_metadata_scan(body).is_empty(), "{body}");
+    }
+}
+
+#[test]
+fn java_imperative_getter_reads_are_bundled_per_receiver() {
+    let tree = TempTree::new("java-imperative-getters");
+    tree.write("Customer.java", "class Customer { String getName() { return null; } String getEmail() { return null; } String getCity() { return null; } }");
+    for index in 0..3 {
+        tree.write(&format!("Consumer{index}.java"), &format!(
+            "class Consumer{index} {{ void render(Customer c) {{ setName(c.getName()); setEmail(c.getEmail()); setCity(c.getCity()); }} }}"
+        ));
+    }
+    assert_eq!(
+        load_project(tree.path())
+            .unwrap()
+            .detect_source("shotgun")
+            .unwrap()
+            .len(),
+        3
+    );
+}
+
+#[test]
+fn repeated_file_kind_decisions_are_evidence_even_with_only_two_fields() {
+    let tree = TempTree::new("file-kind-policy");
+    tree.write("VFS.java", "class VFS { static class DirectoryEntry { static final int FILE = 0, DIRECTORY = 1, FILESYSTEM = 2; int type; String path; } }");
+    for index in 0..3 {
+        tree.write(&format!("Browser{index}.java"), &format!(
+            "class Browser{index} {{ void open(VFS.DirectoryEntry file) {{ if (file.type == VFS.DirectoryEntry.DIRECTORY || file.type == VFS.DirectoryEntry.FILESYSTEM) browse(file.path); else openFile(file.path); }} }}"
+        ));
+    }
+    let findings = load_project(tree.path())
+        .unwrap()
+        .detect_source("shotgun")
+        .unwrap();
+    assert_eq!(findings.len(), 3);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("repeated case handling"))
+    );
+}
+
+#[test]
+fn one_kind_check_and_two_ordinary_fields_are_not_repeated_case_handling() {
+    let tree = TempTree::new("single-case-policy");
+    tree.write(
+        "Entry.java",
+        "class Entry { static final int FILE = 0; int type; String path; }",
+    );
+    for index in 0..5 {
+        tree.write(&format!("Browser{index}.java"), &format!(
+            "class Browser{index} {{ void open(Entry file) {{ if (file.type == Entry.FILE) openFile(file.path); }} }}"
+        ));
+    }
+    assert!(
+        load_project(tree.path())
+            .unwrap()
+            .detect_source("shotgun")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn java_metadata_bundles_do_not_mix_distinct_bindings_or_include_constants() {
+    let tree = TempTree::new("metadata-binding-scopes");
+    tree.write("Entry.java", "class Entry { String name, path; int type; static final int FILE = 0, DIRECTORY = 1, FILESYSTEM = 2; }");
+    for index in 0..3 {
+        tree.write(&format!("Browser{index}.java"), &format!(
+            "class Browser{index} {{ void render() {{ {{ Entry file = first(); setText(file.name); }} {{ Entry file = second(); setPath(file.path); }} {{ Entry file = third(); setKind(file.type); }} }} Object constants() {{ return new Object[] {{ Entry.FILE, Entry.DIRECTORY, Entry.FILESYSTEM }}; }} }}"
+        ));
+    }
+    assert!(
+        load_project(tree.path())
+            .unwrap()
+            .detect_source("shotgun")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn java_nested_metadata_types_resolve_through_an_imported_outer_type() {
+    let tree = TempTree::new("imported-nested-metadata");
+    tree.write("io/VFS.java", "package io; public class VFS { public static class DirectoryEntry { public String name, path; public int type; public static final int DIRECTORY = 1, FILESYSTEM = 2; } }");
+    for index in 0..3 {
+        tree.write(&format!("browser/Browser{index}.java"), &format!(
+            "package browser; import io.VFS; class Browser{index} {{ Object render(VFS.DirectoryEntry file) {{ setText(file.name); setPath(file.path); if (file.type == VFS.DirectoryEntry.DIRECTORY || file.type == VFS.DirectoryEntry.FILESYSTEM) setIcon(folderIcon); return this; }} }}"
+        ));
+    }
+    let findings = load_project(tree.path())
+        .unwrap()
+        .detect_source("shotgun")
+        .unwrap();
+    assert_eq!(findings.len(), 6, "three bundles and three case handlers");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.class_name == "io.VFS.DirectoryEntry")
+    );
+}
+
 #[test]
 fn groups_share_a_real_core_and_do_not_rely_on_transitive_similarity() {
     let findings = scan(&[

@@ -25,6 +25,12 @@ struct Method<'a> {
     parameters: Vec<String>,
 }
 
+struct Field<'a> {
+    owner: usize,
+    node: Node<'a>,
+    type_name: String,
+}
+
 struct Project<'a> {
     types: Vec<Type<'a>>,
     methods: Vec<Method<'a>>,
@@ -97,6 +103,10 @@ pub(crate) fn projection_reads<'a>(
     for method in &project.methods {
         let owner = &project.types[method.owner];
         let file = owner.file;
+        let expressions = JavaExpressionResolver {
+            project: &project,
+            site: method.site(),
+        };
         for (call, target_index) in project.resolved_calls(method.site()) {
             let target_method = &project.methods[target_index];
             if target_method.owner == method.owner
@@ -114,14 +124,104 @@ pub(crate) fn projection_reads<'a>(
                 consumer: file.at(method.node),
                 target: target.file.at(target.node),
                 target_name: target.qualified.clone(),
-                receiver: file.text(receiver).into(),
+                receiver: expressions.receiver_identity(receiver),
                 member: target_method.name.clone(),
             });
+        }
+        for access in descendants(method.node)
+            .into_iter()
+            .filter(|node| node.kind() == "field_access")
+        {
+            // Nested callbacks and classes have their own receiver/binding scopes.
+            if ancestor_while(
+                access,
+                |node| node.kind() == "lambda_expression" || is_type(node),
+                |node| node.kind() == "method_declaration",
+            )
+            .is_none_or(|node| node.id() != method.node.id())
+            {
+                continue;
+            }
+            let Some(object) = access.child_by_field_name("object") else {
+                continue;
+            };
+            let Some(field) = access.child_by_field_name("field") else {
+                continue;
+            };
+            let Some(receiver_type) = project.expression_type(method.site(), object) else {
+                continue;
+            };
+            let resolver = project.type_resolver();
+            let Some(receiver_owner) = resolver.type_index(&receiver_type) else {
+                continue;
+            };
+            let Some(declaration) = resolver.field_definition(receiver_owner, file.text(field))
+            else {
+                continue;
+            };
+            // Constants describe a domain's vocabulary, not instance metadata.
+            let target = &project.types[declaration.owner];
+            if declaration.owner == method.owner
+                || named_children(declaration.node).iter().any(|node| {
+                    node.kind() == "modifiers"
+                        && target
+                            .file
+                            .text(*node)
+                            .split_whitespace()
+                            .any(|word| word == "static")
+                })
+            {
+                continue;
+            }
+            let read = crate::lang::projections::MemberRead {
+                usage: file.at(access),
+                consumer: file.at(method.node),
+                target: target.file.at(target.node),
+                target_name: target.qualified.clone(),
+                receiver: expressions.receiver_identity(object),
+                member: file.text(field).into(),
+            };
+            if let Some(value) = project.case_value(method.site(), access, declaration.owner) {
+                reads.record_case(read.clone(), value);
+            }
+            reads.record(read);
         }
     }
 }
 
 impl<'a> Project<'a> {
+    fn case_value(&self, site: CallSite<'a>, access: Node<'a>, target: usize) -> Option<String> {
+        let comparison = access.parent()?;
+        let file = self.types[site.owner].file;
+        if comparison.kind() != "binary_expression"
+            || file.text(comparison.child_by_field_name("operator")?) != "=="
+        {
+            return None;
+        }
+        let left = comparison.child_by_field_name("left")?;
+        let right = comparison.child_by_field_name("right")?;
+        let value = if left.id() == access.id() {
+            right
+        } else {
+            left
+        };
+        if value.kind() != "field_access" {
+            return None;
+        }
+        let receiver = self.expression_type(site, value.child_by_field_name("object")?)?;
+        let resolver = self.type_resolver();
+        let owner = resolver.type_index(&receiver)?;
+        let name = file.text(value.child_by_field_name("field")?);
+        let field = resolver.field_definition(owner, name)?;
+        let owner_type = &self.types[field.owner];
+        let modifiers = named_children(field.node)
+            .into_iter()
+            .find(|node| node.kind() == "modifiers")?;
+        let words: BTreeSet<_> = owner_type.file.text(modifiers).split_whitespace().collect();
+        (field.owner == target && words.contains("static") && words.contains("final"))
+            .then(|| name.into())
+    }
+
     fn resolved_calls(&self, site: CallSite<'a>) -> Vec<(Node<'a>, usize)> {
         descendants(site.method)
             .into_iter()
@@ -304,6 +404,19 @@ struct JavaExpressionResolver<'query, 'source> {
 }
 
 impl<'a> JavaExpressionResolver<'_, 'a> {
+    fn receiver_identity(&self, expression: Node<'a>) -> String {
+        let file = self.project.types[self.site.owner].file;
+        let root = descendants(expression)
+            .into_iter()
+            .find(|node| node.kind() == "identifier");
+        let binding = root.and_then(|usage| self.variable_binding(usage));
+        format!(
+            "{}@{:?}",
+            file.text(expression),
+            binding.map(|node| node.start_byte())
+        )
+    }
+
     fn deeper(self) -> Self {
         Self {
             site: self.site.deeper(),
@@ -406,15 +519,41 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
         let object = expression.child_by_field_name("object")?;
         let receiver = self.deeper().expression_type(object)?;
         let target_owner = self.project.type_resolver().type_index(&receiver)?;
-        self.project.type_resolver().field_type(
-            target_owner,
-            file.text(expression.child_by_field_name("field")?),
-        )
+        self.project
+            .type_resolver()
+            .field_definition(
+                target_owner,
+                file.text(expression.child_by_field_name("field")?),
+            )
+            .map(|field| field.type_name)
     }
 
     fn variable_type(&self, usage: Node<'a>) -> Option<String> {
         let owner = self.site.owner;
         let file = self.project.types[owner].file;
+        if let Some(binding) = self.variable_binding(usage) {
+            let declared = binding.child_by_field_name("type")?;
+            if file.text(declared) != "var" {
+                return Some(
+                    self.project
+                        .type_resolver()
+                        .type_name(owner, file.text(declared)),
+                );
+            }
+            return descendants(binding)
+                .into_iter()
+                .find(|node| node.kind() == "variable_declarator")
+                .and_then(|node| node.child_by_field_name("value"))
+                .and_then(|value| self.deeper().expression_type(value));
+        }
+        self.project
+            .type_resolver()
+            .field_definition(owner, file.text(usage))
+            .map(|field| field.type_name)
+    }
+
+    fn variable_binding(&self, usage: Node<'a>) -> Option<Node<'a>> {
+        let file = self.project.types[self.site.owner].file;
         let name = file.text(usage);
         let mut scope = usage.parent();
         while let Some(block) = scope {
@@ -433,26 +572,14 @@ impl<'a> JavaExpressionResolver<'_, 'a> {
                 .filter(|n| declares(file, *n, name))
                 .max_by_key(|n| n.start_byte());
             if let Some(binding) = candidate {
-                let declared = binding.child_by_field_name("type")?;
-                if file.text(declared) != "var" {
-                    return Some(
-                        self.project
-                            .type_resolver()
-                            .type_name(owner, file.text(declared)),
-                    );
-                }
-                return descendants(binding)
-                    .into_iter()
-                    .find(|n| n.kind() == "variable_declarator")
-                    .and_then(|n| n.child_by_field_name("value"))
-                    .and_then(|value| self.deeper().expression_type(value));
+                return Some(binding);
             }
             if block.id() == self.site.method.id() {
                 break;
             }
             scope = block.parent();
         }
-        self.project.type_resolver().field_type(owner, name)
+        None
     }
 }
 
@@ -507,8 +634,15 @@ impl<'a> TypeResolver<'_, 'a> {
                 if self.type_index(&candidate).is_some() {
                     return candidate;
                 }
-            } else if import.rsplit('.').next() == Some(raw) {
-                return import.into();
+            } else {
+                let (head, nested) = raw.split_once('.').unwrap_or((raw, ""));
+                if import.rsplit('.').next() == Some(head) {
+                    return if nested.is_empty() {
+                        import.into()
+                    } else {
+                        qualify(import, nested)
+                    };
+                }
             }
         }
         let candidate = qualify(&ty.package, raw);
@@ -547,7 +681,7 @@ impl<'a> TypeResolver<'_, 'a> {
         result
     }
 
-    fn field_type(&self, owner: usize, name: &str) -> Option<String> {
+    fn field_definition(&self, owner: usize, name: &str) -> Option<Field<'a>> {
         for parent in self.hierarchy(owner) {
             let ty = &self.types[parent];
             for field in descendants(ty.node)
@@ -557,9 +691,12 @@ impl<'a> TypeResolver<'_, 'a> {
                 if nearest_type(field).is_some_and(|n| n.id() == ty.node.id())
                     && declares(ty.file, field, name)
                 {
-                    return field
-                        .child_by_field_name("type")
-                        .map(|n| self.type_name(parent, ty.file.text(n)));
+                    return Some(Field {
+                        owner: parent,
+                        node: field,
+                        type_name: self
+                            .type_name(parent, ty.file.text(field.child_by_field_name("type")?)),
+                    });
                 }
             }
         }
