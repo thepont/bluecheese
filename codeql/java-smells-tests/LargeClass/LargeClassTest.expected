@@ -1,0 +1,1 @@
+| LargeClass.java:1:7:1:16 | ManyFields | This class declares at least eight instance fields. |

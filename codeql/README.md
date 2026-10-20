@@ -60,6 +60,10 @@ replace inherited behavior with an empty `void` body or an
 through unimplemented parent methods, JavaScript/TypeScript, or Rust trait
 stubs.
 
+**Large Class** has a Java query for classes with at least eight instance
+fields. The source detector's weighted method complexity and tight class
+cohesion branch is not included in this query.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
