@@ -13,7 +13,7 @@ use anyhow::{Context, Result, ensure};
 use crate::finding::Finding;
 use crate::lang::{
     LanguageId, SourceFile,
-    coupling::{self, MethodCoupling, MethodLocation},
+    coupling::{self, MethodChanges, MethodCoupling},
 };
 use symbols::{SymbolKey, Symbols};
 
@@ -40,6 +40,9 @@ struct Change {
 }
 
 impl Change {
+    fn id(&self) -> &str {
+        self.id.as_str()
+    }
     fn includes(&self, path: &str) -> bool {
         self.paths.contains(path)
     }
@@ -117,34 +120,38 @@ impl Evidence<'_, '_> {
     fn commits(&mut self, method: &MethodCoupling, changes: &[Change]) -> Result<Vec<String>> {
         let mut commits = Vec::new();
         for change in changes {
-            if !self.changed(&method.location, change)? {
-                continue;
-            }
-            let mut caller_files = BTreeSet::new();
-            for caller in &method.callers {
-                if caller.file_path != method.location.file_path && self.changed(caller, change)? {
-                    caller_files.insert(caller.file_path.as_str());
-                }
-            }
-            if caller_files.len() >= 2 {
-                commits.push(change.id.as_str().to_owned());
+            let mut changed = ChangedMethods {
+                change,
+                symbols: self.symbols,
+                snapshots: &mut *self.snapshots,
+            };
+            if method.changes_with_callers(&mut changed)? {
+                commits.push(change.id().to_owned());
             }
         }
         Ok(commits)
     }
+}
 
-    fn changed(&mut self, location: &MethodLocation, change: &Change) -> Result<bool> {
-        if !change.includes(&location.file_path) {
+struct ChangedMethods<'a, 'history> {
+    change: &'a Change,
+    symbols: &'a BTreeMap<&'history str, Symbols>,
+    snapshots: &'a mut Snapshots<'history>,
+}
+
+impl MethodChanges for ChangedMethods<'_, '_> {
+    fn body_changed(&mut self, path: &str, offset: usize) -> Result<bool> {
+        if !self.change.includes(path) {
             return Ok(false);
         }
         let Some(key) = self
             .symbols
-            .get(location.file_path.as_str())
-            .and_then(|symbols| symbols.at_offset(location.start_byte))
+            .get(path)
+            .and_then(|symbols| symbols.at_offset(offset))
         else {
             return Ok(false);
         };
-        change.body_changed(self.snapshots, &location.file_path, key)
+        self.change.body_changed(self.snapshots, path, key)
     }
 }
 

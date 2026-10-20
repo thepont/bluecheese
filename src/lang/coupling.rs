@@ -6,17 +6,22 @@ use super::{SourceFile, SourceNode, model_for};
 use crate::finding::Finding;
 
 pub struct MethodCoupling {
-    pub location: MethodLocation,
+    location: MethodLocation,
     pub counts: CouplingCounts,
-    pub callers: Vec<MethodLocation>,
+    callers: Vec<MethodLocation>,
+}
+
+/// A body-change query supplied by a history adapter.
+pub trait MethodChanges {
+    fn body_changed(&mut self, path: &str, offset: usize) -> anyhow::Result<bool>;
 }
 
 #[derive(Clone)]
 pub struct MethodLocation {
-    pub file_path: String,
-    pub class_name: String,
-    pub line: usize,
-    pub(crate) start_byte: usize,
+    file_path: String,
+    class_name: String,
+    line: usize,
+    start_byte: usize,
 }
 
 impl MethodLocation {
@@ -27,6 +32,14 @@ impl MethodLocation {
             line: source.model().decl_line(source.node()),
             start_byte: source.node().start_byte(),
         }
+    }
+
+    fn changed_in(&self, changes: &mut dyn MethodChanges) -> anyhow::Result<bool> {
+        changes.body_changed(&self.file_path, self.start_byte)
+    }
+
+    fn file_key(&self) -> &str {
+        &self.file_path
     }
 }
 
@@ -53,6 +66,19 @@ impl std::fmt::Display for CouplingCounts {
 }
 
 impl MethodCoupling {
+    pub fn changes_with_callers(&self, changes: &mut dyn MethodChanges) -> anyhow::Result<bool> {
+        if !self.location.changed_in(changes)? {
+            return Ok(false);
+        }
+        let mut files = BTreeSet::new();
+        for caller in &self.callers {
+            if caller.file_key() != self.location.file_key() && caller.changed_in(changes)? {
+                files.insert(caller.file_key());
+            }
+        }
+        Ok(files.len() >= 2)
+    }
+
     pub fn into_finding(self, smell_name: &str) -> Finding {
         Finding {
             smell_name: smell_name.into(),
