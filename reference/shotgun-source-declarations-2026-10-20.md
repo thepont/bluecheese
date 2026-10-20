@@ -96,6 +96,9 @@ the existing adapter resolvers. Unresolved targets are omitted; types are not
 joined by matching names. Java direct field reads, Rust member bundles,
 destructuring, computed keys, JSX output and exhaustive enum branching are not
 covered by this initial bundle check.
+ES property getter declarations, inherited direct fields and unnamed callbacks
+are also outside this initial projection query. The existing source resolvers
+provide bounded inference, not compiler-backed whole-program analysis.
 
 Reads must participate in an explicit representation: JS/TS object/array
 expressions or template strings, or Java array initializers/constructor calls.
@@ -138,3 +141,19 @@ frequent accessor use under Feature Envy; it does not specify these bundle
 thresholds. Passing the controls establishes behaviour on those examples, not
 a public-project false-positive rate. Legitimately separate representations
 sharing three or more members can still be reported as review candidates.
+
+Final follow-up verification: 304 tests pass, one fails, zero are ignored in
+`cargo test --locked --no-fail-fast`. The failure remains the repository
+self-check's data-clump report in `incomplete_library_class.rs`; concurrent work
+changed that file and its tests during this run. An isolated checkout based on
+the earlier committed baseline also reproduced the same failing self-check.
+No assertion or exclusion was weakened. Strict all-target Clippy and formatting
+pass. The 22-rule application scan reports remaining findings only in
+`incomplete_library_class.rs`, with none in this feature's implementation.
+
+The feature and its tests were committed separately from two tested,
+behaviour-preserving refactorings: moving grouping/overlap behaviour to its
+owners and sharing Java resolved-call traversal/context. Regression tests were
+unchanged for those refactorings. Final logs are
+`/tmp/bluecheese-bundles-complete-{tests,clippy,format}.log`; application JSON is
+under `/tmp/bluecheese-bundles-final-application/`.
