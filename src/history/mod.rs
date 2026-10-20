@@ -39,6 +39,25 @@ struct Change {
     paths: BTreeSet<String>,
 }
 
+impl Change {
+    fn includes(&self, path: &str) -> bool {
+        self.paths.contains(path)
+    }
+
+    fn body_changed(
+        &self,
+        snapshots: &mut Snapshots<'_>,
+        path: &str,
+        key: &SymbolKey,
+    ) -> Result<bool> {
+        let before = snapshots.read(&self.parent, path)?;
+        let after = snapshots.read(&self.id, path)?;
+        Ok(before
+            .zip(after)
+            .is_some_and(|(before, after)| before.body_changed(&after, key)))
+    }
+}
+
 struct Blob {
     id: ObjectId,
     source: String,
@@ -115,7 +134,7 @@ impl Evidence<'_, '_> {
     }
 
     fn changed(&mut self, location: &MethodLocation, change: &Change) -> Result<bool> {
-        if !change.paths.contains(&location.file_path) {
+        if !change.includes(&location.file_path) {
             return Ok(false);
         }
         let Some(key) = self
@@ -125,7 +144,7 @@ impl Evidence<'_, '_> {
         else {
             return Ok(false);
         };
-        self.snapshots.changed(change, &location.file_path, key)
+        change.body_changed(self.snapshots, &location.file_path, key)
     }
 }
 
@@ -147,14 +166,6 @@ impl<'a> Snapshots<'a> {
             revisions: BTreeMap::new(),
             blobs: BTreeMap::new(),
         }
-    }
-
-    fn changed(&mut self, change: &Change, path: &str, key: &SymbolKey) -> Result<bool> {
-        let before = self.read(&change.parent, path)?;
-        let after = self.read(&change.id, path)?;
-        Ok(before
-            .zip(after)
-            .is_some_and(|(before, after)| before.body_changed(&after, key)))
     }
 
     fn read(&mut self, revision: &ObjectId, path: &str) -> Result<Option<Arc<Symbols>>> {
