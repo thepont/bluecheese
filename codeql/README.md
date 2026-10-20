@@ -17,6 +17,10 @@ Rust's statement count mirrors the existing adapter; Java and JavaScript use
 their language libraries' complexity metrics, so metric-level parity on edge
 cases remains to be checked.
 
+**Comments** is ported for JavaScript/TypeScript. It reports non-documentation
+comments with more than five words or a `TODO` marker; Java and Rust comments
+are not included.
+
 **Switch Statements** is also ported for Java switch statements and expressions,
 JavaScript/TypeScript switch statements, and Rust match expressions. The Rust
 query currently reports every match expression, including forwarding
@@ -79,8 +83,8 @@ expressions occur across at least three methods. Its repeated-action and
 low-cohesion branches are not included yet.
 
 No CodeQL query is currently provided for **Alternative Classes with Different
-Interfaces**, **Comments**, **Duplicate Code**, **Incomplete Library Class**,
-or **Temporary Field**.
+Interfaces**, **Duplicate Code**, **Incomplete Library Class**, or
+**Temporary Field**.
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.
