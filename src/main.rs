@@ -61,7 +61,7 @@ fn main() -> anyhow::Result<()> {
     let findings = if args.source_only {
         bluecheese::detect(&project.files, &args.smell)?
     } else {
-        bluecheese::detect_project(&args.folder, &project.files, &args.smell)?
+        project.detect(&args.smell)?
     };
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())

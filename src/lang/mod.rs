@@ -105,9 +105,19 @@ pub struct Project {
     /// nothing are otherwise the same bytes: a tree of JavaScript analysed by a
     /// Rust-only tool must not look like clean code.
     pub skipped: BTreeMap<String, usize>,
+    root: PathBuf,
 }
 
 impl Project {
+    /// Analyse the loaded project, requiring history for Shotgun Surgery.
+    pub fn detect(&self, smell: &str) -> Result<Vec<crate::finding::Finding>> {
+        if smell == "shotgun" {
+            crate::history::detect(&self.root, &self.files)
+        } else {
+            crate::detect(&self.files, smell)
+        }
+    }
+
     pub fn language_summary(&self) -> String {
         let mut counts = BTreeMap::<LanguageId, usize>::new();
         for file in &self.files {
@@ -350,7 +360,11 @@ pub fn load_project_with(root: &Path, scope: &Scope) -> Result<Project> {
         });
     }
 
-    Ok(Project { files, skipped })
+    Ok(Project {
+        files,
+        skipped,
+        root: root.to_owned(),
+    })
 }
 
 impl Scope {

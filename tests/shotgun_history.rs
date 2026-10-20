@@ -61,7 +61,7 @@ impl Repository {
 
     fn scan(&self) -> Vec<Finding> {
         let project = load_project(self.0.path()).unwrap();
-        bluecheese::detect_project(self.0.path(), &project.files, "shotgun").unwrap()
+        project.detect("shotgun").unwrap()
     }
 }
 
@@ -142,7 +142,7 @@ fn missing_history_is_an_error_instead_of_a_clean_report() {
     let tree = TempTree::new("shotgun-no-history");
     tree.write("Policy.java", "class Policy { void check() {} }");
     let project = load_project(tree.path()).unwrap();
-    assert!(bluecheese::detect_project(tree.path(), &project.files, "shotgun").is_err());
+    assert!(project.detect("shotgun").is_err());
 }
 
 #[test]
@@ -252,7 +252,7 @@ fn an_unborn_repository_is_not_reported_as_clean() {
         .unwrap();
     assert!(result.status.success());
     let project = load_project(tree.path()).unwrap();
-    assert!(bluecheese::detect_project(tree.path(), &project.files, "shotgun").is_err());
+    assert!(project.detect("shotgun").is_err());
 }
 
 #[test]

@@ -4,7 +4,7 @@
 
 The CLI now requires local Git-history evidence for `-s shotgun`. Static
 coupling remains available with `--source-only`, and the existing `detect`
-library function retains that reference heuristic. `detect_project` uses the
+library function retains that reference heuristic. `Project::detect` uses the
 history-backed application contract.
 
 A candidate must have two resolved external calling classes and an existing
