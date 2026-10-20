@@ -23,4 +23,4 @@ where
     count(Stmt statement | statement.getEnclosingCallable() = right) and
   count(Expr expression | expression.getEnclosingCallable() = left) =
     count(Expr expression | expression.getEnclosingCallable() = right)
-select left, "This method has the same statement and expression structure as another method in its impl."
+select left.getName().toString()
