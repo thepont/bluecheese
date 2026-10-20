@@ -215,6 +215,26 @@ fn reports_repeated_marshalling_around_jni_native_calls() {
 }
 
 #[test]
+fn reports_repeated_numeric_string_conversion_before_library_calls() {
+    let findings = scan(
+        "import vendor.RangeIndex;\n\
+         class UserLookup {\n\
+             int find(String id) { return RangeIndex.find(Integer.parseInt(id)); }\n\
+         }\n\
+         class OrderLookup {\n\
+             int find(String id) { return RangeIndex.find(Integer.parseInt(id)); }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("RangeIndex"))
+    );
+}
+
+#[test]
 fn reports_duplicated_rust_extension_implementations_for_an_imported_type() {
     let file = parse(
         "date_helpers.rs",
