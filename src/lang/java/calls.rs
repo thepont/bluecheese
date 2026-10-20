@@ -40,6 +40,16 @@ struct CallSite<'a> {
     depth: usize,
 }
 
+impl<'a> Method<'a> {
+    fn site(&self) -> CallSite<'a> {
+        CallSite {
+            owner: self.owner,
+            method: self.node,
+            depth: 0,
+        }
+    }
+}
+
 impl CallSite<'_> {
     fn deeper(self) -> Self {
         Self {
@@ -58,18 +68,7 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
         if method.node.child_by_field_name("body").is_none() {
             continue;
         }
-        for call in descendants(method.node)
-            .into_iter()
-            .filter(|node| node.kind() == "method_invocation")
-        {
-            let site = CallSite {
-                owner: method.owner,
-                method: method.node,
-                depth: 0,
-            };
-            let Some(target) = project.resolve_call(site, call) else {
-                continue;
-            };
+        for (_, target) in project.resolved_calls(method.site()) {
             edges.push((caller, target));
         }
     }
@@ -98,18 +97,7 @@ pub(crate) fn projection_reads<'a>(
     for method in &project.methods {
         let owner = &project.types[method.owner];
         let file = owner.file;
-        let site = CallSite {
-            owner: method.owner,
-            method: method.node,
-            depth: 0,
-        };
-        for call in descendants(method.node)
-            .into_iter()
-            .filter(|node| node.kind() == "method_invocation")
-        {
-            let Some(target_index) = project.resolve_call(site, call) else {
-                continue;
-            };
+        for (call, target_index) in project.resolved_calls(method.site()) {
             let target_method = &project.methods[target_index];
             if target_method.owner == method.owner
                 || !target_method.parameters.is_empty()
@@ -134,6 +122,14 @@ pub(crate) fn projection_reads<'a>(
 }
 
 impl<'a> Project<'a> {
+    fn resolved_calls(&self, site: CallSite<'a>) -> Vec<(Node<'a>, usize)> {
+        descendants(site.method)
+            .into_iter()
+            .filter(|node| node.kind() == "method_invocation")
+            .filter_map(|call| self.resolve_call(site, call).map(|target| (call, target)))
+            .collect()
+    }
+
     fn expression_type(&self, site: CallSite<'a>, expression: Node<'a>) -> Option<String> {
         JavaExpressionResolver {
             project: self,
