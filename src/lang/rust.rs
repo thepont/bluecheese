@@ -229,16 +229,8 @@ impl LanguageModel for RustModel {
             if DECISION_KINDS.contains(&kind) {
                 complexity += 1;
             }
-            if kind == "match_arm" {
-                // The wildcard arm is the fall-through case, not a decision.
-                // tree-sitter-rust does not always give `_` a distinct kind, so
-                // the text is checked as well as the kind.
-                let is_wildcard = node
-                    .child_by_field_name("pattern")
-                    .is_some_and(|p| p.kind() == "wildcard_pattern" || file.text(p).trim() == "_");
-                if !is_wildcard {
-                    complexity += 1;
-                }
+            if kind == "match_arm" && !is_wildcard_arm(file.at(node)) {
+                complexity += 1;
             }
             if kind == "binary_expression" {
                 let op = node.child_by_field_name("operator").map(|n| file.text(n));
@@ -249,6 +241,16 @@ impl LanguageModel for RustModel {
         }
         complexity
     }
+}
+
+/// Wildcards are fall-through arms. The grammar can represent `_` by kind or text.
+fn is_wildcard_arm(source: SourceNode<'_>) -> bool {
+    source
+        .node()
+        .child_by_field_name("pattern")
+        .is_some_and(|pattern| {
+            pattern.kind() == "wildcard_pattern" || source.file().text(pattern).trim() == "_"
+        })
 }
 
 /// Functions directly inside an `impl` or trait body.
