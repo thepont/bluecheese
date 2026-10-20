@@ -9,8 +9,13 @@
  */
 import java
 
-from Class type
+from ClassOrInterface type
 where
-  type.isAbstract() and
+  (
+    type instanceof Interface or
+    exists(Class abstractClass |
+      type = abstractClass and abstractClass.isAbstract()
+    )
+  ) and
   count(TypeAccess access | access.getType() = type) <= 1
-select type, "This abstract class has few references and may be speculative."
+select type, "This abstract type has few references and may be speculative."

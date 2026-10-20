@@ -40,10 +40,12 @@ JavaScript/TypeScript also recognizes
 `has*`. The Rust port uses explicit method-call syntax and does not infer
 chains through overloaded operators.
 
-**Speculative Generality** has a Java query for abstract classes with no more
-than one resolved source type reference. It currently omits Java interfaces,
-Rust traits, and TypeScript interfaces; the repository heuristic counts
-name-based references in a narrower package/file scope.
+**Speculative Generality** covers abstract Java classes and interfaces,
+JavaScript/TypeScript abstract classes and interfaces, and Rust traits. Java
+uses resolved type references; JavaScript/TypeScript counts matching type
+names and `extends` clauses; Rust currently reports traits with no source
+implementation. These queries use narrower references than the repository's
+name-based cross-file heuristic.
 
 **Data Clumps** has Java, Rust, and JavaScript/TypeScript queries for methods
 that repeat at least two parameter names with compatible types. The Rust query

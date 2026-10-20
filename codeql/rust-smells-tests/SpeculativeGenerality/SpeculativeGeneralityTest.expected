@@ -1,0 +1,1 @@
+| SpeculativeGenerality.rs:1:1:1:20 | trait UnusedTrait | This trait has no source implementation and may be speculative. |

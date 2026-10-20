@@ -9,3 +9,11 @@ class UsesAbstraction {
   UsedAbstraction first;
   UsedAbstraction second;
 }
+
+interface UnusedInterface {}
+
+interface ReferencedInterface {}
+
+class FirstInterfaceUser implements ReferencedInterface {}
+
+class SecondInterfaceUser implements ReferencedInterface {}

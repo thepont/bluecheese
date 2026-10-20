@@ -1,0 +1,2 @@
+| SpeculativeGenerality.ts:1:1:1:28 | abstrac ... Base {} | This abstract type has few references and may be speculative. |
+| SpeculativeGenerality.ts:3:1:3:27 | interfa ... ract {} | This abstract type has few references and may be speculative. |
