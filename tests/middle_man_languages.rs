@@ -22,8 +22,14 @@ fn rust_types_that_only_forward_to_a_project_field_are_reported() {
 #[test]
 fn typescript_and_javascript_wrappers_are_reported() {
     for (name, source) in [
-        ("service.ts", "class Target { first() {} second() {} } class Service { target: Target; first() { return this.target.first(); } second() { return this.target.second(); } }"),
-        ("service.js", "class Target { first() {} second() {} } class Service { constructor() { this.target = new Target(); } first() { return this.target.first(); } second() { return this.target.second(); } }"),
+        (
+            "service.ts",
+            "class Target { first() {} second() {} } class Service { target: Target; first() { return this.target.first(); } second() { return this.target.second(); } }",
+        ),
+        (
+            "service.js",
+            "class Target { first() {} second() {} } class Service { constructor() { this.target = new Target(); } first() { return this.target.first(); } second() { return this.target.second(); } }",
+        ),
     ] {
         let findings = scan(name, source);
         assert_eq!(findings.len(), 1, "{name}");
