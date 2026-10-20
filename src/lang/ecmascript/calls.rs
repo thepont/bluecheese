@@ -64,11 +64,7 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
             let file = project.files[owner.file];
             Callable {
                 owner: method.owner,
-                location: MethodLocation {
-                    file_path: file.rel.clone(),
-                    class_name: owner.name.clone(),
-                    line: file.line(method.node),
-                },
+                location: MethodLocation::new(owner.name.clone(), file.at(method.node)),
                 reportable: file.language == language
                     && method.node.child_by_field_name("body").is_some()
                     && method.name != "constructor"

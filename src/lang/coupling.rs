@@ -2,12 +2,13 @@
 
 use std::collections::BTreeSet;
 
-use super::{SourceFile, model_for};
+use super::{SourceFile, SourceNode, model_for};
 use crate::finding::Finding;
 
 pub struct MethodCoupling {
     pub location: MethodLocation,
     pub counts: CouplingCounts,
+    pub callers: Vec<MethodLocation>,
 }
 
 #[derive(Clone)]
@@ -15,6 +16,18 @@ pub struct MethodLocation {
     pub file_path: String,
     pub class_name: String,
     pub line: usize,
+    pub(crate) start_byte: usize,
+}
+
+impl MethodLocation {
+    pub fn new(class_name: String, source: SourceNode<'_>) -> Self {
+        Self {
+            file_path: source.file().rel.clone(),
+            class_name,
+            line: source.model().decl_line(source.node()),
+            start_byte: source.node().start_byte(),
+        }
+    }
 }
 
 pub struct CouplingCounts {
@@ -94,6 +107,10 @@ pub fn count(methods: &[Callable], edges: &[(usize, usize)]) -> Vec<MethodCoupli
                 .collect();
             MethodCoupling {
                 location: method.location.clone(),
+                callers: incoming[index]
+                    .iter()
+                    .map(|caller| methods[*caller].location.clone())
+                    .collect(),
                 counts: CouplingCounts {
                     callers: incoming[index].len(),
                     calling_classes: classes.len(),

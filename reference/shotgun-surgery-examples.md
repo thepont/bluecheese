@@ -1,5 +1,25 @@
 # Public shotgun surgery examples
 
+## Current application reporting contract
+
+The CLI now requires local Git-history evidence for `-s shotgun`. Static
+coupling remains available with `--source-only`, and the existing `detect`
+library function retains that reference heuristic. `detect_project` uses the
+history-backed application contract.
+
+A candidate must have two resolved external calling classes and an existing
+callee whose body changed together with existing callers in at least two
+other source files. Reports include the supporting commit IDs. The bounded
+window is 128 non-merge commits; declaration/signature changes, added/deleted
+methods, whitespace and comments do not establish body co-change. String
+literal contents remain significant. This is a review candidate, not a
+semantic proof or a reproduction of HIST's association rules. Missing history
+and historical parse failures are errors, not clean reports.
+
+The historical public-project tables below measure the source-only heuristic.
+Use `--source-only` when reproducing those commands and numbers. They do not
+establish the performance of the new history-backed mode on public examples.
+
 Investigated 2026-10-20. This is an evidence notebook, not a list of confirmed
 defects in current releases. Keep adding examples here, including weak leads
 and controls. A large commit or frequently co-changing files alone does not

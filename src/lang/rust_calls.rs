@@ -87,11 +87,7 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
         .iter()
         .map(|method| Callable {
             owner: method.owner,
-            location: MethodLocation {
-                file_path: method.file.rel.clone(),
-                class_name: method.owner_name.clone(),
-                line: model.decl_line(method.node),
-            },
+            location: MethodLocation::new(method.owner_name.clone(), method.file.at(method.node)),
             reportable: method.node.child_by_field_name("body").is_some(),
         })
         .collect();

@@ -141,7 +141,7 @@ fn cli_finds_cross_language_issues_in_the_same_mixed_directory() {
     assert!(project.files.iter().all(|file| !file.root().has_error()));
     let run = |smell| {
         let output = std::process::Command::new(env!("CARGO_BIN_EXE_bluecheese"))
-            .args(["-f", root.to_str().unwrap(), "-s", smell])
+            .args(["-f", root.to_str().unwrap(), "-s", smell, "--source-only"])
             .output()
             .expect("run CLI");
         assert!(

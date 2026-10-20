@@ -80,11 +80,7 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
             let ty = &project.types[method.owner];
             Callable {
                 owner: method.owner,
-                location: MethodLocation {
-                    file_path: ty.file.rel.clone(),
-                    class_name: ty.name.clone(),
-                    line: model_for(LanguageId::Java).decl_line(method.node),
-                },
+                location: MethodLocation::new(ty.name.clone(), ty.file.at(method.node)),
                 reportable: ty.node.kind() != "interface_declaration"
                     && method.node.child_by_field_name("body").is_some()
                     && !project.interface_contract(method),

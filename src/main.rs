@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-/// Detect Fowler code smells using static analysis.
+/// Detect code smell candidates using source and local Git history.
 #[derive(Parser)]
 #[command(name = "bluecheese", version, about)]
 struct Args {
@@ -14,6 +14,10 @@ struct Args {
     /// The code smell to detect.
     #[arg(short = 's', long = "smell")]
     smell: String,
+
+    /// Use source-only reference heuristics, including static coupling for Shotgun Surgery.
+    #[arg(long)]
+    source_only: bool,
 
     /// Report format.
     #[arg(short = 'r', long = "report-format", default_value = "json")]
@@ -43,7 +47,22 @@ fn main() -> anyhow::Result<()> {
 
     print_inventory(&project, &args.folder)?;
 
-    let findings = bluecheese::detect(&project.files, &args.smell)?;
+    if args.smell == "shotgun" {
+        eprintln!(
+            "shotgun evidence: {}",
+            if args.source_only {
+                "source-only coupling heuristic; no history validation"
+            } else {
+                "body co-change in up to 128 non-merge commits; candidates require review"
+            }
+        );
+    }
+
+    let findings = if args.source_only {
+        bluecheese::detect(&project.files, &args.smell)?
+    } else {
+        bluecheese::detect_project(&args.folder, &project.files, &args.smell)?
+    };
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())
 }

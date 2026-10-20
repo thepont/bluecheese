@@ -190,7 +190,13 @@ fn cli_accepts_a_mixed_javascript_typescript_project() {
             "import {Policy} from './policy'; class B { run() { Policy.check(); } }",
         );
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_bluecheese"))
-        .args(["-f", tree.path().to_str().unwrap(), "-s", "shotgun"])
+        .args([
+            "-f",
+            tree.path().to_str().unwrap(),
+            "-s",
+            "shotgun",
+            "--source-only",
+        ])
         .output()
         .expect("run CLI");
     assert!(

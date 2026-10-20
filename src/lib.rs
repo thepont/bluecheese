@@ -7,6 +7,7 @@
 
 pub mod detectors;
 pub mod finding;
+pub mod history;
 pub mod lang;
 pub mod smells;
 pub mod walk;
@@ -59,6 +60,8 @@ const fn detector_labels() -> [&'static str; DETECTORS.len()] {
 const PORTED_SMELLS: [&str; DETECTORS.len()] = detector_labels();
 
 /// Run a single detector by its smell label.
+/// This retains source-only reference heuristics for corpus comparisons. Use
+/// [`detect_project`] for application reports that require history evidence.
 ///
 /// Fails when the smell is one the book names but no detector has been ported
 /// for yet, and when the label is not a smell of the book at all. Both have to
@@ -70,6 +73,19 @@ pub fn detect(files: &[SourceFile], smell: &str) -> Result<Vec<Finding>> {
         .map(|(_, detector)| detector)
         .ok_or_else(|| refused(smell))?;
     Ok(detector(files))
+}
+
+/// Analyse a project using its available source and change-history evidence.
+pub fn detect_project(
+    root: &std::path::Path,
+    files: &[SourceFile],
+    smell: &str,
+) -> Result<Vec<Finding>> {
+    if smell == "shotgun" {
+        history::detect(root, files)
+    } else {
+        detect(files, smell)
+    }
 }
 
 /// Why `smell` cannot be run, as a message that says which of the two mistakes
