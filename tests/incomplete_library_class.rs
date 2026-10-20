@@ -595,3 +595,111 @@ fn does_not_pair_a_rust_lrs_query_with_completion_from_an_unrelated_collection()
             .is_empty()
     );
 }
+
+#[test]
+fn does_not_use_a_rust_lrs_query_when_completion_reads_a_different_item() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::LrsClient;\n\
+         use vendor::Agent;\n\
+         use vendor::Activity;\n\
+         use vendor::Statement;\n\
+         struct Dashboard;\n\
+         impl Dashboard {\n\
+             fn complete(lrs: &LrsClient, user: &Agent, course: &Activity, cached: &[Statement]) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|_| cached.iter().any(|item| item.result().completion()))\n\
+             }\n\
+         }\n\
+         struct Report;\n\
+         impl Report {\n\
+             fn completed(lrs: &LrsClient, user: &Agent, course: &Activity, cached: &[Statement]) -> bool {\n\
+                 for _item in lrs.get_statements(user, course) {\n\
+                     if cached.iter().any(|item| item.result().completion()) { return true; }\n\
+                 }\n\
+                 false\n\
+             }\n\
+         }",
+    );
+
+    assert!(
+        bluecheese::detect(&[file], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn recognizes_rust_lrs_types_from_grouped_imports() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::{LrsClient as Lrs, Agent, Activity};\n\
+         struct Dashboard;\n\
+         impl Dashboard {\n\
+             fn complete(lrs: &Lrs, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }\n\
+         struct Report;\n\
+         impl Report {\n\
+             fn completed(lrs: &Lrs, user: &Agent, course: &Activity) -> bool {\n\
+                 for statement in lrs.get_statements(user, course) {\n\
+                     if statement.result().completion() { return true; }\n\
+                 }\n\
+                 false\n\
+             }\n\
+         }",
+    );
+
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 2);
+}
+
+#[test]
+fn does_not_merge_rust_lrs_pipelines_with_different_input_types() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::{LrsClient, Agent, AdminAgent, Activity};\n\
+         struct Dashboard;\n\
+         impl Dashboard {\n\
+             fn complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }\n\
+         struct AdminReport;\n\
+         impl AdminReport {\n\
+             fn completed(lrs: &LrsClient, user: &AdminAgent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }",
+    );
+
+    assert!(
+        bluecheese::detect(&[file], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn does_not_report_repeated_rust_lrs_pipelines_in_only_one_owner() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::{LrsClient, Agent, Activity};\n\
+         struct Dashboard;\n\
+         impl Dashboard {\n\
+             fn complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+             fn is_completed(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }",
+    );
+
+    assert!(
+        bluecheese::detect(&[file], "incomp-lib-class")
+            .unwrap()
+            .is_empty()
+    );
+}

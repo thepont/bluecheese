@@ -567,29 +567,36 @@ fn rust_completion_pipeline_shape(
     }
     let parameters = method.child_by_field_name("parameters")?;
     let mut cursor = parameters.walk();
-    let (client_type, receiver, parameter_shape) = parameters
+    let mut client_parameter = None;
+    let mut parameter_shapes = Vec::new();
+    for parameter in parameters
         .named_children(&mut cursor)
-        .filter_map(|parameter| {
-            let type_node = parameter.child_by_field_name("type")?;
-            let raw_type = file.text(type_node);
-            let normalized_type = raw_type
-                .trim()
-                .trim_start_matches('&')
-                .trim_start_matches("mut ");
-            let type_name = simple_rust_type(normalized_type)?;
-            if !imported.contains(&type_name) {
-                return None;
-            }
-            let pattern = parameter
-                .child_by_field_name("pattern")
-                .filter(|node| node.kind() == "identifier")?;
-            Some((
-                type_name,
-                file.text(pattern).to_owned(),
-                file.text(type_node).replace(' ', ""),
-            ))
-        })
-        .next()?;
+        .filter(|node| node.kind() == "parameter")
+    {
+        let Some(type_node) = parameter.child_by_field_name("type") else {
+            continue;
+        };
+        let raw_type = file.text(type_node);
+        parameter_shapes.push(format!("param:{}", raw_type.replace(' ', "")));
+        let normalized_type = raw_type
+            .trim()
+            .trim_start_matches('&')
+            .trim_start_matches("mut ");
+        let Some(type_name) = simple_rust_type(normalized_type) else {
+            continue;
+        };
+        if !imported.contains(&type_name) || client_parameter.is_some() {
+            continue;
+        }
+        let Some(pattern) = parameter
+            .child_by_field_name("pattern")
+            .filter(|node| node.kind() == "identifier")
+        else {
+            continue;
+        };
+        client_parameter = Some((type_name, file.text(pattern).to_owned()));
+    }
+    let (client_type, receiver) = client_parameter?;
 
     let calls = descendants(body)
         .into_iter()
@@ -605,13 +612,13 @@ fn rust_completion_pipeline_shape(
         return None;
     }
 
-    let shape = vec![
+    let mut shape = vec![
         "lrs-completion-projection".to_owned(),
         "return:bool".to_owned(),
         "query:get_statements".to_owned(),
         "method:result.completion".to_owned(),
-        format!("param:{}", parameter_shape),
     ];
+    shape.extend(parameter_shapes);
     Some((client_type, shape))
 }
 
@@ -631,10 +638,7 @@ fn rust_uses_completion_aggregation(
         rust_method_call_name(file, iter_call).as_deref() == Some("iter")
             && rust_method_receiver(iter_call)
                 .is_some_and(|query| rust_is_lrs_query(file, query, receiver))
-            && descendants(*call).into_iter().any(|node| {
-                node.kind() == "call_expression"
-                    && rust_method_call_name(file, node).as_deref() == Some("completion")
-            })
+            && rust_any_projects_completion_from_its_item(file, *call)
     });
     if stream_any {
         return true;
@@ -653,6 +657,12 @@ fn rust_uses_completion_aggregation(
             if !rust_is_lrs_query(file, query, receiver) {
                 return false;
             }
+            let Some(item_name) = loop_node
+                .child_by_field_name("pattern")
+                .and_then(|pattern| rust_pattern_identifier(file, pattern))
+            else {
+                return false;
+            };
             descendants(loop_body)
                 .into_iter()
                 .filter(|node| node.kind() == "if_expression")
@@ -665,6 +675,8 @@ fn rust_uses_completion_aggregation(
                                     node.kind() == "call_expression"
                                         && rust_method_call_name(file, node).as_deref()
                                             == Some("completion")
+                                        && rust_completion_item_name(file, node).as_deref()
+                                            == Some(item_name.as_str())
                                 })
                             });
                     let returns_true = condition
@@ -673,6 +685,50 @@ fn rust_uses_completion_aggregation(
                     has_completion && returns_true
                 })
         })
+}
+
+fn rust_any_projects_completion_from_its_item(file: &SourceFile, any_call: Node<'_>) -> bool {
+    let Some(arguments) = any_call.child_by_field_name("arguments") else {
+        return false;
+    };
+    let mut cursor = arguments.walk();
+    arguments
+        .named_children(&mut cursor)
+        .filter(|node| node.kind() == "closure_expression")
+        .any(|closure| {
+            let Some(parameters) = closure.child_by_field_name("parameters") else {
+                return false;
+            };
+            let mut cursor = parameters.walk();
+            let Some(item_name) = parameters
+                .named_children(&mut cursor)
+                .next()
+                .and_then(|pattern| rust_pattern_identifier(file, pattern))
+            else {
+                return false;
+            };
+            let Some(closure_body) = closure.child_by_field_name("body") else {
+                return false;
+            };
+            descendants(closure_body).into_iter().any(|node| {
+                node.kind() == "call_expression"
+                    && rust_method_call_name(file, node).as_deref() == Some("completion")
+                    && rust_completion_item_name(file, node).as_deref() == Some(item_name.as_str())
+            })
+        })
+}
+
+fn rust_completion_item_name(file: &SourceFile, completion: Node<'_>) -> Option<String> {
+    let result = rust_method_receiver(completion)?;
+    if rust_method_call_name(file, result).as_deref() != Some("result") {
+        return None;
+    }
+    let item = rust_method_receiver(result)?;
+    (item.kind() == "identifier").then(|| file.text(item).to_owned())
+}
+
+fn rust_pattern_identifier(file: &SourceFile, pattern: Node<'_>) -> Option<String> {
+    (pattern.kind() == "identifier").then(|| file.text(pattern).to_owned())
 }
 
 fn rust_is_lrs_query(file: &SourceFile, call: Node<'_>, receiver: &str) -> bool {
@@ -694,22 +750,46 @@ fn rust_method_receiver<'a>(call: Node<'a>) -> Option<Node<'a>> {
 }
 
 fn rust_imported_types(file: &SourceFile) -> BTreeSet<String> {
-    descendants(file.root())
+    let mut imported = BTreeSet::new();
+    for declaration in descendants(file.root())
         .into_iter()
         .filter(|node| node.kind() == "use_declaration")
-        .filter_map(|node| node.child_by_field_name("argument"))
-        .filter_map(|argument| {
-            let path = file.text(argument).trim();
-            if path.contains('*') || path.contains(',') {
-                return None;
+    {
+        if let Some(argument) = declaration.child_by_field_name("argument") {
+            collect_rust_import_names(file, argument, &mut imported);
+        }
+    }
+    imported
+}
+
+fn collect_rust_import_names(file: &SourceFile, node: Node<'_>, imported: &mut BTreeSet<String>) {
+    match node.kind() {
+        "identifier" => {
+            imported.insert(file.text(node).to_owned());
+        }
+        "scoped_identifier" => {
+            if let Some(name) = node.child_by_field_name("name") {
+                imported.insert(file.text(name).to_owned());
             }
-            path.rsplit("::")
-                .next()
-                .map(|leaf| leaf.trim_matches(|c: char| !c.is_alphanumeric() && c != '_'))
-                .filter(|leaf| !leaf.is_empty())
-                .map(str::to_owned)
-        })
-        .collect()
+        }
+        "use_as_clause" => {
+            if let Some(alias) = node.child_by_field_name("alias") {
+                imported.insert(file.text(alias).to_owned());
+            }
+        }
+        "scoped_use_list" => {
+            if let Some(list) = node.child_by_field_name("list") {
+                collect_rust_import_names(file, list, imported);
+            }
+        }
+        "use_list" => {
+            let mut cursor = node.walk();
+            for child in node.named_children(&mut cursor) {
+                collect_rust_import_names(file, child, imported);
+            }
+        }
+        _ => {}
+    }
 }
 
 fn simple_rust_type(text: &str) -> Option<String> {
