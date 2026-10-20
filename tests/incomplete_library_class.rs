@@ -257,6 +257,64 @@ fn reports_repeated_completion_projection_around_an_lrs_api() {
 }
 
 #[test]
+fn reports_equivalent_lrs_completion_pipelines_with_stream_and_loop_syntax() {
+    let findings = scan(
+        "import vendor.LrsClient;\n\
+         import vendor.Agent;\n\
+         import vendor.Activity;\n\
+         class CourseDashboard {\n\
+             boolean isComplete(LrsClient lrs, Agent user, Activity course) { return lrs.getStatements(user, course).stream().anyMatch(statement -> statement.result().completion()); }\n\
+         }\n\
+         class LearnerReport {\n\
+             boolean completed(LrsClient lrs, Agent user, Activity course) { for (Statement statement : lrs.getStatements(user, course)) { if (statement.result().completion()) return true; } return false; }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("LrsClient"))
+    );
+}
+
+#[test]
+fn does_not_merge_lrs_completion_and_success_projections() {
+    let findings = scan(
+        "import vendor.LrsClient;\n\
+         import vendor.Agent;\n\
+         import vendor.Activity;\n\
+         class CourseDashboard {\n\
+             boolean isComplete(LrsClient lrs, Agent user, Activity course) { return lrs.getStatements(user, course).stream().anyMatch(statement -> statement.result().completion()); }\n\
+         }\n\
+         class QuizReport {\n\
+             boolean passed(LrsClient lrs, Agent user, Activity course) { for (Statement statement : lrs.getStatements(user, course)) { if (statement.result().success()) return true; } return false; }\n\
+         }",
+    );
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn does_not_match_completion_from_an_unrelated_collection_to_an_lrs_query() {
+    let findings = scan(
+        "import vendor.LrsClient;\n\
+         import vendor.Agent;\n\
+         import vendor.Activity;\n\
+         import vendor.Statement;\n\
+         import java.util.List;\n\
+         class CourseDashboard {\n\
+             boolean isComplete(LrsClient lrs, Agent user, Activity course, List<Statement> cached) { lrs.getStatements(user, course); return cached.stream().anyMatch(statement -> statement.result().completion()); }\n\
+         }\n\
+         class LearnerReport {\n\
+             boolean completed(LrsClient lrs, Agent user, Activity course, List<Statement> cached) { lrs.getStatements(user, course); for (Statement statement : cached) { if (statement.result().completion()) return true; } return false; }\n\
+         }",
+    );
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn reports_duplicated_rust_extension_implementations_for_an_imported_type() {
     let file = parse(
         "date_helpers.rs",

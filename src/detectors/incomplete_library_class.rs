@@ -97,6 +97,7 @@ fn java_repeated_callsite_findings(
     local: &BTreeSet<String>,
 ) -> Vec<Finding> {
     let mut groups = ExtensionGroups::new();
+    let mut completion_pipelines = ExtensionGroups::new();
     let native_types = java_native_boundary_types(file);
     for class in java::JAVA
         .types(file)
@@ -140,7 +141,14 @@ fn java_repeated_callsite_findings(
                 let shape = java_callsite_shape(file, body);
                 if shape.len() >= MIN_BODY_SHAPE_NODES {
                     groups
-                        .entry((type_name, shape))
+                        .entry((type_name.clone(), shape))
+                        .or_default()
+                        .entry(owner.clone())
+                        .or_insert(method.start_position().row + 1);
+                }
+                if let Some(shape) = java_completion_pipeline_shape(file, method, body, &receiver) {
+                    completion_pipelines
+                        .entry((type_name.clone(), shape))
                         .or_default()
                         .entry(owner.clone())
                         .or_insert(method.start_position().row + 1);
@@ -149,7 +157,17 @@ fn java_repeated_callsite_findings(
         }
     }
 
-    repeated_extension_owners(groups)
+    let mut repeated = repeated_extension_owners(groups);
+    for ((type_name, _), owners) in completion_pipelines {
+        if owners.len() < MIN_EXTENSIONS {
+            continue;
+        }
+        for (owner, line) in owners {
+            repeated.entry((owner, type_name.clone())).or_insert(line);
+        }
+    }
+
+    repeated
         .into_iter()
         .map(|((class_name, type_name), line)| Finding {
             smell_name: SMELL_NAME.to_owned(),
@@ -163,6 +181,141 @@ fn java_repeated_callsite_findings(
             ),
         })
         .collect()
+}
+
+fn java_completion_pipeline_shape(
+    file: &SourceFile,
+    method: Node<'_>,
+    body: Node<'_>,
+    receiver: &str,
+) -> Option<Vec<String>> {
+    let return_type = method.child_by_field_name("type")?;
+    if file.text(return_type).trim() != "boolean" {
+        return None;
+    }
+
+    let calls = descendants(body)
+        .into_iter()
+        .filter(|node| node.kind() == "method_invocation")
+        .collect::<Vec<_>>();
+    let has_lrs_query = calls
+        .iter()
+        .any(|call| java_is_lrs_query(file, *call, receiver));
+    if !has_lrs_query
+        || !calls.iter().any(|call| {
+            call.child_by_field_name("name")
+                .is_some_and(|name| file.text(name) == "result")
+        })
+        || !calls.iter().any(|call| {
+            call.child_by_field_name("name")
+                .is_some_and(|name| file.text(name) == "completion")
+        })
+        || !java_uses_any_completion_aggregation(file, body, &calls, receiver)
+    {
+        return None;
+    }
+
+    let mut shape = vec![
+        "lrs-completion-projection".to_owned(),
+        "return:boolean".to_owned(),
+        "query:getStatements".to_owned(),
+        "field:result.completion".to_owned(),
+    ];
+    shape.extend(java_parameter_types(file, method));
+    Some(shape)
+}
+
+fn java_parameter_types(file: &SourceFile, method: Node<'_>) -> Vec<String> {
+    let Some(parameters) = method.child_by_field_name("parameters") else {
+        return Vec::new();
+    };
+    let mut cursor = parameters.walk();
+    parameters
+        .named_children(&mut cursor)
+        .filter(|parameter| parameter.kind() == "formal_parameter")
+        .filter_map(|parameter| parameter.child_by_field_name("type"))
+        .map(|type_node| {
+            let type_name = file.text(type_node).trim();
+            format!(
+                "param:{}",
+                type_name.rsplit('.').next().unwrap_or(type_name)
+            )
+        })
+        .collect()
+}
+
+fn java_uses_any_completion_aggregation(
+    file: &SourceFile,
+    body: Node<'_>,
+    calls: &[Node<'_>],
+    receiver: &str,
+) -> bool {
+    let stream_any_match = calls.iter().any(|call| {
+        let is_any_match = call
+            .child_by_field_name("name")
+            .is_some_and(|name| file.text(name) == "anyMatch");
+        let has_completion = call
+            .child_by_field_name("arguments")
+            .is_some_and(|arguments| java_has_call_named(file, arguments, "completion"));
+        let query_is_streamed = call
+            .child_by_field_name("object")
+            .and_then(|stream| {
+                (java_call_name(file, stream).as_deref() == Some("stream"))
+                    .then(|| stream.child_by_field_name("object"))
+                    .flatten()
+            })
+            .is_some_and(|query| java_is_lrs_query(file, query, receiver));
+        is_any_match && has_completion && query_is_streamed
+    });
+    if stream_any_match {
+        return true;
+    }
+
+    descendants(body)
+        .into_iter()
+        .filter(|node| matches!(node.kind(), "for_statement" | "enhanced_for_statement"))
+        .any(|loop_node| {
+            let Some(loop_body) = loop_node.child_by_field_name("body") else {
+                return false;
+            };
+            let query_precedes_loop_body = descendants(loop_node).into_iter().any(|node| {
+                java_is_lrs_query(file, node, receiver) && node.end_byte() <= loop_body.start_byte()
+            });
+            query_precedes_loop_body
+                && descendants(loop_node)
+                    .into_iter()
+                    .filter(|node| node.kind() == "if_statement")
+                    .any(|condition| {
+                        let condition_nodes = descendants(condition);
+                        let checks_completion = condition_nodes.iter().any(|node| {
+                            java_call_name(file, *node).as_deref() == Some("completion")
+                        });
+                        let exits_with_true = condition_nodes.iter().any(|node| {
+                            node.kind() == "return_statement" && file.text(*node).contains("true")
+                        });
+                        checks_completion && exits_with_true
+                    })
+        })
+}
+
+fn java_is_lrs_query(file: &SourceFile, node: Node<'_>, receiver: &str) -> bool {
+    java_call_name(file, node).as_deref() == Some("getStatements")
+        && node
+            .child_by_field_name("object")
+            .is_some_and(|object| file.text(object).trim() == receiver)
+}
+
+fn java_call_name(file: &SourceFile, node: Node<'_>) -> Option<String> {
+    (node.kind() == "method_invocation")
+        .then(|| node.child_by_field_name("name"))
+        .flatten()
+        .map(|name| file.text(name).to_owned())
+}
+
+fn java_has_call_named(file: &SourceFile, node: Node<'_>, name: &str) -> bool {
+    descendants(node)
+        .into_iter()
+        .any(|child| java_call_name(file, child).as_deref() == Some(name))
 }
 
 fn java_native_boundary_types(file: &SourceFile) -> BTreeSet<String> {
