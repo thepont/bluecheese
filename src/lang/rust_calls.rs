@@ -95,6 +95,15 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
 }
 
 impl Method<'_> {
+    fn qualified_owner(&self, path: Node<'_>) -> Option<&str> {
+        let qualifier = self.file.text(path).rsplit("::").next()?;
+        Some(if qualifier == "Self" {
+            &self.owner_name
+        } else {
+            qualifier
+        })
+    }
+
     fn call_name(&self, function: Node<'_>) -> Option<(&str, Option<&str>)> {
         if function.kind() == "generic_function" {
             return function
@@ -207,12 +216,7 @@ impl CallSyntax {
     fn qualifier<'a>(&self, caller: &'a Method<'_>, function: Node<'_>) -> Option<Option<&'a str>> {
         if let Some(field) = self.path_field {
             let path = function.child_by_field_name(field)?;
-            let qualifier = caller.file.text(path).rsplit("::").next()?;
-            return Some(Some(if qualifier == "Self" {
-                &caller.owner_name
-            } else {
-                qualifier
-            }));
+            return Some(Some(caller.qualified_owner(path)?));
         }
         if let Some(field) = self.receiver_field {
             let receiver = function.child_by_field_name(field)?;
