@@ -392,7 +392,12 @@ impl<'a> ExpressionResolver<'_, 'a> {
 
     fn identifier(&self, usage: Node<'a>, name: &str) -> Option<Target> {
         let file = self.project.file_index(self.context);
-        if let Some(binding) = find_binding(self.project.files[file], usage, name) {
+        if let Some(binding) = (BindingQuery {
+            file: self.project.files[file],
+            name,
+        })
+        .find_binding(usage)
+        {
             if let Some(annotation) = binding.child_by_field_name("type") {
                 return self
                     .project
@@ -643,24 +648,6 @@ fn binding_name<'a>(file: &'a SourceFile, node: Node<'_>) -> Option<&'a str> {
         .map(|n| file.text(n))
 }
 
-fn find_binding<'a>(file: &SourceFile, usage: Node<'a>, name: &str) -> Option<Node<'a>> {
-    let mut scope = usage.parent();
-    while let Some(current) = scope {
-        if is_scope(current) {
-            let binding = descendants(current).into_iter().find(|node| {
-                is_binding(*node)
-                    && binding_name(file, *node) == Some(name)
-                    && binding_scope(*node).is_some_and(|scope| scope.id() == current.id())
-            });
-            if binding.is_some() {
-                return binding;
-            }
-        }
-        scope = current.parent();
-    }
-    None
-}
-
 fn is_binding(node: Node<'_>) -> bool {
     [
         "variable_declarator",
@@ -698,4 +685,28 @@ fn binding_scope(node: Node<'_>) -> Option<Node<'_>> {
         parent = node.parent();
     }
     None
+}
+
+struct BindingQuery<'a> {
+    file: &'a SourceFile,
+    name: &'a str,
+}
+impl BindingQuery<'_> {
+    fn find_binding<'a>(&self, usage: Node<'a>) -> Option<Node<'a>> {
+        let mut scope = usage.parent();
+        while let Some(current) = scope {
+            if is_scope(current) {
+                let binding = descendants(current).into_iter().find(|node| {
+                    is_binding(*node)
+                        && binding_name(self.file, *node) == Some(self.name)
+                        && binding_scope(*node).is_some_and(|scope| scope.id() == current.id())
+                });
+                if binding.is_some() {
+                    return binding;
+                }
+            }
+            scope = current.parent();
+        }
+        None
+    }
 }
