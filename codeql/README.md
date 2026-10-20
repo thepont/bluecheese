@@ -56,9 +56,11 @@ annotations, and repeated call-site argument groups remain Java-only.
 expose public instance fields. These queries do not yet detect accessor-only
 data classes.
 
-**Inappropriate Intimacy** has a Java query for direct field reads through a
-different source-defined class. The JavaScript/TypeScript and Rust heuristics
-are not represented yet.
+**Inappropriate Intimacy** has Java, JavaScript/TypeScript, and Rust queries
+for direct reads of source-defined fields through a different source type. The
+JavaScript/TypeScript query matches property names to field declarations, so
+same-named fields on unrelated types can be over-counted; alias and indirect
+access patterns are not covered.
 
 **Middle Man** has a Java query for classes where at least half of the methods
 are single-statement delegations through a field to another source-defined

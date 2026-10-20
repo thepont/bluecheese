@@ -1,0 +1,1 @@
+| InappropriateIntimacy.ts:7:19:7:35 | this.other.secret | This method reads a field from another source class. |

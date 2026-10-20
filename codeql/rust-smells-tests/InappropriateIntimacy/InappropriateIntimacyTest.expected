@@ -1,0 +1,1 @@
+| InappropriateIntimacy.rs:10:34:10:50 | ... .secret | This method reads a field from another source struct. |
