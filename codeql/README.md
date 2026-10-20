@@ -5,12 +5,15 @@ packs for running those rules in GitHub code scanning and focused query tests.
 
 ## Current coverage
 
-The current CodeQL port covers **Long Parameter List** in Rust, Java, JavaScript,
-and TypeScript (TypeScript uses CodeQL's JavaScript extractor). The Java and
-JavaScript/TypeScript versions use the same method threshold as BlueCheese;
-constructors have the Java-specific threshold. The Rust version reports free
-functions, trait declarations, and inherent methods, while excluding trait
-implementations.
+The current CodeQL port covers **Long Parameter List** and **Long Method** in
+Rust, Java, JavaScript, and TypeScript (TypeScript uses CodeQL's JavaScript
+extractor). Long Parameter List uses the BlueCheese parameter limits. The Rust
+version reports free functions, trait declarations, and inherent methods,
+while excluding trait implementations. Long Method uses the same configured
+size and complexity thresholds. Its CodeQL metrics are AST-based: Rust's
+statement count mirrors the existing adapter; Java and JavaScript use their
+language libraries' complexity metrics, so metric-level parity on edge cases
+remains to be checked.
 
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
