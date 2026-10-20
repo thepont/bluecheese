@@ -430,6 +430,11 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         .iter()
         .filter_map(|ty| rust::RUST.type_name(file.at(*ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
+    let local_owner_types = descendants(file.root())
+        .into_iter()
+        .filter(|node| matches!(node.kind(), "struct_item" | "enum_item" | "union_item"))
+        .filter_map(|ty| rust::RUST.type_name(file.at(ty)).map(str::to_owned))
+        .collect::<BTreeSet<_>>();
     let local_traits = declarations
         .iter()
         .filter(|ty| ty.kind() == "trait_item")
@@ -495,7 +500,7 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
     findings.extend(rust_completion_pipeline_findings(
         file,
         &imported,
-        &local_types,
+        &local_owner_types,
     ));
     findings
 }
@@ -506,6 +511,7 @@ fn rust_completion_pipeline_findings(
     local_types: &BTreeSet<String>,
 ) -> Vec<Finding> {
     let mut groups = ExtensionGroups::new();
+    let mut candidates = Vec::new();
     for implementation in descendants(file.root())
         .into_iter()
         .filter(|node| node.kind() == "impl_item" && node.child_by_field_name("trait").is_none())
@@ -522,21 +528,37 @@ fn rust_completion_pipeline_findings(
         if !local_types.contains(&owner_name) {
             continue;
         }
+        let owner_name = rust_module_path(file, implementation)
+            .into_iter()
+            .chain(std::iter::once(owner_name))
+            .collect::<Vec<_>>()
+            .join("::");
         for method in direct_rust_functions(body) {
-            let Some(method_body) = method.child_by_field_name("body") else {
-                continue;
-            };
-            let Some((client_type, shape)) =
-                rust_completion_pipeline_shape(file, method, method_body, imported)
-            else {
-                continue;
-            };
-            groups
-                .entry((client_type, shape))
-                .or_default()
-                .entry(owner_name.clone())
-                .or_insert(method.start_position().row + 1);
+            candidates.push((owner_name.clone(), method));
         }
+    }
+    for function in descendants(file.root()).into_iter().filter(|node| {
+        node.kind() == "function_item" && !rust_function_belongs_to_impl_or_trait(*node)
+    }) {
+        if let Some(owner_name) = rust_free_function_owner(file, function) {
+            candidates.push((owner_name, function));
+        }
+    }
+
+    for (owner_name, function) in candidates {
+        let Some(body) = function.child_by_field_name("body") else {
+            continue;
+        };
+        let Some((client_type, shape)) =
+            rust_completion_pipeline_shape(file, function, body, imported)
+        else {
+            continue;
+        };
+        groups
+            .entry((client_type, shape))
+            .or_default()
+            .entry(owner_name)
+            .or_insert(function.start_position().row + 1);
     }
 
     repeated_extension_owners(groups)
@@ -553,6 +575,40 @@ fn rust_completion_pipeline_findings(
             ),
         })
         .collect()
+}
+
+fn rust_function_belongs_to_impl_or_trait(function: Node<'_>) -> bool {
+    let mut ancestor = function.parent();
+    while let Some(node) = ancestor {
+        if matches!(node.kind(), "impl_item" | "trait_item") {
+            return true;
+        }
+        ancestor = node.parent();
+    }
+    false
+}
+
+fn rust_free_function_owner(file: &SourceFile, function: Node<'_>) -> Option<String> {
+    let name = function.child_by_field_name("name")?;
+    let mut scope_names = vec![file.path.file_stem()?.to_str()?.to_owned()];
+    scope_names.extend(rust_module_path(file, function));
+    scope_names.push(file.text(name).to_owned());
+    Some(scope_names.join("::"))
+}
+
+fn rust_module_path(file: &SourceFile, node: Node<'_>) -> Vec<String> {
+    let mut ancestor = node.parent();
+    let mut modules = Vec::new();
+    while let Some(ancestor_node) = ancestor {
+        if ancestor_node.kind() == "mod_item"
+            && let Some(module_name) = ancestor_node.child_by_field_name("name")
+        {
+            modules.push(file.text(module_name).to_owned());
+        }
+        ancestor = ancestor_node.parent();
+    }
+    modules.reverse();
+    modules
 }
 
 fn rust_completion_pipeline_shape(

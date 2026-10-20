@@ -703,3 +703,63 @@ fn does_not_report_repeated_rust_lrs_pipelines_in_only_one_owner() {
             .is_empty()
     );
 }
+
+#[test]
+fn reports_repeated_rust_lrs_pipelines_in_free_functions() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::{LrsClient, Agent, Activity};\n\
+         fn dashboard_complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+             lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+         }\n\
+         fn report_completed(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+             for statement in lrs.get_statements(user, course) {\n\
+                 if statement.result().completion() { return true; }\n\
+             }\n\
+             false\n\
+         }",
+    );
+
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name.ends_with("dashboard_complete"))
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name.ends_with("report_completed"))
+    );
+}
+
+#[test]
+fn reports_repeated_rust_lrs_pipelines_inside_a_module() {
+    let file = parse(
+        "lrs_progress.rs",
+        "use vendor::{LrsClient, Agent, Activity};\n\
+         mod dashboards {\n\
+             struct Dashboard;\n\
+             impl Dashboard {\n\
+                 fn complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                     lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+                 }\n\
+             }\n\
+             struct Report;\n\
+             impl Report {\n\
+                 fn completed(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                     for statement in lrs.get_statements(user, course) {\n\
+                         if statement.result().completion() { return true; }\n\
+                     }\n\
+                     false\n\
+                 }\n\
+             }\n\
+         }",
+    );
+
+    let findings = bluecheese::detect(&[file], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 2);
+}
