@@ -115,11 +115,7 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
             model
                 .fields(ty)
                 .into_iter()
-                .filter(|field| {
-                    !has_non_java_modifier(file.text(*field), "private")
-                        && !has_non_java_modifier(file.text(*field), "protected")
-                        && !has_non_java_modifier(file.text(*field), "static")
-                })
+                .filter(|field| is_public_instance_field(file.at(*field)))
                 .filter_map(|field| {
                     field
                         .child_by_field_name("name")
@@ -150,9 +146,20 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
     })
 }
 
-fn has_non_java_modifier(text: &str, modifier: &str) -> bool {
-    text.split(|ch: char| !ch.is_alphanumeric() && ch != '_')
-        .any(|word| word == modifier)
+fn is_public_instance_field(source: crate::lang::SourceNode<'_>) -> bool {
+    let field = source.node();
+    let name = field
+        .child_by_field_name("name")
+        .or_else(|| field.child_by_field_name("property"));
+    if name.is_some_and(|name| name.kind() == "private_property_identifier") {
+        return false;
+    }
+    let mut cursor = field.walk();
+    !field.children(&mut cursor).any(|child| {
+        child.kind() == "static"
+            || (child.kind() == "accessibility_modifier"
+                && matches!(source.file().text(child), "private" | "protected"))
+    })
 }
 
 struct Accessors<'a> {
