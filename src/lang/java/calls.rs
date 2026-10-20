@@ -57,6 +57,16 @@ impl<'a> Method<'a> {
 }
 
 impl CallSite<'_> {
+    /// Nested callbacks and classes own their receiver scopes.
+    fn owns(self, access: Node<'_>) -> bool {
+        ancestor_while(
+            access,
+            |node| node.kind() == "lambda_expression" || is_type(node),
+            |node| node.kind() == "method_declaration",
+        )
+        .is_some_and(|node| node.id() == self.method.id())
+    }
+
     fn deeper(self) -> Self {
         Self {
             depth: self.depth + 1,
@@ -101,91 +111,12 @@ pub(crate) fn projection_reads<'a>(
 ) {
     let project = Project::new(files);
     for method in &project.methods {
-        let owner = &project.types[method.owner];
-        let file = owner.file;
         let expressions = JavaExpressionResolver {
             project: &project,
             site: method.site(),
         };
-        for (call, target_index) in project.resolved_calls(method.site()) {
-            let target_method = &project.methods[target_index];
-            if target_method.owner == method.owner
-                || !target_method.parameters.is_empty()
-                || !crate::lang::projections::is_getter(&target_method.name)
-            {
-                continue;
-            }
-            let Some(receiver) = call.child_by_field_name("object") else {
-                continue;
-            };
-            let target = &project.types[target_method.owner];
-            reads.record(crate::lang::projections::MemberRead {
-                usage: file.at(call),
-                consumer: file.at(method.node),
-                target: target.file.at(target.node),
-                target_name: target.qualified.clone(),
-                receiver: expressions.receiver_identity(receiver),
-                member: target_method.name.clone(),
-            });
-        }
-        for access in descendants(method.node)
-            .into_iter()
-            .filter(|node| node.kind() == "field_access")
-        {
-            // Nested callbacks and classes have their own receiver/binding scopes.
-            if ancestor_while(
-                access,
-                |node| node.kind() == "lambda_expression" || is_type(node),
-                |node| node.kind() == "method_declaration",
-            )
-            .is_none_or(|node| node.id() != method.node.id())
-            {
-                continue;
-            }
-            let Some(object) = access.child_by_field_name("object") else {
-                continue;
-            };
-            let Some(field) = access.child_by_field_name("field") else {
-                continue;
-            };
-            let Some(receiver_type) = project.expression_type(method.site(), object) else {
-                continue;
-            };
-            let resolver = project.type_resolver();
-            let Some(receiver_owner) = resolver.type_index(&receiver_type) else {
-                continue;
-            };
-            let Some(declaration) = resolver.field_definition(receiver_owner, file.text(field))
-            else {
-                continue;
-            };
-            // Constants describe a domain's vocabulary, not instance metadata.
-            let target = &project.types[declaration.owner];
-            if declaration.owner == method.owner
-                || named_children(declaration.node).iter().any(|node| {
-                    node.kind() == "modifiers"
-                        && target
-                            .file
-                            .text(*node)
-                            .split_whitespace()
-                            .any(|word| word == "static")
-                })
-            {
-                continue;
-            }
-            let read = crate::lang::projections::MemberRead {
-                usage: file.at(access),
-                consumer: file.at(method.node),
-                target: target.file.at(target.node),
-                target_name: target.qualified.clone(),
-                receiver: expressions.receiver_identity(object),
-                member: file.text(field).into(),
-            };
-            if let Some(value) = project.case_value(method.site(), access, declaration.owner) {
-                reads.record_case(read.clone(), value);
-            }
-            reads.record(read);
-        }
+        expressions.getter_reads(reads);
+        expressions.metadata_reads(reads);
     }
 }
 
@@ -214,12 +145,11 @@ impl<'a> Project<'a> {
         let name = file.text(value.child_by_field_name("field")?);
         let field = resolver.field_definition(owner, name)?;
         let owner_type = &self.types[field.owner];
-        let modifiers = named_children(field.node)
-            .into_iter()
-            .find(|node| node.kind() == "modifiers")?;
-        let words: BTreeSet<_> = owner_type.file.text(modifiers).split_whitespace().collect();
-        (field.owner == target && words.contains("static") && words.contains("final"))
-            .then(|| name.into())
+        let declaration = owner_type.file.at(field.node);
+        (field.owner == target
+            && super::has_modifier(declaration, "static")
+            && super::has_modifier(declaration, "final"))
+        .then(|| name.into())
     }
 
     fn resolved_calls(&self, site: CallSite<'a>) -> Vec<(Node<'a>, usize)> {
@@ -404,6 +334,79 @@ struct JavaExpressionResolver<'query, 'source> {
 }
 
 impl<'a> JavaExpressionResolver<'_, 'a> {
+    fn getter_reads(&self, reads: &mut crate::lang::projections::Reads<'a>) {
+        let file = self.project.types[self.site.owner].file;
+        for (call, index) in self.project.resolved_calls(self.site) {
+            let method = &self.project.methods[index];
+            if method.owner == self.site.owner
+                || !method.parameters.is_empty()
+                || !crate::lang::projections::is_getter(&method.name)
+            {
+                continue;
+            }
+            let Some(receiver) = call.child_by_field_name("object") else {
+                continue;
+            };
+            let target = &self.project.types[method.owner];
+            reads.record(crate::lang::projections::MemberRead {
+                usage: file.at(call),
+                consumer: file.at(self.site.method),
+                target: target.file.at(target.node),
+                target_name: target.qualified.clone(),
+                receiver: self.receiver_identity(receiver),
+                member: method.name.clone(),
+            });
+        }
+    }
+
+    fn metadata_reads(&self, reads: &mut crate::lang::projections::Reads<'a>) {
+        for access in descendants(self.site.method)
+            .into_iter()
+            .filter(|node| node.kind() == "field_access")
+        {
+            if !self.site.owns(access) {
+                continue;
+            }
+            let Some((read, target)) = self.metadata_read(access) else {
+                continue;
+            };
+            if let Some(value) = self.project.case_value(self.site, access, target) {
+                reads.record_case(read.clone(), value);
+            }
+            reads.record(read);
+        }
+    }
+
+    fn metadata_read(
+        &self,
+        access: Node<'a>,
+    ) -> Option<(crate::lang::projections::MemberRead<'a>, usize)> {
+        let file = self.project.types[self.site.owner].file;
+        let object = access.child_by_field_name("object")?;
+        let field = access.child_by_field_name("field")?;
+        let receiver = self.expression_type(object)?;
+        let resolver = self.project.type_resolver();
+        let owner = resolver.type_index(&receiver)?;
+        let declaration = resolver.field_definition(owner, file.text(field))?;
+        let target = &self.project.types[declaration.owner];
+        if declaration.owner == self.site.owner
+            || super::has_modifier(target.file.at(declaration.node), "static")
+        {
+            return None;
+        }
+        Some((
+            crate::lang::projections::MemberRead {
+                usage: file.at(access),
+                consumer: file.at(self.site.method),
+                target: target.file.at(target.node),
+                target_name: target.qualified.clone(),
+                receiver: self.receiver_identity(object),
+                member: file.text(field).into(),
+            },
+            declaration.owner,
+        ))
+    }
+
     fn receiver_identity(&self, expression: Node<'a>) -> String {
         let file = self.project.types[self.site.owner].file;
         let root = descendants(expression)
