@@ -141,7 +141,8 @@ impl LanguageModel for RustModel {
         )
     }
 
-    fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn methods<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
+        let SourceNode { file, node: ty } = source;
         let mut out = Vec::new();
 
         // Free functions: direct children of the file.
@@ -197,7 +198,11 @@ impl LanguageModel for RustModel {
         out
     }
 
-    fn constructors<'a>(&self, _file: &SourceFile, _ty: Node<'a>) -> Vec<Node<'a>> {
+    fn constructors<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
+        let SourceNode {
+            file: _file,
+            node: _ty,
+        } = source;
         // Rust has no constructors: `fn new` is an ordinary function returning
         // the type, and nothing in the grammar marks it as special. A type
         // therefore has none, and the constructor threshold never applies.

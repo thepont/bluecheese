@@ -56,7 +56,7 @@ impl ClassAnalysis<'_> {
             return false;
         }
         let method_fields = java::JAVA
-            .methods(self.file, self.class)
+            .methods(self.file.at(self.class))
             .into_iter()
             .map(|method| {
                 descendants(method)
@@ -94,7 +94,7 @@ impl ClassAnalysis<'_> {
 
     fn same_field_drives_multiple_methods(&self) -> bool {
         let mut method_counts = std::collections::BTreeMap::<String, usize>::new();
-        for method in java::JAVA.methods(self.file, self.class) {
+        for method in java::JAVA.methods(self.file.at(self.class)) {
             let fields = descendants(method)
                 .into_iter()
                 .filter(|node| node.kind() == "if_statement")
@@ -119,7 +119,7 @@ impl ClassAnalysis<'_> {
     }
 
     fn has_repeated_action_or_switches(&self) -> bool {
-        let methods = java::JAVA.methods(self.file, self.class);
+        let methods = java::JAVA.methods(self.file.at(self.class));
         let switch_methods = methods
             .iter()
             .filter(|method| {

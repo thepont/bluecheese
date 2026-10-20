@@ -30,7 +30,7 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
             let Some(owner_name) = model.type_name(file.at(ty)).map(str::to_owned) else {
                 continue;
             };
-            for node in model.methods(file, ty) {
+            for node in model.methods(file.at(ty)) {
                 let Some(name) = node.child_by_field_name("name").map(|node| file.text(node))
                 else {
                     continue;

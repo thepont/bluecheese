@@ -110,7 +110,8 @@ impl LanguageModel for EcmaModel {
                 "number" | "string" | "boolean" | "bigint" | "symbol"
             )
     }
-    fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn methods<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
+        let SourceNode { file, node: ty } = source;
         descendants(ty)
             .into_iter()
             .filter(|node| is_function(*node))
@@ -118,7 +119,8 @@ impl LanguageModel for EcmaModel {
             .filter(|node| owner(*node).id() == ty.id() && enclosing_function(*node).is_none())
             .collect()
     }
-    fn constructors<'a>(&self, file: &SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn constructors<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
+        let SourceNode { file, node: ty } = source;
         descendants(ty)
             .into_iter()
             .filter(|node| node.kind() == "method_definition")

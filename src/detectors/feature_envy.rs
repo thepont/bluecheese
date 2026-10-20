@@ -31,7 +31,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 return Vec::new();
             };
             java::JAVA
-                .methods(file, ty)
+                .methods(file.at(ty))
                 .into_iter()
                 .filter(|method| is_envying(file, *method))
                 .map(|method| Finding {

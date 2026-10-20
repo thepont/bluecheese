@@ -173,13 +173,13 @@ pub trait LanguageModel {
     ///
     /// The file is passed because a language may not keep methods inside the
     /// type declaration (Rust puts them in `impl` blocks elsewhere in the file).
-    fn methods<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>>;
+    fn methods<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>>;
 
     /// Constructors belonging to `ty`. A constructor is not a method, and the
     /// reference tool reads them separately, so this is a separate
     /// relationship and not a filter over [`LanguageModel::methods`]. A
     /// language without constructors returns nothing.
-    fn constructors<'a>(&self, file: &SourceFile, ty: Node<'a>) -> Vec<Node<'a>>;
+    fn constructors<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>>;
 
     /// How many parameters a caller must supply to this method or constructor.
     ///

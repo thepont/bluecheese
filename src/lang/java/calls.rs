@@ -146,7 +146,7 @@ impl<'a> Project<'a> {
             methods: Vec::new(),
         };
         for (owner, ty) in project.types.iter().enumerate() {
-            for node in model_for(LanguageId::Java).methods(ty.file, ty.node) {
+            for node in model_for(LanguageId::Java).methods(ty.file.at(ty.node)) {
                 let Some(name) = node.child_by_field_name("name") else {
                     continue;
                 };

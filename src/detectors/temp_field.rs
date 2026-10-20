@@ -34,8 +34,8 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .into_iter()
         .filter(|ty| ty.kind() == "class_declaration")
         .filter_map(|ty| {
-            let methods = java::JAVA.methods(file, ty);
-            let constructors = java::JAVA.constructors(file, ty);
+            let methods = java::JAVA.methods(file.at(ty));
+            let constructors = java::JAVA.constructors(file.at(ty));
             let declared_fields = fields(file, ty);
             let usage = FieldUsage {
                 file,

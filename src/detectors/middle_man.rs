@@ -78,7 +78,7 @@ fn non_java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationSta
     if fields.is_empty() {
         return None;
     }
-    let methods = model_for(file.language).methods(file, ty);
+    let methods = model_for(file.language).methods(file.at(ty));
     if methods.is_empty() {
         return None;
     }
@@ -152,7 +152,7 @@ fn non_java_field_types(
             );
         }
     }
-    for constructor in model_for(file.language).constructors(file, ty) {
+    for constructor in model_for(file.language).constructors(file.at(ty)) {
         for assignment in descendants(constructor)
             .into_iter()
             .filter(|node| node.kind() == "assignment_expression")
@@ -279,7 +279,7 @@ fn file_findings(analysis: &Analysis<'_>, read_stats: StatsReader) -> Vec<Findin
 }
 
 fn java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationStats> {
-    let methods = model_for(LanguageId::Java).methods(analysis.file, ty);
+    let methods = model_for(LanguageId::Java).methods(analysis.file.at(ty));
     if methods.is_empty() {
         return None;
     }

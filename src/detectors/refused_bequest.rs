@@ -86,7 +86,7 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
             }) else {
                 continue;
             };
-            let trait_methods = model.methods(file, trait_type);
+            let trait_methods = model.methods(file.at(trait_type));
             let implementation_methods: Vec<_> = descendants(implementation)
                 .into_iter()
                 .filter(|node| node.kind() == "function_item")
@@ -153,8 +153,8 @@ impl EcmaClass<'_> {
 
     fn refusal_lines(&self, parent: &Self) -> Vec<usize> {
         let model = model_for(self.file.language);
-        let child_methods = model.methods(self.file, self.node);
-        let parent_methods = model.methods(parent.file, parent.node);
+        let child_methods = model.methods(self.file.at(self.node));
+        let parent_methods = model.methods(parent.file.at(parent.node));
         let mut lines: Vec<_> = child_methods
             .into_iter()
             .filter(|method| self.refuses(*method, parent, &parent_methods))
@@ -263,7 +263,7 @@ fn finding_for_type(project: &Project<'_>, index: usize) -> Option<Finding> {
     if parents.is_empty() {
         return None;
     }
-    let methods = model_for(LanguageId::Java).methods(ty.file, ty.node);
+    let methods = model_for(LanguageId::Java).methods(ty.file.at(ty.node));
     let context = ChildContext {
         project,
         child: index,
@@ -393,7 +393,7 @@ impl<'a> Project<'a> {
     }
 
     fn methods(&self, index: usize) -> Vec<Node<'a>> {
-        model_for(LanguageId::Java).methods(self.types[index].file, self.types[index].node)
+        model_for(LanguageId::Java).methods(self.types[index].file.at(self.types[index].node))
     }
 }
 

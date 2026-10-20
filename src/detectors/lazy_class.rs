@@ -25,7 +25,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .filter(|ty| ty.kind() == "class_declaration")
         .filter(|ty| has_no_fields(*ty))
         .filter(|ty| {
-            let methods = java::JAVA.methods(file, *ty);
+            let methods = java::JAVA.methods(file.at(*ty));
             methods.len() == 1 && is_forwarding_method(methods[0])
         })
         .filter_map(|ty| {

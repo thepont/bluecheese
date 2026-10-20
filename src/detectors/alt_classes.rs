@@ -28,7 +28,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .filter_map(|ty| {
             let name = java::JAVA.type_name(file.at(ty))?.to_owned();
             let methods = java::JAVA
-                .methods(file, ty)
+                .methods(file.at(ty))
                 .into_iter()
                 .filter_map(|method| {
                     method

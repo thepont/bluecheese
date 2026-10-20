@@ -94,11 +94,19 @@ impl LanguageModel for JavaModel {
         types::simple_name(file, ty)
     }
 
-    fn methods<'a>(&self, _file: &'a SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn methods<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
+        let SourceNode {
+            file: _file,
+            node: ty,
+        } = source;
         types::methods(ty)
     }
 
-    fn constructors<'a>(&self, _file: &SourceFile, ty: Node<'a>) -> Vec<Node<'a>> {
+    fn constructors<'a>(&self, source: SourceNode<'a>) -> Vec<Node<'a>> {
+        let SourceNode {
+            file: _file,
+            node: ty,
+        } = source;
         types::constructors(ty)
     }
 

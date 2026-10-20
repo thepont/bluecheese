@@ -32,14 +32,14 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
 
             let mut lines = Vec::new();
 
-            for method in model.methods(file, ty) {
+            for method in model.methods(file.at(ty)) {
                 if model.parameters(method) > MAX_METHOD_PARAMS && !model.is_override(file, method)
                 {
                     lines.push(model.decl_line(method));
                 }
             }
 
-            for constructor in model.constructors(file, ty) {
+            for constructor in model.constructors(file.at(ty)) {
                 if model.parameters(constructor) > MAX_CONSTRUCTOR_PARAMS {
                     lines.push(model.decl_line(constructor));
                 }

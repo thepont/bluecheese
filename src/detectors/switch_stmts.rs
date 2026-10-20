@@ -25,7 +25,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             };
 
             let mut lines = Vec::new();
-            for method in model.methods(file, ty) {
+            for method in model.methods(file.at(ty)) {
                 for node in descendants(method) {
                     if is_switch(file, node.kind()) {
                         lines.push(file.line(node));

@@ -51,7 +51,7 @@ fn non_java_findings(file: &SourceFile) -> Vec<Finding> {
             let name = model.type_name(file.at(ty))?;
             let field_names = non_java_fields(file, ty);
             let methods: Vec<_> = model
-                .methods(file, ty)
+                .methods(file.at(ty))
                 .into_iter()
                 .filter(|method| model.body(*method).is_some())
                 .collect();
@@ -126,7 +126,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 return None;
             }
             let fields = model.fields(ty);
-            let all_methods = model.methods(file, ty);
+            let all_methods = model.methods(file.at(ty));
             if all_methods.is_empty() {
                 return None;
             }
@@ -141,7 +141,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                     .collect(),
             };
             let wmc: usize = model
-                .methods(file, ty)
+                .methods(file.at(ty))
                 .into_iter()
                 .filter(|m| m.child_by_field_name("body").is_some())
                 .map(|m| model.complexity(file, m))

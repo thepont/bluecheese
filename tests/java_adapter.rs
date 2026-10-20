@@ -40,7 +40,7 @@ fn methods_by_type(file: &SourceFile) -> BTreeMap<String, Vec<String>> {
             .expect("type has a name")
             .to_string();
         let methods = model
-            .methods(file, ty)
+            .methods(file.at(ty))
             .into_iter()
             .map(|method| {
                 let name = method
@@ -67,7 +67,7 @@ fn methods_of_declaration(file: &SourceFile, type_name: &str) -> Vec<String> {
         })
         .unwrap_or_else(|| panic!("no declaration named {type_name}"));
     model
-        .methods(file, declaration)
+        .methods(file.at(declaration))
         .into_iter()
         .map(|method| {
             let name = method
@@ -82,7 +82,7 @@ fn methods_of_declaration(file: &SourceFile, type_name: &str) -> Vec<String> {
 fn metrics_of(file: &SourceFile, method_name: &str) -> (usize, usize) {
     let model = model_for(file.language);
     for ty in model.types(file) {
-        for method in model.methods(file, ty) {
+        for method in model.methods(file.at(ty)) {
             let name = method
                 .child_by_field_name("name")
                 .expect("method has a name");

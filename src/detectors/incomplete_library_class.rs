@@ -49,7 +49,7 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         let Some(owner_name) = java::JAVA.type_name(file.at(ty)).map(str::to_owned) else {
             continue;
         };
-        for method in java::JAVA.methods(file, ty) {
+        for method in java::JAVA.methods(file.at(ty)) {
             let (Some((type_name, receiver)), Some(body)) = (
                 extension_parameter(file, method),
                 method.child_by_field_name("body"),

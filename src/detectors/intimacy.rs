@@ -133,7 +133,7 @@ impl<'a> NonJavaAnalysis<'a> {
     fn finding(&self, owner: &NonJavaType<'_>) -> Option<Finding> {
         let model = model_for(owner.file.language);
         let mut lines = Vec::new();
-        for method in model.methods(owner.file, owner.node) {
+        for method in model.methods(owner.file.at(owner.node)) {
             let vars = non_java_variable_types(owner, method);
             for access in descendants(method) {
                 if self.is_external_access(owner, &vars, access) {
@@ -595,8 +595,9 @@ impl<'a> JavaExpressionReader<'_, 'a> {
             .resolve_type(self.context.owner, &target_type)?;
         model_for(LanguageId::Java)
             .methods(
-                self.analysis.types[target_index].file,
-                self.analysis.types[target_index].node,
+                self.analysis.types[target_index]
+                    .file
+                    .at(self.analysis.types[target_index].node),
             )
             .into_iter()
             .find_map(|candidate| {

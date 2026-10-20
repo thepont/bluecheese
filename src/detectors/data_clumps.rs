@@ -55,7 +55,7 @@ impl ParameterAnalysis<'_> {
     fn repeated_parameter_lines(&self) -> BTreeSet<usize> {
         let model = model_for(self.file.language);
         let groups: Vec<_> = model
-            .methods(self.file, self.ty)
+            .methods(self.file.at(self.ty))
             .iter()
             .map(|method| {
                 (
@@ -158,7 +158,7 @@ fn declared_methods(file: &SourceFile) -> BTreeSet<String> {
     model_for(file.language)
         .types(file)
         .into_iter()
-        .flat_map(|ty| model_for(file.language).methods(file, ty))
+        .flat_map(|ty| model_for(file.language).methods(file.at(ty)))
         .filter_map(|method| method.child_by_field_name("name"))
         .map(|name| file.text(name).to_string())
         .collect()

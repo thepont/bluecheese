@@ -17,7 +17,7 @@ fn main() {
             let Some(class_name) = model.type_name(file.at(ty)) else {
                 continue;
             };
-            for method in model.methods(file, ty) {
+            for method in model.methods(file.at(ty)) {
                 let Some(body) = model.body(method) else {
                     continue;
                 };

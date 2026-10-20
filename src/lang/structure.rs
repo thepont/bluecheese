@@ -54,7 +54,7 @@ pub fn functions(files: &[SourceFile]) -> Vec<Function> {
             let Some(class_name) = model.type_name(file.at(ty)) else {
                 continue;
             };
-            for method in model.methods(file, ty) {
+            for method in model.methods(file.at(ty)) {
                 if let Some(fingerprint) = Normalizer::function(file, method) {
                     functions.push(Function {
                         fingerprint,

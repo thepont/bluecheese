@@ -46,7 +46,7 @@ fn maps_impl_blocks_and_free_functions() {
             .expect("type has a name")
             .to_string();
         let methods = model
-            .methods(file, ty)
+            .methods(file.at(ty))
             .into_iter()
             .map(|m| {
                 let name = m.child_by_field_name("name").expect("method has a name");
@@ -86,7 +86,7 @@ fn wildcard_match_arm_is_not_a_decision() {
 
     let mut classified = None;
     for ty in model.types(file) {
-        for method in model.methods(file, ty) {
+        for method in model.methods(file.at(ty)) {
             let name = method
                 .child_by_field_name("name")
                 .expect("method has a name");
@@ -165,7 +165,7 @@ fn a_trait_default_method_belongs_to_the_trait() {
         .find(|ty| model.type_name(features.at(*ty)) == Some("Volume"))
         .expect("Volume is a type");
     let names: Vec<&str> = model
-        .methods(&features, volume)
+        .methods(features.at(volume))
         .into_iter()
         .map(|method| features.text(method.child_by_field_name("name").expect("a name")))
         .collect();
@@ -215,7 +215,7 @@ fn logical_operators_are_decisions_but_bitwise_is_not() {
 
     let mut complexity = None;
     for ty in model.types(&features) {
-        for method in model.methods(&features, ty) {
+        for method in model.methods(features.at(ty)) {
             let name = method.child_by_field_name("name").expect("a name");
             if features.text(name) == "fits" {
                 complexity = Some(model.complexity(&features, method));
@@ -236,7 +236,7 @@ fn an_impl_without_a_body_yields_no_methods() {
     let model = model_for(broken.language);
 
     for ty in model.types(&broken) {
-        for method in model.methods(&broken, ty) {
+        for method in model.methods(broken.at(ty)) {
             let name = method.child_by_field_name("name").expect("a name");
             assert_ne!(broken.text(name), "anything", "there is nothing in there");
         }

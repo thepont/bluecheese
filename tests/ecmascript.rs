@@ -215,8 +215,8 @@ fn adapter_distinguishes_constructors_from_ordinary_methods() {
         .into_iter()
         .find(|ty| model.type_name(file.at(*ty)) == Some("Example"))
         .expect("class");
-    assert_eq!(model.constructors(&file, class).len(), 1);
-    assert_eq!(model.methods(&file, class).len(), 1);
+    assert_eq!(model.constructors(file.at(class)).len(), 1);
+    assert_eq!(model.methods(file.at(class)).len(), 1);
     let findings = bluecheese::detect(&[file], "long-params").expect("long parameters");
     assert_eq!(findings.len(), 1);
 }

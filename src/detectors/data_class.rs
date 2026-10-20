@@ -37,7 +37,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 return None;
             }
 
-            let constructors = model.constructors(file, ty);
+            let constructors = model.constructors(file.at(ty));
             if !constructors.is_empty()
                 && constructors
                     .iter()
@@ -47,7 +47,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             }
 
             let fields = model.fields(ty);
-            let methods = model.methods(file, ty);
+            let methods = model.methods(file.at(ty));
             let public_mutable_fields = fields
                 .iter()
                 .filter(|field| {
@@ -132,7 +132,7 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
     if fields.is_empty() {
         return None;
     }
-    let methods = model.methods(file, ty);
+    let methods = model.methods(file.at(ty));
     let accessors = Accessors {
         file,
         fields: &fields,
