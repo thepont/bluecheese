@@ -69,7 +69,7 @@ fields, interface contracts and cyclic input. Java parity remains unchanged.
 Reproduce the controlled checks:
 
 ```sh
-cargo run --locked -- -f tests/fixtures/multilingual -s shotgun
+cargo run --locked -- -f tests/fixtures/multilingual -s shotgun --source-only
 cargo run --locked -- -f tests/fixtures/multilingual -s dup-code
 cargo test --locked --test ecmascript --test cross_language_duplicates
 ```
@@ -349,8 +349,8 @@ git -C /tmp/shotgun-tomcat log --no-merges --format=fuller --stat -- \
   java/org/apache/coyote/AsyncStateMachine.java
 git -C /tmp/shotgun-tomcat show cf4fae533cb303c97031b68ec652d6624207df21
 git -C /tmp/shotgun-tomcat show c1dc59e99108f24b041d37fb4de8ae5da75e135c
-target/debug/bluecheese -f /tmp/shotgun-tomcat/java -s shotgun
-target/debug/bluecheese -f tests/fixtures/smellbench/main/java/shotgun -s shotgun
+target/debug/bluecheese -f /tmp/shotgun-tomcat/java -s shotgun --source-only
+target/debug/bluecheese -f tests/fixtures/smellbench/main/java/shotgun -s shotgun --source-only
 
 git clone https://github.com/team-propra/roommate.git /tmp/shotgun-roommate
 git -C /tmp/shotgun-roommate show 3f1348ec8bd79dfaabd2ecb17d70059722271dc0
@@ -358,7 +358,7 @@ mkdir -p /tmp/shotgun-roommate-before
 git -C /tmp/shotgun-roommate archive \
   604bb07ea52692bd84bdf330c5365e77f45c5d59 src/main/java |
   tar -x -C /tmp/shotgun-roommate-before
-target/debug/bluecheese -f /tmp/shotgun-roommate-before -s shotgun
+target/debug/bluecheese -f /tmp/shotgun-roommate-before -s shotgun --source-only
 
 git clone https://github.com/guidesmiths/clean-code-school.git /tmp/shotgun-school
 git -C /tmp/shotgun-school show e88f760414faac08e1f91b211c37f4daad4b4211
