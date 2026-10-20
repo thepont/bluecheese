@@ -15,6 +15,7 @@ pub const MAX_IF_CHAIN_LENGTH: usize = 2;
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     let mut findings = Vec::new();
+    let dispatch = crate::lang::rust_dispatch::EnumDispatch::new(files);
 
     for file in files {
         let model = model_for(file.language);
@@ -27,7 +28,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             let mut lines = Vec::new();
             for method in model.methods(file.at(ty)) {
                 for node in descendants(method) {
-                    if is_switch(file, node.kind()) {
+                    if is_switch(file, node.kind()) && !dispatch.is_forwarding(file.at(node)) {
                         lines.push(file.line(node));
                     } else if file.language == crate::lang::LanguageId::Java
                         && node.kind() == "if_statement"

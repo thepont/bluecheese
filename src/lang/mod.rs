@@ -17,6 +17,7 @@ pub mod ecmascript;
 pub mod java;
 pub mod rust;
 pub mod rust_calls;
+pub(crate) mod rust_dispatch;
 pub mod structure;
 
 use std::collections::hash_map::Entry;
