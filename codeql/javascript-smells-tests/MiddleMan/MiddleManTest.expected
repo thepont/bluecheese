@@ -1,0 +1,1 @@
+| MiddleMan.js:6:1:10:1 | class F ... (); }\\n} | At least half of this class's methods delegate through a source-defined field. |

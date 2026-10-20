@@ -62,9 +62,10 @@ JavaScript/TypeScript query matches property names to field declarations, so
 same-named fields on unrelated types can be over-counted; alias and indirect
 access patterns are not covered.
 
-**Middle Man** has Java and Rust queries for types where at least half of the
-methods delegate through a field to another source-defined type. Rust matches
-field type text to source struct names; JavaScript/TypeScript is not included.
+**Middle Man** has Java, Rust, and JavaScript/TypeScript queries for types where
+at least half of the methods delegate through a field to another source-defined
+type. Rust matches field type text to source struct names; JavaScript/TypeScript
+only recognizes fields initialized with `new` expressions.
 
 **Refused Bequest** has Java, Rust, and JavaScript/TypeScript queries. Java
 reports explicit `@Override` methods with empty `void` bodies or
