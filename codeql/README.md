@@ -50,6 +50,10 @@ data classes.
 different source-defined class. The JavaScript/TypeScript and Rust heuristics
 are not represented yet.
 
+**Middle Man** has a Java query for classes where at least half of the methods
+are single-statement delegations through a field to another source-defined
+class. The Rust and JavaScript/TypeScript variants are not included yet.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
