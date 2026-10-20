@@ -1,0 +1,2 @@
+| RefusedBequest.java:5:7:5:18 | EmptyRefusal | This override refuses the inherited behavior. |
+| RefusedBequest.java:13:7:13:18 | ThrowRefusal | This override refuses the inherited behavior. |

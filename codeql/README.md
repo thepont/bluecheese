@@ -54,6 +54,12 @@ are not represented yet.
 are single-statement delegations through a field to another source-defined
 class. The Rust and JavaScript/TypeScript variants are not included yet.
 
+**Refused Bequest** has a Java query for explicit `@Override` methods that
+replace inherited behavior with an empty `void` body or an
+`UnsupportedOperation` exception. It does not yet cover implicit refusal
+through unimplemented parent methods, JavaScript/TypeScript, or Rust trait
+stubs.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need
