@@ -1,0 +1,5 @@
+name: bluecheese/javascript-smells
+version: 0.0.1
+dependencies:
+  codeql/javascript-all: ^2.6.14
+extractor: javascript

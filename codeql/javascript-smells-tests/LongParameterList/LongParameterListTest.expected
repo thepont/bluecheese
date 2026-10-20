@@ -1,0 +1,4 @@
+| JavaScriptLongParameterList.js:3:10:3:24 | (a, b, c, d) {} | This function exceeds BlueCheese's parameter limit. |
+| JavaScriptLongParameterList.js:5:25:5:45 | (a, b,  ... , f) {} | This function exceeds BlueCheese's parameter limit. |
+| JavaScriptLongParameterList.js:8:1:8:36 | functio ... , d) {} | This function exceeds BlueCheese's parameter limit. |
+| LongParameterList.ts:3:3:3:62 | tooMany ... void {} | This function exceeds BlueCheese's parameter limit. |

@@ -1,0 +1,2 @@
+| LongParameterList.java:3:8:3:14 | tooMany | This callable exceeds BlueCheese's parameter limit. |
+| LongParameterList.java:6:3:6:19 | LongParameterList | This callable exceeds BlueCheese's parameter limit. |

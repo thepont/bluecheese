@@ -1,5 +1,9 @@
 /target
 
+# CodeQL query test extraction databases and their Cargo build artifacts.
+/codeql/**/*.testproj/
+/codeql/**/target/
+
 
 # Added by cargo
 #

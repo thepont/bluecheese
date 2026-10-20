@@ -1,0 +1,6 @@
+name: bluecheese/java-smells-tests
+version: 0.0.1
+dependencies:
+  bluecheese/java-smells: 0.0.1
+  codeql/java-all: ^9.3.2
+extractor: java

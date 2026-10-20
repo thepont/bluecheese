@@ -1,0 +1,3 @@
+| LongParameterList.rs:2:5:2:55 | fn declared | This function has more than 3 parameters. |
+| LongParameterList.rs:10:5:10:59 | fn over_limit | This function has more than 3 parameters. |
+| LongParameterList.rs:17:1:17:51 | fn free_function | This function has more than 3 parameters. |

@@ -20,7 +20,11 @@ use bluecheese::lang::{Project, Scope, load_project_with};
 fn shipped() -> Scope {
     Scope {
         include: Vec::new(),
-        exclude: vec!["tests/".to_string(), "reference/".to_string()],
+        exclude: vec![
+            "tests/".to_string(),
+            "reference/".to_string(),
+            "codeql/".to_string(),
+        ],
     }
 }
 
