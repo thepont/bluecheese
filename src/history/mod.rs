@@ -142,7 +142,7 @@ impl<'a> Snapshots<'a> {
             history,
             languages: files
                 .iter()
-                .map(|file| (file.rel.as_str(), file.language))
+                .map(|file| (file.rel.as_str(), file.at(file.root()).model().id()))
                 .collect(),
             revisions: BTreeMap::new(),
             blobs: BTreeMap::new(),

@@ -29,7 +29,7 @@ impl Symbols {
         let mut positions = BTreeMap::new();
         for node in descendants(file.root())
             .into_iter()
-            .filter(|node| is_function(file.language, *node))
+            .filter(|node| is_function(file.at(*node).model().id(), *node))
         {
             let Some(body) = node.child_by_field_name("body") else {
                 continue;
@@ -102,7 +102,7 @@ fn symbol_key(source: SourceNode<'_>, body: Node<'_>) -> SymbolKey {
         parent = node.parent();
     }
     let mut header = tokens(source, Some(body));
-    if ecmascript::is_ecmascript(source.file().language)
+    if ecmascript::is_ecmascript(source.model().id())
         && let Some(name) = ecmascript::function_name(source)
     {
         header.insert(0, Token("binding".to_owned(), name));
