@@ -78,9 +78,11 @@ prefixes. CodeQL resolves parent types project-wide, while this query's
 name-pairing is a simpler approximation of the source detector's greedy
 matching heuristic.
 
-**Shotgun Surgery** has a Java query for methods called by at least two
-distinct methods from at least two other classes. Rust and JavaScript/TypeScript
-are not included yet.
+**Shotgun Surgery** has Java, Rust, and JavaScript/TypeScript queries for
+methods called by at least two distinct methods from at least two other
+classes. Rust uses resolved calls and counts callers by `impl` block;
+JavaScript/TypeScript matches method names and can confuse same-named methods
+on unrelated classes.
 
 **Divergent Change** has a Java query for classes whose switch statements or
 expressions occur across at least three methods. Its repeated-action and

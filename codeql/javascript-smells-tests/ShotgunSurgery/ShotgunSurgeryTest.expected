@@ -1,0 +1,1 @@
+| ShotgunSurgery.ts:2:3:2:12 | serve() {} | This method is called by multiple methods across multiple classes. |

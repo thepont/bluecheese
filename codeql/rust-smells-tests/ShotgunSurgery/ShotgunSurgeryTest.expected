@@ -1,0 +1,1 @@
+| ShotgunSurgery.rs:4:5:4:22 | fn serve | This method is called by multiple methods across multiple impl blocks. |
