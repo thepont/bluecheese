@@ -1,0 +1,2 @@
+| IncompleteLibraryClass.java:3:7:3:22 | FirstListHelpers | This class repeats helper behavior around imported type List. |
+| IncompleteLibraryClass.java:9:7:9:23 | SecondListHelpers | This class repeats helper behavior around imported type List. |

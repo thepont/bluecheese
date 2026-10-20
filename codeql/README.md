@@ -96,6 +96,11 @@ statement and expression node-class counts and at least three statements. It
 does not preserve AST ordering or nesting, and does not cover cross-language
 duplicates.
 
+**Incomplete Library Class** has a Java query for same-file static helper
+methods that take the same imported type, call a method on that parameter, and
+have matching statement and expression node-class counts. It does not cover the
+Rust, JavaScript, or TypeScript workflows in the source detector.
+
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.
