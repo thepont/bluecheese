@@ -35,6 +35,10 @@ struct Context {
     depth: usize,
 }
 impl Context {
+    fn file_index(self, project: &Project<'_>) -> usize {
+        project.file_index(self.caller)
+    }
+
     fn deeper(self) -> Self {
         Self {
             depth: self.depth + 1,
@@ -177,8 +181,8 @@ impl<'a> Project<'a> {
         edges
     }
 
-    fn file_index(&self, context: Context) -> usize {
-        self.owners[self.methods[context.caller].owner].file
+    fn file_index(&self, caller: usize) -> usize {
+        self.owners[self.methods[caller].owner].file
     }
 
     fn local_symbol(&self, file: usize, name: &str) -> Option<Target> {
@@ -349,7 +353,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
         if self.context.depth > 24 {
             return None;
         }
-        let file = self.project.file_index(self.context);
+        let file = self.context.file_index(self.project);
         let source = self.project.files[file];
         if node.kind() == "identifier" {
             return self.identifier(node, source.text(node));
@@ -392,7 +396,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
     }
 
     fn identifier(&self, usage: Node<'a>, name: &str) -> Option<Target> {
-        let file = self.project.file_index(self.context);
+        let file = self.context.file_index(self.project);
         if let Some(binding) = (BindingQuery {
             file: self.project.files[file],
             name,
@@ -422,7 +426,7 @@ impl<'a> ExpressionResolver<'_, 'a> {
     }
 
     fn member(&self, node: Node<'a>) -> Option<Target> {
-        let file = self.project.files[self.project.file_index(self.context)];
+        let file = self.project.files[self.context.file_index(self.project)];
         let name = file.text(node.child_by_field_name("property")?);
         let receiver = self.deeper().read(node.child_by_field_name("object")?)?;
         if let Target::Namespace(module) = receiver {
