@@ -1,0 +1,2 @@
+| DuplicateCode.java:2:7:2:20 | calculateFirst | This method has the same statement and expression structure as another method in its class. |
+| DuplicateCode.java:8:7:8:21 | calculateSecond | This method has the same statement and expression structure as another method in its class. |

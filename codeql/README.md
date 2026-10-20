@@ -91,8 +91,11 @@ classes with at least two methods whose statement and expression node-class
 counts match. It ignores identifier and literal values, but does not preserve
 the exact AST ordering and nesting used by the source detector.
 
-No CodeQL query is currently provided for **Duplicate Code** or
-**Incomplete Library Class**.
+**Duplicate Code** has a Java query for same-class methods with matching
+statement and expression node-class counts and at least three statements. It
+does not preserve AST ordering or nesting, and does not cover cross-language
+duplicates.
+
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.
