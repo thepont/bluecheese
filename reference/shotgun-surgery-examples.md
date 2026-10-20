@@ -1,5 +1,16 @@
 # Public shotgun surgery examples
 
+## Historical co-change rerun
+
+The [2026-10-20 co-change evaluation](shotgun-cochange-evaluation-2026-10-20.md)
+now runs the source and history rules independently against pinned public
+examples. Source matched 0/6 focused before-change examples; history matched
+2/5 focused methods after the selected changes. These exploratory, partly
+detector-selected counts are not precision/recall. The write-up records every
+miss, a likely false positive involving editable presets, snapshot/label
+alignment problems, and default-mode source findings hiding history findings.
+Raw per-case results are in [the JSON](shotgun-cochange-results-2026-10-20.json).
+
 ## Current application reporting contract
 
 The CLI and `Project::detect` now try source evidence for `-s shotgun` first:

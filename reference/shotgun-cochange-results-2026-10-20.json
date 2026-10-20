@@ -1,0 +1,667 @@
+{
+  "date": "2026-10-20",
+  "shotgunCodeRevision": "7c567572543ee1227b8893d37d75a0aa878748be",
+  "provenance": "Shotgun, language, history and CLI code unchanged while unrelated incomplete-library-class work landed during release build. Frozen artifact SHA-256 values identify the actual executable.",
+  "artifactChecksums": [
+    "5e1eca21cbec2ead6fcfb94f77c70c13efe480261a4f72804d457e6af6efb2fd  /tmp/bluecheese-cochange-20261020/bin/bluecheese-release",
+    "6799151e76403b4b4872d027cffa7f02e24bc1f7b0e5e1acb39c2fbd9273714f  /tmp/bluecheese-cochange-20261020/bin/probe-release"
+  ],
+  "summary": {
+    "sourceTargetsMatched": 0,
+    "sourceEpisodes": 6,
+    "historyTargetsMatched": 2,
+    "historyEpisodes": 5,
+    "eventCommitIdsRetrieved": 3,
+    "defaultTargetsMatched": 0,
+    "reviewedLikelyFalsePositiveGroups": 1
+  },
+  "limitations": [
+    "Exploratory sample, not precision/recall. Three Android events belong to one related family.",
+    "Two jEdit episodes were selected from the history detector output.",
+    "All records count focused methods, not any finding in the same repository or class.",
+    "Tomcat paper snapshot and jEdit original revision/identity mismatch are excluded from headline counts."
+  ],
+  "cases": [
+    {
+      "id": "android-august",
+      "project": "android-support",
+      "commit": "2a4d8518f36346ea25a22a736453ff28f2954165",
+      "discovery": "HIST-guided Git review",
+      "target": {
+        "file": "v13/java/android/support/v13/app/FragmentPagerAdapter.java",
+        "method": "instantiateItem"
+      },
+      "beforeRevision": "481243c175651c5de0741ab9390eb10f5b024d98",
+      "afterRevision": "2a4d8518f36346ea25a22a736453ff28f2954165",
+      "beforeSource": {
+        "error": null,
+        "findings": [],
+        "languages": "45 Java",
+        "mode": "source",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-august-before",
+        "source_files": 45
+      },
+      "afterHistory": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]; body co-change candidate; commits=2a4d8518f36346ea25a22a736453ff28f2954165",
+            "className": "FragmentManagerImpl",
+            "lineNumbers": [
+              1093
+            ],
+            "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "49 Java",
+        "mode": "history",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-august",
+        "source_files": 49
+      },
+      "afterDefault": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]; body co-change candidate; commits=2a4d8518f36346ea25a22a736453ff28f2954165",
+            "className": "FragmentManagerImpl",
+            "lineNumbers": [
+              1093
+            ],
+            "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "49 Java",
+        "mode": "default",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-august",
+        "source_files": 49
+      },
+      "sourceTargetMatched": false,
+      "historyTargetMatched": false,
+      "defaultTargetMatched": false,
+      "episodeCommitRetrieved": true
+    },
+    {
+      "id": "android-october",
+      "project": "android-support",
+      "commit": "abc968f1eba800c34a4008deb43b015da5d23a5f",
+      "discovery": "HIST-guided Git review",
+      "target": {
+        "file": "v13/java/android/support/v13/app/FragmentPagerAdapter.java",
+        "method": "instantiateItem"
+      },
+      "beforeRevision": "862ffa0efd58922b8ec119bf6fa6695c316423f7",
+      "afterRevision": "abc968f1eba800c34a4008deb43b015da5d23a5f",
+      "beforeSource": {
+        "error": null,
+        "findings": [],
+        "languages": "67 Java",
+        "mode": "source",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-october-before",
+        "source_files": 67
+      },
+      "afterHistory": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]; body co-change candidate; commits=2a4d8518f36346ea25a22a736453ff28f2954165",
+            "className": "FragmentManagerImpl",
+            "lineNumbers": [
+              1125
+            ],
+            "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "68 Java",
+        "mode": "history",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-october",
+        "source_files": 68
+      },
+      "afterDefault": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]; body co-change candidate; commits=2a4d8518f36346ea25a22a736453ff28f2954165",
+            "className": "FragmentManagerImpl",
+            "lineNumbers": [
+              1125
+            ],
+            "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "68 Java",
+        "mode": "default",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-october",
+        "source_files": 68
+      },
+      "sourceTargetMatched": false,
+      "historyTargetMatched": false,
+      "defaultTargetMatched": false,
+      "episodeCommitRetrieved": false
+    },
+    {
+      "id": "android-november",
+      "project": "android-support",
+      "commit": "79398eaefea45e61d839cf4e0534f0eafee70a09",
+      "discovery": "HIST-guided Git review",
+      "target": {
+        "file": "v13/java/android/support/v13/app/FragmentPagerAdapter.java",
+        "method": "instantiateItem"
+      },
+      "beforeRevision": "6cafd27a3c89dfed10d7e226dc6168307513d4a6",
+      "afterRevision": "79398eaefea45e61d839cf4e0534f0eafee70a09",
+      "beforeSource": {
+        "error": null,
+        "findings": [],
+        "languages": "68 Java",
+        "mode": "source",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-november-before",
+        "source_files": 68
+      },
+      "afterHistory": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]; body co-change candidate; commits=2a4d8518f36346ea25a22a736453ff28f2954165",
+            "className": "FragmentManagerImpl",
+            "lineNumbers": [
+              1142
+            ],
+            "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "68 Java",
+        "mode": "history",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-november",
+        "source_files": 68
+      },
+      "afterDefault": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=2, Fan-Out=0]; body co-change candidate; commits=2a4d8518f36346ea25a22a736453ff28f2954165",
+            "className": "FragmentManagerImpl",
+            "lineNumbers": [
+              1142
+            ],
+            "relativeFilePath": "v4/java/android/support/v4/app/FragmentManager.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "68 Java",
+        "mode": "default",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/android-november",
+        "source_files": 68
+      },
+      "sourceTargetMatched": false,
+      "historyTargetMatched": false,
+      "defaultTargetMatched": false,
+      "episodeCommitRetrieved": false
+    },
+    {
+      "id": "jedit-vfs",
+      "project": "jedit",
+      "commit": "058dde7f873ecd291a3b409951d40312c58a8c43",
+      "discovery": "Selected from history-rule output; selection bias",
+      "target": {
+        "file": "gjt/sp/jedit/browser/VFSBrowser.java",
+        "method": "filesActivated"
+      },
+      "beforeRevision": "7ea901a294b7ca96e39971c919974fa4d7d4a1a6",
+      "afterRevision": "058dde7f873ecd291a3b409951d40312c58a8c43",
+      "beforeSource": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              93
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          },
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              71
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "253 Java",
+        "mode": "source",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/jedit-vfs-before/org",
+        "source_files": 253
+      },
+      "afterHistory": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=14]; body co-change candidate; commits=058dde7f873ecd291a3b409951d40312c58a8c43",
+            "className": "VFSBrowser",
+            "lineNumbers": [
+              787
+            ],
+            "relativeFilePath": "gjt/sp/jedit/browser/VFSBrowser.java",
+            "smellName": "Shotgun Surgery"
+          },
+          {
+            "additionalInfo": "Shotgun Surgery [CM=5, CC=5, Fan-Out=1]; body co-change candidate; commits=7c30ffccce439b4e5f5c8cf6e93d8a12c5b91a20",
+            "className": "JEditTextArea",
+            "lineNumbers": [
+              1554
+            ],
+            "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "254 Java",
+        "mode": "history",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/jedit-vfs-after/org",
+        "source_files": 254
+      },
+      "afterDefault": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              93
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          },
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              71
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "254 Java",
+        "mode": "default",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/jedit-vfs-after/org",
+        "source_files": 254
+      },
+      "sourceTargetMatched": false,
+      "historyTargetMatched": true,
+      "defaultTargetMatched": false,
+      "episodeCommitRetrieved": true
+    },
+    {
+      "id": "jedit-buffer",
+      "project": "jedit",
+      "commit": "d571dc9c2b689c28ab37dd36a7ea846d0de81279",
+      "discovery": "Selected from history-rule output; selection bias",
+      "target": {
+        "file": "gjt/sp/jedit/textarea/JEditTextArea.java",
+        "method": "propertiesChanged"
+      },
+      "beforeRevision": "13dbc5dace4464ef92eeb832e425f2fd1fa70615",
+      "afterRevision": "d571dc9c2b689c28ab37dd36a7ea846d0de81279",
+      "beforeSource": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              93
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          },
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              71
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "273 Java",
+        "mode": "source",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/jedit-buffer-before/org",
+        "source_files": 273
+      },
+      "afterHistory": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=14]; body co-change candidate; commits=058dde7f873ecd291a3b409951d40312c58a8c43",
+            "className": "VFSBrowser",
+            "lineNumbers": [
+              854
+            ],
+            "relativeFilePath": "gjt/sp/jedit/browser/VFSBrowser.java",
+            "smellName": "Shotgun Surgery"
+          },
+          {
+            "additionalInfo": "Shotgun Surgery [CM=5, CC=3, Fan-Out=10]; body co-change candidate; commits=d571dc9c2b689c28ab37dd36a7ea846d0de81279",
+            "className": "JEditTextArea",
+            "lineNumbers": [
+              4656
+            ],
+            "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "273 Java",
+        "mode": "history",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/jedit-buffer-after/org",
+        "source_files": 273
+      },
+      "afterDefault": {
+        "error": null,
+        "findings": [
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              93
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          },
+          {
+            "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+            "className": "tabSizes",
+            "lineNumbers": [
+              71
+            ],
+            "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+            "smellName": "Shotgun Surgery"
+          }
+        ],
+        "languages": "273 Java",
+        "mode": "default",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/jedit-buffer-after/org",
+        "source_files": 273
+      },
+      "sourceTargetMatched": false,
+      "historyTargetMatched": true,
+      "defaultTargetMatched": false,
+      "episodeCommitRetrieved": true
+    },
+    {
+      "id": "enforma-errors",
+      "project": "enforma-front",
+      "commit": "44a108c1ac748a4489a0d3ea57a59187110b40b1",
+      "implementationCommit": "95a002bc52bbc9e26c0009604123d46e681fff3a",
+      "discovery": "Independent GitHub commit-message search and patch review",
+      "beforeRevision": "4bc7c173b2bd9593ca4cb52264f7a96f626340e2",
+      "target": "Repeated statusText/message mapping in twelve components",
+      "beforeSource": {
+        "error": null,
+        "findings": [],
+        "languages": "1 JavaScript, 68 TypeScript",
+        "mode": "source",
+        "parse_errors": [],
+        "root": "/tmp/bluecheese-cochange-20261020/enforma-front",
+        "source_files": 69
+      },
+      "sourceTargetMatched": false,
+      "historyTargetMatched": null,
+      "defaultTargetMatched": null,
+      "episodeCommitRetrieved": null,
+      "historyExclusion": "The labelled extraction is future to the before snapshot and removes the duplicated policy; not scored as a retrospective live history defect."
+    }
+  ],
+  "snapshots": [
+    {
+      "id": "android-release",
+      "revision": "0f6f72e19db852cc253fd2fc05459abdf8d5c3af",
+      "scope": "/tmp/bluecheese-cochange-20261020/android-support",
+      "results": {
+        "source": {
+          "files": 211,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "history": {
+          "files": 211,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "reference": {
+          "files": 211,
+          "findings": 83,
+          "error": null,
+          "parseErrors": []
+        },
+        "default": {
+          "files": 211,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        }
+      }
+    },
+    {
+      "id": "jedit-full",
+      "revision": "280fb40364f5fbf6bae816dccb6cc038f3d43fef",
+      "scope": "/tmp/bluecheese-cochange-20261020/jedit-full/org",
+      "results": {
+        "source": {
+          "files": 277,
+          "findings": 2,
+          "error": null,
+          "parseErrors": [],
+          "details": [
+            {
+              "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+              "className": "tabSizes",
+              "lineNumbers": [
+                93
+              ],
+              "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+              "smellName": "Shotgun Surgery"
+            },
+            {
+              "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+              "className": "tabSizes",
+              "lineNumbers": [
+                71
+              ],
+              "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+              "smellName": "Shotgun Surgery"
+            }
+          ]
+        },
+        "history": {
+          "files": 277,
+          "findings": 2,
+          "error": null,
+          "parseErrors": [],
+          "details": [
+            {
+              "additionalInfo": "Shotgun Surgery [CM=3, CC=3, Fan-Out=14]; body co-change candidate; commits=058dde7f873ecd291a3b409951d40312c58a8c43",
+              "className": "VFSBrowser",
+              "lineNumbers": [
+                854
+              ],
+              "relativeFilePath": "gjt/sp/jedit/browser/VFSBrowser.java",
+              "smellName": "Shotgun Surgery"
+            },
+            {
+              "additionalInfo": "Shotgun Surgery [CM=5, CC=3, Fan-Out=10]; body co-change candidate; commits=d571dc9c2b689c28ab37dd36a7ea846d0de81279",
+              "className": "JEditTextArea",
+              "lineNumbers": [
+                4608
+              ],
+              "relativeFilePath": "gjt/sp/jedit/textarea/JEditTextArea.java",
+              "smellName": "Shotgun Surgery"
+            }
+          ]
+        },
+        "reference": {
+          "files": 277,
+          "findings": 449,
+          "error": null,
+          "parseErrors": []
+        },
+        "default": {
+          "files": 277,
+          "findings": 2,
+          "error": null,
+          "parseErrors": [],
+          "details": [
+            {
+              "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+              "className": "tabSizes",
+              "lineNumbers": [
+                93
+              ],
+              "relativeFilePath": "gjt/sp/jedit/options/EditingOptionPane.java",
+              "smellName": "Shotgun Surgery"
+            },
+            {
+              "additionalInfo": "Source evidence: parallel membership declarations for tabsize with complete literal set {\"2\", \"4\", \"8\"}. Locations: gjt/sp/jedit/options/EditingOptionPane.java:93, gjt/sp/jedit/options/PrintOptionPane.java:71. If these represent one catalogue, adding a member requires coordinated edits. Review independent domains or frozen versions before treating this as Shotgun Surgery; history was not evaluated.",
+              "className": "tabSizes",
+              "lineNumbers": [
+                71
+              ],
+              "relativeFilePath": "gjt/sp/jedit/options/PrintOptionPane.java",
+              "smellName": "Shotgun Surgery"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tomcat-paper-release",
+      "revision": "398ca7eedce89f05011104134a09c80208414cef",
+      "scope": "/tmp/bluecheese-cochange-20261020/tomcat/java",
+      "results": {
+        "source": {
+          "files": 1167,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "history": {
+          "files": 1167,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "reference": {
+          "files": 1167,
+          "findings": 1123,
+          "error": null,
+          "parseErrors": []
+        },
+        "default": {
+          "files": 1167,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        }
+      }
+    },
+    {
+      "id": "tomcat-later",
+      "revision": "5f6f258107e7e463cce41187e13474f3c894693e",
+      "scope": "/tmp/bluecheese-cochange-20261020/tomcat-later/java",
+      "results": {
+        "source": {
+          "files": 1260,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "history": {
+          "files": 1260,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "reference": {
+          "files": 1260,
+          "findings": 1162,
+          "error": null,
+          "parseErrors": []
+        },
+        "default": {
+          "files": 1260,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        }
+      }
+    },
+    {
+      "id": "roommate-before",
+      "revision": "604bb07ea52692bd84bdf330c5365e77f45c5d59",
+      "scope": "/tmp/bluecheese-cochange-20261020/roommate/src/main/java",
+      "results": {
+        "source": {
+          "files": 35,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "history": {
+          "files": 35,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        },
+        "reference": {
+          "files": 35,
+          "findings": 0,
+          "error": null,
+          "parseErrors": []
+        },
+        "default": {
+          "files": 35,
+          "findings": 0,
+          "error": null,
+          "parseErrors": [],
+          "details": []
+        }
+      }
+    }
+  ]
+}
