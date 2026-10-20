@@ -1,0 +1,2 @@
+| IncompleteLibraryClass.rs:11:1:16:1 | impl FirstExtension for Client { ... } | This file repeats behavior across trait implementations for an external type. |
+| IncompleteLibraryClass.rs:18:1:23:1 | impl SecondExtension for Client { ... } | This file repeats behavior across trait implementations for an external type. |

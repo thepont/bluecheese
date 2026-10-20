@@ -109,10 +109,13 @@ compare statement and expression node-class counts; Rust compares only total
 statement and expression counts. None preserve AST ordering or nesting, and
 cross-language duplicates are not covered.
 
-**Incomplete Library Class** has a Java query for same-file static helper
-methods that take the same imported type, call a method on that parameter, and
-have matching statement and expression node-class counts. It does not cover the
-Rust, JavaScript, or TypeScript workflows in the source detector.
+**Incomplete Library Class** has Java, Rust, and JavaScript/TypeScript queries.
+Java finds same-file static helpers around the same imported type. Rust finds
+same-file implementations of distinct local traits for an undeclared target
+type when the implementations have equal method counts; it does not verify the
+target import or compare method bodies. JavaScript/TypeScript finds repeated
+same-shape prototype patches to a named import using statement and expression
+counts. All three are narrower approximations of the source detector.
 
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
