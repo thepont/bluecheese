@@ -288,14 +288,27 @@ fn non_java_variable_types(owner: &NonJavaType<'_>, method: Node<'_>) -> BTreeMa
 
 fn expression_type(
     file: &SourceFile,
-    expression: Node<'_>,
+    mut expression: Node<'_>,
     vars: &BTreeMap<String, String>,
 ) -> Option<String> {
-    match expression.kind() {
-        "identifier" => vars.get(file.text(expression)).cloned(),
-        "reference_type" => Some(file.text(expression).trim_start_matches('&').to_owned()),
-        _ => None,
+    let model = model_for(file.language);
+    while [
+        "parenthesized_expression",
+        "reference_expression",
+        "non_null_expression",
+    ]
+    .contains(&expression.kind())
+    {
+        expression = expression.child_by_field_name("value").or_else(|| {
+            let mut cursor = expression.walk();
+            expression
+                .named_children(&mut cursor)
+                .find(|child| !model.is_comment(*child))
+        })?;
     }
+    (expression.kind() == "identifier")
+        .then(|| vars.get(file.text(expression)).cloned())
+        .flatten()
 }
 
 fn simple_type_name(raw: &str) -> String {
