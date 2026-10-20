@@ -163,6 +163,33 @@ evidence for that maintenance obligation.
 
 ## Verification and limits
 
+### Forced history follow-up
+
+The current history detector was subsequently run independently of source
+analysis on both new snapshots:
+
+| Snapshot | Parsed files | History findings | Execution/parse errors |
+| --- | --- | --- | --- |
+| Discord.js `13.17.1` | 307 | 0 | None |
+| Phoenix before consolidation | 131 | 0 | None |
+
+Discord.js's 128 non-merge-commit window reaches
+`4cf05559a2cc6c4dfc409f8aab60256e5b030bca` (2022-07-20). Both verified
+`MessageTypes` additions are inside that window. Its failure to identify that
+catalogue is therefore not explained by the window. The implementation selects
+shared-callee methods and compares method bodies; parallel declarations never
+become the responsibility being tracked.
+
+Phoenix's zero result does not establish failure against independently proven
+recurrence: we have verified one consolidation episode, not recurring groups.
+The repeated scalar-code switches still do not fit the detector's prerequisite.
+
+The history implementation also accepts a nonempty list of supporting commits:
+one qualifying co-change suffices. It does not require repeated occasions.
+Consequently these runs test the present implementation, not an independent
+recurring-co-change method such as the user requested. A Git-confirmed example
+and a successful detector retrieval must remain distinct claims.
+
 The behaviour change is commit `37b1dfe`; subsequent refactorings preserve its
 tests and source evidence. New positive regressions were observed failing before
 their fixes, including the imported nested-type case. A separate binding-scope

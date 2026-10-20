@@ -588,5 +588,26 @@
         "rawFindings": 10
       }
     }
+  },
+  "forcedHistoryFollowup": {
+    "discordjs": {
+      "sourceFiles": 307,
+      "parseErrors": [],
+      "error": null,
+      "findings": [],
+      "window": {
+        "limit": 128,
+        "oldestCommit": "4cf05559a2cc6c4dfc409f8aab60256e5b030bca",
+        "oldestDate": "2022-07-20",
+        "bothVerifiedAdditionsIncluded": true
+      }
+    },
+    "phoenix": {
+      "sourceFiles": 131,
+      "parseErrors": [],
+      "error": null,
+      "findings": []
+    },
+    "interpretation": "Current shared-callee/body-change implementation; a single supporting commit suffices. Not a test of independently discovered recurring co-change."
   }
 }
