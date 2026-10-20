@@ -26,7 +26,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .into_iter()
         .filter(|ty| ty.kind() == "class_declaration")
         .filter_map(|ty| {
-            let name = java::JAVA.type_name(file, ty)?.to_owned();
+            let name = java::JAVA.type_name(file.at(ty))?.to_owned();
             let methods = java::JAVA
                 .methods(file, ty)
                 .into_iter()

@@ -33,7 +33,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     for owner in 0..analysis.types.len() {
         let ty = &analysis.types[owner];
         let model = model_for(LanguageId::Java);
-        let Some(class_name) = model.type_name(ty.file, ty.node) else {
+        let Some(class_name) = model.type_name(ty.file.at(ty.node)) else {
             continue;
         };
         let mut lines = Vec::new();
@@ -96,7 +96,7 @@ fn non_java_types(files: &[SourceFile]) -> Vec<NonJavaType<'_>> {
             if matches!(node.kind(), "source_file" | "program") {
                 continue;
             }
-            let Some(name) = model_for(file.language).type_name(file, node) else {
+            let Some(name) = model_for(file.language).type_name(file.at(node)) else {
                 continue;
             };
             let fields = non_java_field_types(file, node);
@@ -322,7 +322,7 @@ impl<'a> Analyzer<'a> {
         {
             let package = package_name(file);
             for node in model_for(LanguageId::Java).types(file) {
-                if let Some(name) = model_for(LanguageId::Java).type_name(file, node) {
+                if let Some(name) = model_for(LanguageId::Java).type_name(file.at(node)) {
                     types.push(TypeInfo {
                         file,
                         node,

@@ -48,7 +48,7 @@ fn non_java_findings(file: &SourceFile) -> Vec<Finding> {
             if !is_type {
                 return None;
             }
-            let name = model.type_name(file, ty)?;
+            let name = model.type_name(file.at(ty))?;
             let field_names = non_java_fields(file, ty);
             let methods: Vec<_> = model
                 .methods(file, ty)
@@ -118,7 +118,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .types(file)
         .into_iter()
         .filter_map(|ty| {
-            let name = model.type_name(file, ty)?;
+            let name = model.type_name(file.at(ty))?;
             if matches!(
                 ty.kind(),
                 "interface_declaration" | "enum_declaration" | "annotation_type_declaration"

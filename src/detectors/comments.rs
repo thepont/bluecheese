@@ -16,7 +16,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
         let model = model_for(file.language);
         if file.language == LanguageId::Java {
             for ty in model.types(file) {
-                let Some(class_name) = model.type_name(file, ty) else {
+                let Some(class_name) = model.type_name(file.at(ty)) else {
                     continue;
                 };
                 let mut lines: Vec<usize> = descendants(ty)
@@ -57,7 +57,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
                 continue;
             }
             let owner = comment_owner(comment).unwrap_or(root);
-            let Some(class_name) = model.type_name(file, owner) else {
+            let Some(class_name) = model.type_name(file.at(owner)) else {
                 continue;
             };
             grouped

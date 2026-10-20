@@ -48,6 +48,10 @@ pub struct SourceFile {
 }
 
 impl SourceFile {
+    pub fn at<'a>(&'a self, node: Node<'a>) -> SourceNode<'a> {
+        SourceNode { file: self, node }
+    }
+
     pub fn root(&self) -> Node<'_> {
         self.tree.root_node()
     }
@@ -59,6 +63,35 @@ impl SourceFile {
 
     pub fn text(&self, node: Node<'_>) -> &str {
         &self.source[node.byte_range()]
+    }
+}
+
+/// Syntax together with the source needed to interpret its text and language.
+#[derive(Clone, Copy)]
+pub struct SourceNode<'a> {
+    pub(crate) file: &'a SourceFile,
+    pub(crate) node: Node<'a>,
+}
+
+impl<'a> SourceNode<'a> {
+    pub fn file(self) -> &'a SourceFile {
+        self.file
+    }
+
+    pub fn node(self) -> Node<'a> {
+        self.node
+    }
+
+    pub fn text(self) -> &'a str {
+        self.file.text(self.node)
+    }
+
+    pub fn line(self) -> usize {
+        self.file.line(self.node)
+    }
+
+    pub fn model(self) -> &'static dyn LanguageModel {
+        model_for(self.file.language)
     }
 }
 
@@ -133,7 +166,7 @@ pub trait LanguageModel {
     }
 
     /// Simple name of a type declaration.
-    fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str>;
+    fn type_name<'a>(&self, source: SourceNode<'a>) -> Option<&'a str>;
 
     /// Methods belonging to `ty`, as the language defines that relationship.
     /// Constructors are not methods.

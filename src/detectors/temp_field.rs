@@ -64,7 +64,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
                 class_name: java::JAVA
-                    .type_name(file, ty)
+                    .type_name(file.at(ty))
                     .unwrap_or("<anonymous>")
                     .to_owned(),
                 line_numbers: lines.into_iter().collect(),

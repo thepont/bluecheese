@@ -23,7 +23,7 @@ fn type_names(file: &SourceFile) -> Vec<String> {
         .into_iter()
         .map(|ty| {
             model
-                .type_name(file, ty)
+                .type_name(file.at(ty))
                 .expect("a top-level type has a name")
                 .to_string()
         })
@@ -36,7 +36,7 @@ fn methods_by_type(file: &SourceFile) -> BTreeMap<String, Vec<String>> {
     let mut by_type = BTreeMap::new();
     for ty in model.types(file) {
         let type_name = model
-            .type_name(file, ty)
+            .type_name(file.at(ty))
             .expect("type has a name")
             .to_string();
         let methods = model
@@ -134,7 +134,7 @@ fn reports_a_declaration_at_its_own_line_not_at_its_annotations() {
     let annotated = model
         .types(&shape)
         .into_iter()
-        .find(|ty| model.type_name(&shape, *ty) == Some("Shape"))
+        .find(|ty| model.type_name(shape.at(*ty)) == Some("Shape"))
         .expect("Shape is a type");
     let shape_line = line_of(&shape, "public class Shape");
     assert_eq!(model.decl_line(annotated), shape_line);
@@ -153,7 +153,7 @@ fn reports_a_declaration_at_its_own_line_not_at_its_annotations() {
     let bare = model
         .types(&shape)
         .into_iter()
-        .find(|ty| model.type_name(&shape, *ty) == Some("Bare"))
+        .find(|ty| model.type_name(shape.at(*ty)) == Some("Bare"))
         .expect("Bare is a type");
     let bare_line = line_of(&shape, "class Bare");
     assert_eq!(model.decl_line(bare), bare_line);

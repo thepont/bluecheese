@@ -39,7 +39,7 @@ struct ParameterAnalysis<'a> {
 impl ParameterAnalysis<'_> {
     fn finding(&self) -> Option<Finding> {
         let model = model_for(self.file.language);
-        let class_name = model.type_name(self.file, self.ty)?;
+        let class_name = model.type_name(self.file.at(self.ty))?;
         let lines = self.repeated_parameter_lines();
 
         (!lines.is_empty()).then(|| Finding {

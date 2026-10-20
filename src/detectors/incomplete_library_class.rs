@@ -37,7 +37,7 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
     let local = java::JAVA
         .types(file)
         .into_iter()
-        .filter_map(|ty| java::JAVA.type_name(file, ty).map(str::to_owned))
+        .filter_map(|ty| java::JAVA.type_name(file.at(ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
 
     let mut groups = BTreeMap::<(String, Vec<String>), BTreeMap<String, usize>>::new();
@@ -46,7 +46,7 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         .into_iter()
         .filter(|ty| ty.kind() == "class_declaration")
     {
-        let Some(owner_name) = java::JAVA.type_name(file, ty).map(str::to_owned) else {
+        let Some(owner_name) = java::JAVA.type_name(file.at(ty)).map(str::to_owned) else {
             continue;
         };
         for method in java::JAVA.methods(file, ty) {
@@ -103,12 +103,12 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
     let declarations = rust::RUST.types(file);
     let local_types = declarations
         .iter()
-        .filter_map(|ty| rust::RUST.type_name(file, *ty).map(str::to_owned))
+        .filter_map(|ty| rust::RUST.type_name(file.at(*ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
     let local_traits = declarations
         .iter()
         .filter(|ty| ty.kind() == "trait_item")
-        .filter_map(|ty| rust::RUST.type_name(file, *ty).map(str::to_owned))
+        .filter_map(|ty| rust::RUST.type_name(file.at(*ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
 
     let mut groups = BTreeMap::<(String, Vec<String>), BTreeMap<String, usize>>::new();

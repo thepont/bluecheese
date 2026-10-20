@@ -32,7 +32,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .types(file)
         .into_iter()
         .filter_map(|node| {
-            let name = java::JAVA.type_name(file, node)?.to_owned();
+            let name = java::JAVA.type_name(file.at(node))?.to_owned();
             let parents = parent_types(file, node);
             (!parents.is_empty()).then_some(TypeInfo {
                 node,

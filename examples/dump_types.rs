@@ -17,7 +17,7 @@ fn main() {
             println!(
                 "   TYPE {} name={} body={}",
                 ty.kind(),
-                model.type_name(file, ty).unwrap_or("?"),
+                model.type_name(file.at(ty)).unwrap_or("?"),
                 model.body(ty).map(|b| b.kind()).unwrap_or("none"),
             );
         }

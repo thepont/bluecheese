@@ -73,7 +73,7 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
             let Some(trait_type) = types.iter().copied().find(|ty| {
                 ty.kind() == "trait_item"
                     && model
-                        .type_name(file, *ty)
+                        .type_name(file.at(*ty))
                         .is_some_and(|name| name == trait_name)
             }) else {
                 continue;
@@ -81,7 +81,7 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
             let Some(target_type) = types.iter().copied().find(|ty| {
                 matches!(ty.kind(), "struct_item" | "enum_item" | "union_item")
                     && model
-                        .type_name(file, *ty)
+                        .type_name(file.at(*ty))
                         .is_some_and(|name| name == target_name)
             }) else {
                 continue;
@@ -119,7 +119,7 @@ fn rust_trait_findings(files: &[SourceFile]) -> Vec<Finding> {
             lines.sort_unstable();
             lines.dedup();
             if !lines.is_empty() {
-                let name = model.type_name(file, target_type).unwrap_or(target_name);
+                let name = model.type_name(file.at(target_type)).unwrap_or(target_name);
                 findings.push(Finding {
                     smell_name: SMELL_NAME.to_owned(),
                     file_path: file.rel.clone(),
@@ -223,7 +223,7 @@ fn ecmascript_classes(files: &[SourceFile]) -> Vec<EcmaClass<'_>> {
                 })
                 .filter_map(move |node| {
                     model_for(file.language)
-                        .type_name(file, node)
+                        .type_name(file.at(node))
                         .map(|name| EcmaClass {
                             file,
                             node,
@@ -317,16 +317,8 @@ fn parent_empty_method_findings(context: &ChildContext<'_, '_>, parents: &[usize
                 .into_iter()
                 .filter_map(move |method| {
                     let file = project.types[*parent].file;
-                    ((MethodQuery {
-                        file,
-                        node: method,
-                    })
-                    .is_empty_body()
-                        && !(MethodQuery {
-                            file,
-                            node: method,
-                        })
-                        .has_override()
+                    ((MethodQuery { file, node: method }).is_empty_body()
+                        && !(MethodQuery { file, node: method }).has_override()
                         && !context.overrides(*parent, method))
                     .then(|| {
                         model_for(LanguageId::Java).decl_line(project.types[context.child].node)
@@ -345,7 +337,7 @@ impl<'a> Project<'a> {
         {
             let package = package_name(file);
             for node in model_for(LanguageId::Java).types(file) {
-                if let Some(name) = model_for(LanguageId::Java).type_name(file, node) {
+                if let Some(name) = model_for(LanguageId::Java).type_name(file.at(node)) {
                     types.push(TypeInfo {
                         file,
                         node,

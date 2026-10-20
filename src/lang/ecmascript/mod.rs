@@ -4,7 +4,7 @@
 
 pub mod calls;
 
-use crate::lang::{LanguageId, LanguageModel, SourceFile, coupling::MethodCoupling};
+use crate::lang::{LanguageId, LanguageModel, SourceFile, SourceNode, coupling::MethodCoupling};
 use crate::walk::descendants;
 use tree_sitter::{Language, Node};
 
@@ -73,7 +73,8 @@ impl LanguageModel for EcmaModel {
             )
             .collect()
     }
-    fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str> {
+    fn type_name<'a>(&self, source: SourceNode<'a>) -> Option<&'a str> {
+        let SourceNode { file, node: ty } = source;
         if ty.kind() == "program" {
             Some(&file.rel)
         } else {

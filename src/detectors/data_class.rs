@@ -16,7 +16,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .types(file)
         .into_iter()
         .filter_map(|ty| {
-            let name = model.type_name(file, ty)?;
+            let name = model.type_name(file.at(ty))?;
             if file.language != LanguageId::Java {
                 return non_java_data_class(file, ty, name);
             }

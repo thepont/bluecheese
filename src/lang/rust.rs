@@ -17,7 +17,7 @@
 
 use tree_sitter::{Language, Node};
 
-use crate::lang::{LanguageId, LanguageModel, SourceFile};
+use crate::lang::{LanguageId, LanguageModel, SourceFile, SourceNode};
 use crate::walk::{ancestor_while, descendants};
 
 /// Item kinds that declare a type.
@@ -100,7 +100,8 @@ impl LanguageModel for RustModel {
         out
     }
 
-    fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str> {
+    fn type_name<'a>(&self, source: SourceNode<'a>) -> Option<&'a str> {
+        let SourceNode { file, node: ty } = source;
         if ty.kind() == "source_file" {
             return file.path.file_stem().and_then(|s| s.to_str());
         }
@@ -161,7 +162,7 @@ impl LanguageModel for RustModel {
         // Asking for it as an option and skipping when it is absent would be a
         // branch no input can reach.
         let name = self
-            .type_name(file, ty)
+            .type_name(file.at(ty))
             .expect("a type returned by types() has a name");
         for node in descendants(file.root()) {
             if node.kind() != "impl_item" {

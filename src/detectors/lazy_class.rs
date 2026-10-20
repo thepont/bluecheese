@@ -32,7 +32,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             Some(Finding {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
-                class_name: java::JAVA.type_name(file, ty)?.to_owned(),
+                class_name: java::JAVA.type_name(file.at(ty))?.to_owned(),
                 line_numbers: vec![java::JAVA.decl_line(ty)],
                 relative_file_path: file.rel.clone(),
                 additional_info: String::new(),

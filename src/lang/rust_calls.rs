@@ -27,7 +27,7 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
         for ty in model.types(file) {
             let owner = next_owner;
             next_owner += 1;
-            let Some(owner_name) = model.type_name(file, ty).map(str::to_owned) else {
+            let Some(owner_name) = model.type_name(file.at(ty)).map(str::to_owned) else {
                 continue;
             };
             for node in model.methods(file, ty) {

@@ -43,7 +43,7 @@ fn project_type_names(files: &[SourceFile], language: LanguageId) -> BTreeSet<St
                 .types(file)
                 .into_iter()
                 .filter(|ty| !matches!(ty.kind(), "source_file" | "program"))
-                .filter_map(move |ty| model.type_name(file, ty).map(str::to_owned))
+                .filter_map(move |ty| model.type_name(file.at(ty)).map(str::to_owned))
         })
         .collect()
 }
@@ -264,7 +264,7 @@ fn file_findings(analysis: &Analysis<'_>, read_stats: StatsReader) -> Vec<Findin
         .types(file)
         .into_iter()
         .filter_map(|ty| {
-            let name = model.type_name(file, ty)?;
+            let name = model.type_name(file.at(ty))?;
             let stats = read_stats(analysis, ty)?;
             stats.is_middle_man().then(|| Finding {
                 smell_name: SMELL_NAME.to_string(),

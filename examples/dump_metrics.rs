@@ -14,7 +14,7 @@ fn main() {
     for file in &project.files {
         let model = model_for(file.language);
         for ty in model.types(file) {
-            let Some(class_name) = model.type_name(file, ty) else {
+            let Some(class_name) = model.type_name(file.at(ty)) else {
                 continue;
             };
             for method in model.methods(file, ty) {

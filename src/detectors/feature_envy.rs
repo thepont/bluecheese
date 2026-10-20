@@ -27,7 +27,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .into_iter()
         .filter(|ty| ty.kind() == "class_declaration")
         .flat_map(|ty| {
-            let Some(class_name) = java::JAVA.type_name(file, ty).map(str::to_owned) else {
+            let Some(class_name) = java::JAVA.type_name(file.at(ty)).map(str::to_owned) else {
                 return Vec::new();
             };
             java::JAVA

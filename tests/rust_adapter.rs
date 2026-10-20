@@ -42,7 +42,7 @@ fn maps_impl_blocks_and_free_functions() {
     let mut by_type: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for ty in model.types(file) {
         let name = model
-            .type_name(file, ty)
+            .type_name(file.at(ty))
             .expect("type has a name")
             .to_string();
         let methods = model
@@ -162,7 +162,7 @@ fn a_trait_default_method_belongs_to_the_trait() {
     let volume = model
         .types(&features)
         .into_iter()
-        .find(|ty| model.type_name(&features, *ty) == Some("Volume"))
+        .find(|ty| model.type_name(features.at(*ty)) == Some("Volume"))
         .expect("Volume is a type");
     let names: Vec<&str> = model
         .methods(&features, volume)
@@ -185,7 +185,7 @@ fn attributes_do_not_shift_a_declarations_line() {
     let krate = model
         .types(&features)
         .into_iter()
-        .find(|ty| model.type_name(&features, *ty) == Some("Crate"))
+        .find(|ty| model.type_name(features.at(*ty)) == Some("Crate"))
         .expect("Crate is a type");
     let declaration_line = line_of(&features, "pub struct Crate");
     assert_eq!(model.decl_line(krate), declaration_line);

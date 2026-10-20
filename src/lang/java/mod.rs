@@ -10,7 +10,7 @@ mod types;
 
 use tree_sitter::{Language, Node};
 
-use crate::lang::{LanguageId, LanguageModel, SourceFile};
+use crate::lang::{LanguageId, LanguageModel, SourceFile, SourceNode};
 
 /// The Java adapter. Unit-valued: it carries no state.
 pub struct JavaModel;
@@ -89,7 +89,8 @@ impl LanguageModel for JavaModel {
             .collect()
     }
 
-    fn type_name<'a>(&self, file: &'a SourceFile, ty: Node<'a>) -> Option<&'a str> {
+    fn type_name<'a>(&self, source: SourceNode<'a>) -> Option<&'a str> {
+        let SourceNode { file, node: ty } = source;
         types::simple_name(file, ty)
     }
 

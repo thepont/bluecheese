@@ -213,7 +213,7 @@ fn adapter_distinguishes_constructors_from_ordinary_methods() {
     let class = model
         .types(&file)
         .into_iter()
-        .find(|ty| model.type_name(&file, *ty) == Some("Example"))
+        .find(|ty| model.type_name(file.at(*ty)) == Some("Example"))
         .expect("class");
     assert_eq!(model.constructors(&file, class).len(), 1);
     assert_eq!(model.methods(&file, class).len(), 1);

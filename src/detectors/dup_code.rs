@@ -26,7 +26,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
 
 fn owner_finding(file: &SourceFile, ty: Node<'_>) -> Option<Finding> {
     let model = model_for(file.language);
-    let class_name = model.type_name(file, ty)?;
+    let class_name = model.type_name(file.at(ty))?;
     let methods: Vec<_> = model
         .methods(file, ty)
         .into_iter()
