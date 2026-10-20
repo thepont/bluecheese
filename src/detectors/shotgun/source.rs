@@ -10,6 +10,8 @@ use crate::finding::Finding;
 use crate::lang::{LanguageId, SourceFile, SourceNode};
 use crate::walk::descendants;
 
+mod positions;
+
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Catalogue {
     domain: Vec<String>,
@@ -21,6 +23,16 @@ struct Declaration<'a> {
     file: &'a SourceFile,
     name: &'a str,
     line: usize,
+    positions: Option<BTreeMap<String, i64>>,
+}
+
+impl Declaration<'_> {
+    fn shares_encoding(&self, other: &Self) -> bool {
+        self.positions
+            .as_ref()
+            .zip(other.positions.as_ref())
+            .is_none_or(|(left, right)| left == right)
+    }
 }
 
 pub fn source_evidence(files: &[SourceFile]) -> Result<Vec<Finding>> {
@@ -59,12 +71,25 @@ pub fn source_evidence_with(
         {
             continue;
         }
-        let locations = declarations
-            .iter()
-            .map(|d| format!("{}:{}", d.file.rel, d.line))
-            .collect::<Vec<_>>()
-            .join(", ");
         for declaration in &declarations {
+            let peers: Vec<_> = declarations
+                .iter()
+                .filter(|other| declaration.shares_encoding(other))
+                .collect();
+            if peers
+                .iter()
+                .map(|other| &other.file.rel)
+                .collect::<BTreeSet<_>>()
+                .len()
+                < 2
+            {
+                continue;
+            }
+            let locations = peers
+                .iter()
+                .map(|other| format!("{}:{}", other.file.rel, other.line))
+                .collect::<Vec<_>>()
+                .join(", ");
             findings.push(Finding {
                 smell_name: super::SMELL_NAME.into(),
                 file_path: declaration.file.path.to_string_lossy().into_owned(),
@@ -85,21 +110,46 @@ pub fn source_evidence_with(
 fn catalogue(source: SourceNode<'_>) -> Option<(Catalogue, Declaration<'_>)> {
     let SourceNode { file, node } = source;
     let is_enum = matches!(node.kind(), "enum_declaration" | "enum_item");
-    let members = if is_enum {
-        enum_members(file.at(node.child_by_field_name("body")?))?
+    let is_export = node.kind() == "assignment_expression";
+    let (name_node, value) = if is_enum {
+        (
+            node.child_by_field_name("name")?,
+            node.child_by_field_name("body")?,
+        )
+    } else if is_export {
+        (exported_name(source)?, node.child_by_field_name("right")?)
     } else if matches!(
         node.kind(),
         "variable_declarator" | "const_item" | "static_item"
     ) {
-        list_members(file.at(node.child_by_field_name("value")?))?
+        (
+            node.child_by_field_name("name")?,
+            node.child_by_field_name("value")?,
+        )
     } else {
         return None;
+    };
+    let positions = if is_enum {
+        positions::enum_members(file.at(value))
+    } else if is_export {
+        Some(positions::array_members(file.at(value))?)
+    } else {
+        None
+    };
+    let members = if let Some(positions) = &positions {
+        positions.keys().cloned().collect()
+    } else if is_enum {
+        enum_members(file.at(value))?
+    } else {
+        list_members(file.at(value))?
     };
     if members.len() < 2 {
         return None;
     }
-    let name_node = node.child_by_field_name("name")?;
-    if !matches!(name_node.kind(), "identifier" | "type_identifier") {
+    if !matches!(
+        name_node.kind(),
+        "identifier" | "type_identifier" | "property_identifier"
+    ) {
         return None;
     }
     let name = file.text(name_node);
@@ -108,7 +158,7 @@ fn catalogue(source: SourceNode<'_>) -> Option<(Catalogue, Declaration<'_>)> {
         .filter(|c| c.is_alphanumeric())
         .flat_map(char::to_lowercase)
         .collect();
-    if !is_enum && identity.ends_with('s') && !identity.ends_with("ss") {
+    if identity.ends_with('s') && !identity.ends_with("ss") {
         identity.pop();
     }
     Some((
@@ -121,8 +171,31 @@ fn catalogue(source: SourceNode<'_>) -> Option<(Catalogue, Declaration<'_>)> {
             file,
             name,
             line: file.line(node),
+            positions,
         },
     ))
+}
+
+fn exported_name(source: SourceNode<'_>) -> Option<Node<'_>> {
+    let node = source.node();
+    if node.parent()?.kind() != "expression_statement"
+        || node.parent()?.parent()?.kind() != "program"
+    {
+        return None;
+    }
+    let left = node.child_by_field_name("left")?;
+    if left.kind() != "member_expression" {
+        return None;
+    }
+    let receiver = source.file().text(left.child_by_field_name("object")?);
+    if !matches!(receiver, "exports" | "module.exports") {
+        return None;
+    }
+    let root = receiver.split('.').next()?;
+    if crate::lang::ecmascript::calls::has_module_binding(source.file(), root) {
+        return None;
+    }
+    left.child_by_field_name("property")
 }
 
 fn enum_members(source: SourceNode<'_>) -> Option<BTreeSet<String>> {

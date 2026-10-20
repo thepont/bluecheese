@@ -52,6 +52,116 @@ fn parallel_enums_are_found_without_calls_in_java_rust_and_typescript() {
 }
 
 #[test]
+fn discordjs_runtime_catalogue_and_numeric_enum_are_duplicate_declarations() {
+    let findings = scan(&[
+        (
+            "Constants.js",
+            include_str!("fixtures/shotgun-discordjs/Constants.js"),
+        ),
+        (
+            "enums.d.ts",
+            include_str!("fixtures/shotgun-discordjs/enums.d.ts"),
+        ),
+    ]);
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.class_name == "MessageTypes")
+    );
+    for finding in findings {
+        assert!(finding.additional_info.contains("Constants.js"));
+        assert!(finding.additional_info.contains("enums.d.ts"));
+        assert!(
+            finding
+                .additional_info
+                .contains("ROLE_SUBSCRIPTION_PURCHASE")
+        );
+    }
+}
+
+#[test]
+fn numeric_catalogue_matches_preserve_reserved_slots_and_values() {
+    let enumeration = "export const enum MessageTypes { DEFAULT, ADDED = 2, REMOVED }";
+    assert_eq!(
+        scan(&[
+            ("types.ts", enumeration),
+            (
+                "runtime.js",
+                "module.exports.MessageTypes = ['DEFAULT', null, 'ADDED', 'REMOVED'];"
+            ),
+        ])
+        .len(),
+        2
+    );
+    for runtime in [
+        "exports.MessageTypes = ['DEFAULT', 'ADDED', 'REMOVED'];",
+        "exports.MessageTypes = ['DEFAULT', null, 'REMOVED', 'ADDED'];",
+        "exports.MessageTypes = [null, 'DEFAULT', 'ADDED', 'REMOVED'];",
+        "exports.MessageTypes = ['DEFAULT', , 'ADDED', 'REMOVED'];",
+        "exports.MessageTypes = ['DEFAULT', ...configured, 'ADDED', 'REMOVED'];",
+        "exports.MessageTypes = ['DEFAULT', null, 'ADDED', 'ADDED', 'REMOVED'];",
+    ] {
+        assert!(
+            scan(&[("types.ts", enumeration), ("runtime.js", runtime)]).is_empty(),
+            "{runtime}"
+        );
+    }
+    assert!(
+        scan(&[
+            (
+                "first.ts",
+                "enum MessageTypes { DEFAULT, ADDED = 2, REMOVED }"
+            ),
+            ("second.ts", "enum MessageTypes { DEFAULT, ADDED, REMOVED }"),
+        ])
+        .is_empty()
+    );
+}
+
+#[test]
+fn numeric_enum_values_are_compared_without_executing_expressions() {
+    assert_eq!(scan(&[
+        ("first.ts", "enum Codes { NEGATIVE = -1, ZERO, TWO = 0x2, FOUR = 0b100, EIGHT = 0o10, MANY = 1_000 }"),
+        ("second.ts", "enum Codes { NEGATIVE = -1, ZERO = 0, TWO = 2, FOUR = 4, EIGHT = 8, MANY = 1000 }"),
+    ]).len(), 2);
+    for first in [
+        "enum Codes { A = choose(), B }",
+        "enum Codes { A = 9007199254740992, B }",
+        "enum Codes { A = 9007199254740991, B }",
+    ] {
+        assert!(
+            scan(&[("first.ts", first), ("second.ts", first)]).is_empty(),
+            "{first}"
+        );
+    }
+}
+
+#[test]
+fn instance_assignments_and_shadowed_commonjs_names_are_not_module_catalogues() {
+    for runtime in [
+        "const store = {}; store.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "function configure(exports) { exports.MessageTypes = ['DEFAULT', 'ADDED']; }",
+        "const exports = {}; exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "const module = {exports: {}}; module.exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "function exports() {} exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "import exports from './other'; exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "import { catalogue as exports } from './other'; exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "import * as module from './other'; module.exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+        "const { exports } = other; exports.MessageTypes = ['DEFAULT', 'ADDED'];",
+    ] {
+        assert!(
+            scan(&[
+                ("types.ts", "enum MessageTypes { DEFAULT, ADDED }"),
+                ("runtime.js", runtime),
+            ])
+            .is_empty(),
+            "{runtime}"
+        );
+    }
+}
+
+#[test]
 fn a_tenant_enum_and_independent_name_lists_are_linked_across_languages() {
     let findings = scan(&[
         ("tenant.rs", "enum Tenant { ACME, GLOBEX }"),

@@ -714,6 +714,37 @@ fn binding_name<'a>(file: &'a SourceFile, node: Node<'_>) -> Option<&'a str> {
         .map(|n| file.text(n))
 }
 
+pub(crate) fn has_module_binding(file: &SourceFile, name: &str) -> bool {
+    descendants(file.root()).into_iter().any(|node| {
+        let local = if node.kind() == "import_specifier" {
+            specifier_names(node).map(|(_, local)| file.text(local))
+        } else if is_binding(node)
+            || matches!(node.kind(), "function_declaration" | "class_declaration")
+            || node.kind() == "identifier"
+                && node.parent().is_some_and(|parent| {
+                    matches!(parent.kind(), "import_clause" | "namespace_import")
+                })
+        {
+            binding_name(file, node)
+        } else {
+            None
+        };
+        let pattern_binding = node
+            .child_by_field_name("name")
+            .filter(|pattern| matches!(pattern.kind(), "object_pattern" | "array_pattern"))
+            .is_some_and(|pattern| {
+                descendants(pattern).into_iter().any(|item| {
+                    matches!(
+                        item.kind(),
+                        "identifier" | "shorthand_property_identifier_pattern"
+                    ) && file.text(item) == name
+                })
+            });
+        (local == Some(name) || pattern_binding)
+            && binding_scope(node).is_some_and(|scope| scope.kind() == "program")
+    })
+}
+
 fn is_binding(node: Node<'_>) -> bool {
     [
         "variable_declarator",
