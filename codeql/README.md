@@ -74,9 +74,13 @@ matching heuristic.
 distinct methods from at least two other classes. Rust and JavaScript/TypeScript
 are not included yet.
 
+**Divergent Change** has a Java query for classes whose switch statements or
+expressions occur across at least three methods. Its repeated-action and
+low-cohesion branches are not included yet.
+
 No CodeQL query is currently provided for **Alternative Classes with Different
-Interfaces**, **Comments**, **Divergent Change**, **Duplicate Code**,
-**Incomplete Library Class**, or **Temporary Field**.
+Interfaces**, **Comments**, **Duplicate Code**, **Incomplete Library Class**,
+or **Temporary Field**.
 Several other ports above cover only a subset of the source detector's
 heuristics or languages. A CodeQL database contains one language, so rules
 that compare code across languages need a separate multi-database design.

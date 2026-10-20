@@ -1,0 +1,1 @@
+| DivergentChange.java:1:7:1:23 | DivergentSwitches | Switch-based behavior is spread across at least three methods. |
