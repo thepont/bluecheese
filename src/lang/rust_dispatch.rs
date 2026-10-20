@@ -37,6 +37,19 @@ impl EnumDispatch {
     }
 
     fn forwarding_enum(&self, source: SourceNode<'_>) -> Option<()> {
+        let arms = ForwardingArms::parse(source)?;
+        let declared = self.variants.get(arms.enum_name()?)?.as_ref()?;
+        (arms.covers(declared) && arms.same_inputs()).then_some(())
+    }
+}
+
+struct ForwardingArms {
+    patterns: Vec<(String, String)>,
+    calls: Vec<(String, Vec<String>)>,
+}
+
+impl ForwardingArms {
+    fn parse(source: SourceNode<'_>) -> Option<Self> {
         let body = source.node().child_by_field_name("body")?;
         let mut cursor = body.walk();
         let mut patterns = Vec::new();
@@ -51,22 +64,34 @@ impl EnumDispatch {
             patterns.extend(arm_patterns(source.file().at(arm))?);
             calls.push(forwarded_call(source.file().at(arm))?);
         }
-        let (enum_name, _) = patterns.first()?;
-        let declared = self.variants.get(enum_name)?.as_ref()?;
-        let covered: BTreeSet<_> = patterns
+        Some(Self { patterns, calls })
+    }
+
+    fn enum_name(&self) -> Option<&str> {
+        self.patterns.first().map(|(name, _)| name.as_str())
+    }
+
+    fn covers(&self, declared: &BTreeSet<String>) -> bool {
+        let covered: BTreeSet<_> = self
+            .patterns
             .iter()
             .map(|(_, variant)| variant.clone())
             .collect();
-        if patterns.iter().any(|(name, _)| name != enum_name)
-            || covered.len() != patterns.len()
-            || &covered != declared
-            || calls.len() < 2
-        {
-            return None;
-        }
-        let (_, arguments) = calls.first()?;
-        let backends: BTreeSet<_> = calls.iter().map(|(name, _)| name).collect();
-        (backends.len() >= 2 && calls.iter().all(|(_, args)| args == arguments)).then_some(())
+        self.patterns
+            .iter()
+            .all(|(name, _)| Some(name.as_str()) == self.enum_name())
+            && covered.len() == self.patterns.len()
+            && &covered == declared
+    }
+
+    fn same_inputs(&self) -> bool {
+        let Some((_, arguments)) = self.calls.first() else {
+            return false;
+        };
+        let backends: BTreeSet<_> = self.calls.iter().map(|(name, _)| name).collect();
+        self.calls.len() >= 2
+            && backends.len() >= 2
+            && self.calls.iter().all(|(_, args)| args == arguments)
     }
 }
 
