@@ -1,0 +1,4 @@
+| DataClumps.ts:2:3:2:39 | create( ... ber) {} | This method repeats a parameter group used by another method. |
+| DataClumps.ts:3:3:3:39 | update( ... ber) {} | This method repeats a parameter group used by another method. |
+| JavaScriptDataClumps.js:2:3:2:23 | create( ... end) {} | This method repeats a parameter group used by another method. |
+| JavaScriptDataClumps.js:3:3:3:23 | update( ... end) {} | This method repeats a parameter group used by another method. |

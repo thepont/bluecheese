@@ -45,9 +45,10 @@ than one resolved source type reference. It currently omits Java interfaces,
 Rust traits, and TypeScript interfaces; the repository heuristic counts
 name-based references in a narrower package/file scope.
 
-**Data Clumps** has a Java query for methods in one class that repeat at least
-two parameter names with matching types. Repeated call-site argument groups
-and the Rust/JavaScript/TypeScript variants are not included yet.
+**Data Clumps** has Java, Rust, and JavaScript/TypeScript queries for methods
+that repeat at least two parameter names with compatible types. The Rust query
+compares methods within one `impl` block, JavaScript permits missing type
+annotations, and repeated call-site argument groups remain Java-only.
 
 **Data Class** has Java, JavaScript/TypeScript, and Rust queries for types that
 expose public instance fields. These queries do not yet detect accessor-only

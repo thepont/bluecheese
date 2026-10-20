@@ -1,0 +1,2 @@
+| DataClumps.rs:4:5:4:49 | fn create | This method repeats a parameter group used by another method. |
+| DataClumps.rs:5:5:5:49 | fn update | This method repeats a parameter group used by another method. |
