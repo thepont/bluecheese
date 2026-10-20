@@ -49,13 +49,9 @@ fn project_type_names(files: &[SourceFile], language: LanguageId) -> BTreeSet<St
 }
 
 fn compatible_language(left: LanguageId, right: LanguageId) -> bool {
-    match left {
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => matches!(
-            right,
-            LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx
-        ),
-        _ => left == right,
-    }
+    left == right
+        || (crate::lang::ecmascript::is_ecmascript(left)
+            && crate::lang::ecmascript::is_ecmascript(right))
 }
 
 struct DelegationStats {
@@ -183,17 +179,10 @@ fn non_java_pure_delegate(
     let Some(call) = call else {
         return false;
     };
-    let receiver = match file.language {
-        LanguageId::Rust => call
-            .child_by_field_name("function")
-            .filter(|function| function.kind() == "field_expression")
-            .and_then(|function| function.child_by_field_name("value")),
-        LanguageId::JavaScript | LanguageId::TypeScript | LanguageId::Tsx => call
-            .child_by_field_name("function")
-            .filter(|function| function.kind() == "member_expression")
-            .and_then(|function| function.child_by_field_name("object")),
-        LanguageId::Java => return false,
-    };
+    let receiver = call
+        .child_by_field_name("function")
+        .and_then(|function| model_for(file.language).field_access_parts(function))
+        .map(|(receiver, _)| receiver);
     let Some(receiver) = receiver else {
         return false;
     };
