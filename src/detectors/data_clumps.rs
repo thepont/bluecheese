@@ -145,10 +145,6 @@ fn repeated_argument_groups(file: &SourceFile) -> Vec<Finding> {
     let declared = declared_methods(file);
     let (calls_by_executable, calls_by_type) = collect_argument_calls(file, &declared);
 
-    // Repeated arguments in one executable are a direct data clump. A
-    // constructor forwarding the same group and a method using it again in
-    // the same type is also a clump; sibling constructors alone are ordinary
-    // inheritance plumbing.
     let repeated = repeated_executable_groups(calls_by_executable);
     let repeated = repeated_type_groups(calls_by_type, repeated);
     findings_for_groups(file, repeated)
@@ -218,6 +214,7 @@ fn collect_argument_calls(
     (calls_by_executable, calls_by_type)
 }
 
+/// Repeated arguments in one executable are a direct data clump.
 fn repeated_executable_groups(calls: ExecutableCalls) -> BTreeMap<Vec<String>, Vec<usize>> {
     let mut repeated = BTreeMap::<Vec<String>, Vec<usize>>::new();
     for ((_, variables), lines) in calls {
@@ -228,6 +225,8 @@ fn repeated_executable_groups(calls: ExecutableCalls) -> BTreeMap<Vec<String>, V
     repeated
 }
 
+/// A constructor forwarding a group and a method reusing it form a clump;
+/// sibling constructors alone are ordinary inheritance plumbing.
 fn repeated_type_groups(
     calls_by_type: TypeCalls,
     mut repeated: BTreeMap<Vec<String>, Vec<usize>>,

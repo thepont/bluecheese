@@ -21,8 +21,6 @@ fn main() {
                 let Some(body) = model.body(method) else {
                     continue;
                 };
-                // Debug-only dump; the method name is read the Java way to line
-                // up with the Java probe's columns.
                 let name = method
                     .child_by_field_name("name")
                     .map(|n| file.text(n))

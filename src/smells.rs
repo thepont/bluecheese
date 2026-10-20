@@ -178,21 +178,19 @@ mod tests {
 
     use super::*;
 
+    /// Pin count and endpoints without duplicating the entire transcription.
     #[test]
     fn the_list_is_the_books_twenty_two() {
-        // Pinned by count and by its ends rather than by repeating all
-        // twenty-two strings, which would only be the same transcription twice.
         assert_eq!(SMELLS.len(), 22);
         assert_eq!(SMELLS.first().map(|s| s.name), Some("Duplicate Code"));
         assert_eq!(SMELLS.last().map(|s| s.name), Some("Comments"));
     }
 
+    /// Two detectors are commented out of the reference CLI and one is never
+    /// registered. If a later reference version exposes them, update this audit
+    /// and recapture goldens to establish parity evidence for their ports.
     #[test]
     fn the_three_the_reference_tool_cannot_be_asked_for_are_the_ones_we_audited() {
-        // Two are commented out of its command-line enumeration and one is
-        // registered nowhere. If a later version of the reference tool exposes
-        // them, this is the test that has to change, and the goldens can then be
-        // recaptured to give their ports parity evidence.
         let unsupported: Vec<&str> = SMELLS
             .iter()
             .filter(|smell| !smell.in_reference_tool)
@@ -205,10 +203,10 @@ mod tests {
         );
     }
 
+    /// Duplicate labels make detectors unreachable; duplicate names make
+    /// serialized reports ambiguous.
     #[test]
     fn labels_and_names_are_each_unique() {
-        // A duplicate would make one of the pair unreachable from the command
-        // line, or would make a report ambiguous to read back.
         for field in ["label", "name"] {
             let seen: BTreeSet<&str> = SMELLS
                 .iter()
