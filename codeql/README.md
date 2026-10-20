@@ -27,6 +27,12 @@ yet represented in the CodeQL rules.
 Rust structs: a type is reported when it has at least four explicitly typed
 primitive fields. As in BlueCheese, untyped JavaScript fields are not inferred.
 
+**Message Chains** is ported for getter-style calls in Java,
+JavaScript/TypeScript, and Rust. Java recognizes `get*` and `is*` calls;
+JavaScript/TypeScript also recognizes
+`has*`. The Rust port uses explicit method-call syntax and does not infer
+chains through overloaded operators.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need

@@ -1,0 +1,1 @@
+| MessageChains.java:3:12:3:48 | getValue(...) | This method contains a chain of at least three getter calls. |
