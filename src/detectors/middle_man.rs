@@ -285,7 +285,13 @@ fn java_stats(analysis: &Analysis<'_>, ty: Node<'_>) -> Option<DelegationStats> 
     }
     let delegates = methods
         .iter()
-        .filter(|method| is_pure_delegate(analysis, **method, ty))
+        .filter(|method| {
+            JavaDelegation {
+                analysis,
+                owner: ty,
+            }
+            .is_pure_delegate(**method)
+        })
         .count();
     Some(DelegationStats {
         methods: methods.len(),
@@ -314,43 +320,6 @@ fn referenced_project_types(analysis: &Analysis<'_>, ty: Node<'_>) -> usize {
     names.len()
 }
 
-fn is_pure_delegate(analysis: &Analysis<'_>, method: Node<'_>, owner: Node<'_>) -> bool {
-    let Some(statements) = model_for(analysis.file.language).body_statements(method) else {
-        return false;
-    };
-    if statements.is_empty() {
-        return false;
-    }
-
-    let mut found_delegate = false;
-    for statement in statements {
-        if let Some(call) = statement_call(statement) {
-            if delegates_to_field(analysis, call, owner) {
-                found_delegate = true;
-            } else if statement.kind() != "expression_statement" {
-                return false;
-            }
-        } else if statement.kind() == "return_statement" {
-            if let Some(expression) = first_named(statement)
-                && !matches!(
-                    expression.kind(),
-                    "identifier"
-                        | "decimal_integer_literal"
-                        | "string_literal"
-                        | "true"
-                        | "false"
-                        | "null_literal"
-                )
-            {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    found_delegate
-}
-
 fn statement_call(statement: Node<'_>) -> Option<Node<'_>> {
     if statement.kind() == "expression_statement" {
         let mut cursor = statement.walk();
@@ -366,50 +335,94 @@ fn statement_call(statement: Node<'_>) -> Option<Node<'_>> {
     None
 }
 
-fn delegates_to_field(analysis: &Analysis<'_>, call: Node<'_>, owner: Node<'_>) -> bool {
-    let Some(object) = call.child_by_field_name("object") else {
-        return false;
-    };
-    let object_name = if object.kind() == "field_access" {
-        object
-            .child_by_field_name("field")
-            .map(|field| analysis.file.text(field))
-            .unwrap_or_default()
-    } else {
-        analysis.file.text(object)
-    };
-    let Some(owner_body) = owner.child_by_field_name("body") else {
-        return false;
-    };
-    let mut cursor = owner_body.walk();
-    owner_body
-        .named_children(&mut cursor)
-        .filter(|node| node.kind() == "field_declaration")
-        .any(|field| {
-            let type_name = field.child_by_field_name("type").map(|ty| {
-                analysis
-                    .file
-                    .text(ty)
-                    .rsplit('.')
-                    .next()
-                    .unwrap_or(analysis.file.text(ty))
-            });
-            if !type_name.is_some_and(|name| analysis.project_types.contains(name)) {
-                return false;
-            }
-            let mut cursor = field.walk();
-            field
-                .named_children(&mut cursor)
-                .filter(|node| node.kind() == "variable_declarator")
-                .any(|variable| {
-                    variable
-                        .child_by_field_name("name")
-                        .is_some_and(|name| analysis.file.text(name) == object_name)
-                })
-        })
-}
-
 fn first_named(node: Node<'_>) -> Option<Node<'_>> {
     let mut cursor = node.walk();
     node.named_children(&mut cursor).next()
+}
+
+struct JavaDelegation<'a> {
+    analysis: &'a Analysis<'a>,
+    owner: Node<'a>,
+}
+impl JavaDelegation<'_> {
+    fn is_pure_delegate(&self, method: Node<'_>) -> bool {
+        let Some(statements) = model_for(self.analysis.file.language).body_statements(method)
+        else {
+            return false;
+        };
+        if statements.is_empty() {
+            return false;
+        }
+
+        let mut found_delegate = false;
+        for statement in statements {
+            if let Some(call) = statement_call(statement) {
+                if self.delegates_to_field(call) {
+                    found_delegate = true;
+                } else if statement.kind() != "expression_statement" {
+                    return false;
+                }
+            } else if statement.kind() == "return_statement" {
+                if let Some(expression) = first_named(statement)
+                    && !matches!(
+                        expression.kind(),
+                        "identifier"
+                            | "decimal_integer_literal"
+                            | "string_literal"
+                            | "true"
+                            | "false"
+                            | "null_literal"
+                    )
+                {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        found_delegate
+    }
+
+    fn delegates_to_field(&self, call: Node<'_>) -> bool {
+        let Some(object) = call.child_by_field_name("object") else {
+            return false;
+        };
+        let object_name = if object.kind() == "field_access" {
+            object
+                .child_by_field_name("field")
+                .map(|field| self.analysis.file.text(field))
+                .unwrap_or_default()
+        } else {
+            self.analysis.file.text(object)
+        };
+        let Some(owner_body) = self.owner.child_by_field_name("body") else {
+            return false;
+        };
+        let mut cursor = owner_body.walk();
+        owner_body
+            .named_children(&mut cursor)
+            .filter(|node| node.kind() == "field_declaration")
+            .any(|field| {
+                let type_name = field.child_by_field_name("type").map(|ty| {
+                    self.analysis
+                        .file
+                        .text(ty)
+                        .rsplit('.')
+                        .next()
+                        .unwrap_or(self.analysis.file.text(ty))
+                });
+                if !type_name.is_some_and(|name| self.analysis.project_types.contains(name)) {
+                    return false;
+                }
+                let mut cursor = field.walk();
+                field
+                    .named_children(&mut cursor)
+                    .filter(|node| node.kind() == "variable_declarator")
+                    .any(|variable| {
+                        variable
+                            .child_by_field_name("name")
+                            .is_some_and(|name| self.analysis.file.text(name) == object_name)
+                    })
+            })
+    }
 }
