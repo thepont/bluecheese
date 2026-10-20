@@ -763,3 +763,45 @@ fn reports_repeated_rust_lrs_pipelines_inside_a_module() {
 
     assert_eq!(findings.len(), 2);
 }
+
+#[test]
+fn reports_repeated_rust_lrs_pipelines_across_files() {
+    let dashboard = parse(
+        "dashboard.rs",
+        "use vendor::{LrsClient, Agent, Activity};\n\
+         struct Dashboard;\n\
+         impl Dashboard {\n\
+             fn complete(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 lrs.get_statements(user, course).iter().any(|statement| statement.result().completion())\n\
+             }\n\
+         }",
+    );
+    let report = parse(
+        "report.rs",
+        "use vendor::{LrsClient, Agent, Activity};\n\
+         struct Report;\n\
+         impl Report {\n\
+             fn completed(lrs: &LrsClient, user: &Agent, course: &Activity) -> bool {\n\
+                 for statement in lrs.get_statements(user, course) {\n\
+                     if statement.result().completion() { return true; }\n\
+                 }\n\
+                 false\n\
+             }\n\
+         }",
+    );
+
+    let findings =
+        bluecheese::detect(&[dashboard, report], "incomp-lib-class").expect("run detector");
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file_path == "dashboard.rs")
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file_path == "report.rs")
+    );
+}

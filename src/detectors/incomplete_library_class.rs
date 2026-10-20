@@ -20,8 +20,16 @@ struct PrototypePatch {
     shape: Vec<String>,
 }
 
+struct RustCompletionCandidate<'a> {
+    file: &'a SourceFile,
+    owner: String,
+    client_type: String,
+    shape: Vec<String>,
+    line: usize,
+}
+
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
-    files
+    let mut findings = files
         .iter()
         .flat_map(|file| match file.language {
             LanguageId::Java => java_findings(file),
@@ -29,7 +37,9 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             LanguageId::TypeScript | LanguageId::Tsx => typescript_findings(file),
             LanguageId::JavaScript => javascript_findings(file),
         })
-        .collect()
+        .collect::<Vec<_>>();
+    findings.extend(rust_completion_pipeline_findings(files));
+    findings
 }
 
 fn java_findings(file: &SourceFile) -> Vec<Finding> {
@@ -430,11 +440,6 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         .iter()
         .filter_map(|ty| rust::RUST.type_name(file.at(*ty)).map(str::to_owned))
         .collect::<BTreeSet<_>>();
-    let local_owner_types = descendants(file.root())
-        .into_iter()
-        .filter(|node| matches!(node.kind(), "struct_item" | "enum_item" | "union_item"))
-        .filter_map(|ty| rust::RUST.type_name(file.at(ty)).map(str::to_owned))
-        .collect::<BTreeSet<_>>();
     let local_traits = declarations
         .iter()
         .filter(|ty| ty.kind() == "trait_item")
@@ -483,7 +488,7 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
         }
     }
 
-    let mut findings = repeated_extension_owners(groups)
+    repeated_extension_owners(groups)
         .into_iter()
         .map(|((class_name, target_name), line)| Finding {
             smell_name: SMELL_NAME.to_owned(),
@@ -496,22 +501,62 @@ fn rust_findings(file: &SourceFile) -> Vec<Finding> {
                 target_name
             ),
         })
-        .collect::<Vec<_>>();
-    findings.extend(rust_completion_pipeline_findings(
-        file,
-        &imported,
-        &local_owner_types,
-    ));
+        .collect()
+}
+
+fn rust_completion_pipeline_findings(files: &[SourceFile]) -> Vec<Finding> {
+    let mut groups = BTreeMap::<(String, Vec<String>), Vec<RustCompletionCandidate<'_>>>::new();
+    for file in files
+        .iter()
+        .filter(|file| file.language == LanguageId::Rust)
+    {
+        let imported = rust_imported_types(file);
+        let local_types = descendants(file.root())
+            .into_iter()
+            .filter(|node| matches!(node.kind(), "struct_item" | "enum_item" | "union_item"))
+            .filter_map(|ty| rust::RUST.type_name(file.at(ty)).map(str::to_owned))
+            .collect::<BTreeSet<_>>();
+        for candidate in rust_completion_pipeline_candidates(file, &imported, &local_types) {
+            groups
+                .entry((candidate.client_type.clone(), candidate.shape.clone()))
+                .or_default()
+                .push(candidate);
+        }
+    }
+
+    let mut findings = Vec::new();
+    for ((client_type, _), candidates) in groups {
+        let mut locations = BTreeMap::new();
+        for candidate in candidates {
+            locations
+                .entry((candidate.file.rel.clone(), candidate.owner.clone()))
+                .or_insert(candidate);
+        }
+        if locations.len() < MIN_EXTENSIONS {
+            continue;
+        }
+        findings.extend(locations.into_values().map(|candidate| Finding {
+            smell_name: SMELL_NAME.to_owned(),
+            file_path: candidate.file.rel.clone(),
+            class_name: candidate.owner,
+            line_numbers: vec![candidate.line],
+            relative_file_path: candidate.file.rel.clone(),
+            additional_info: format!(
+                "repeated LRS completion projection around imported type {}",
+                client_type
+            ),
+        }));
+    }
     findings
 }
 
-fn rust_completion_pipeline_findings(
-    file: &SourceFile,
+fn rust_completion_pipeline_candidates<'a>(
+    file: &'a SourceFile,
     imported: &BTreeSet<String>,
     local_types: &BTreeSet<String>,
-) -> Vec<Finding> {
-    let mut groups = ExtensionGroups::new();
+) -> Vec<RustCompletionCandidate<'a>> {
     let mut candidates = Vec::new();
+    let mut owners = Vec::new();
     for implementation in descendants(file.root())
         .into_iter()
         .filter(|node| node.kind() == "impl_item" && node.child_by_field_name("trait").is_none())
@@ -534,18 +579,18 @@ fn rust_completion_pipeline_findings(
             .collect::<Vec<_>>()
             .join("::");
         for method in direct_rust_functions(body) {
-            candidates.push((owner_name.clone(), method));
+            owners.push((owner_name.clone(), method));
         }
     }
     for function in descendants(file.root()).into_iter().filter(|node| {
         node.kind() == "function_item" && !rust_function_belongs_to_impl_or_trait(*node)
     }) {
         if let Some(owner_name) = rust_free_function_owner(file, function) {
-            candidates.push((owner_name, function));
+            owners.push((owner_name, function));
         }
     }
 
-    for (owner_name, function) in candidates {
+    for (owner, function) in owners {
         let Some(body) = function.child_by_field_name("body") else {
             continue;
         };
@@ -554,27 +599,16 @@ fn rust_completion_pipeline_findings(
         else {
             continue;
         };
-        groups
-            .entry((client_type, shape))
-            .or_default()
-            .entry(owner_name)
-            .or_insert(function.start_position().row + 1);
+        candidates.push(RustCompletionCandidate {
+            file,
+            owner,
+            client_type,
+            shape,
+            line: function.start_position().row + 1,
+        });
     }
 
-    repeated_extension_owners(groups)
-        .into_iter()
-        .map(|((class_name, type_name), line)| Finding {
-            smell_name: SMELL_NAME.to_owned(),
-            file_path: file.rel.clone(),
-            class_name,
-            line_numbers: vec![line],
-            relative_file_path: file.rel.clone(),
-            additional_info: format!(
-                "repeated LRS completion projection around imported type {}",
-                type_name
-            ),
-        })
-        .collect()
+    candidates
 }
 
 fn rust_function_belongs_to_impl_or_trait(function: Node<'_>) -> bool {
