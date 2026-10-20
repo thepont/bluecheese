@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use crate::finding::Finding;
-use crate::lang::{SourceFile, model_for};
+use crate::lang::{SourceFile, SourceNode, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -30,7 +30,7 @@ fn owner_finding(file: &SourceFile, ty: Node<'_>) -> Option<Finding> {
     let methods: Vec<_> = model
         .methods(file.at(ty))
         .into_iter()
-        .map(|method| MethodFingerprint::new(file, method))
+        .map(|method| MethodFingerprint::new(file.at(method)))
         .collect();
     let lines = duplicate_lines(&methods);
     (!lines.is_empty()).then(|| Finding {
@@ -63,19 +63,23 @@ struct MethodFingerprint {
 }
 
 impl MethodFingerprint {
-    fn new(file: &SourceFile, method: Node<'_>) -> Self {
-        let model = model_for(file.language);
+    fn new(source: SourceNode<'_>) -> Self {
+        let model = source.model();
         let mut fingerprint = Self {
-            line: model_for(file.language).decl_line(method),
+            line: model.decl_line(source.node()),
             statements: BTreeSet::new(),
             arithmetic: BTreeSet::new(),
         };
-        for node in descendants(method) {
+        for node in descendants(source.node()) {
             if model.is_statement(node) {
-                fingerprint.statements.insert(normalize(file.text(node)));
+                fingerprint
+                    .statements
+                    .insert(normalize(source.file().text(node)));
             }
             if is_arithmetic(node) {
-                fingerprint.arithmetic.insert(normalize(file.text(node)));
+                fingerprint
+                    .arithmetic
+                    .insert(normalize(source.file().text(node)));
             }
         }
         fingerprint
