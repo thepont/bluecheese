@@ -102,46 +102,54 @@ fn if_chain_target<'tree>(
 
     let selectors: Vec<_> = chain
         .iter()
-        .filter_map(|branch| selector(file, *branch))
+        .filter_map(|branch| Condition::new(file, *branch)?.selector())
         .collect();
     if selectors.len() == chain.len() && selectors.iter().all(|item| item == &selectors[0]) {
         return Some(root);
     }
 
-    chain
-        .iter()
-        .rev()
-        .copied()
-        .find(|branch| is_enum_comparison(file, *branch))
+    chain.iter().rev().copied().find(|branch| {
+        Condition::new(file, *branch).is_some_and(|condition| condition.is_enum_comparison())
+    })
 }
 
-fn selector(file: &SourceFile, branch: tree_sitter::Node<'_>) -> Option<String> {
-    let condition = branch.child_by_field_name("condition")?;
-    let raw = file.text(condition).trim();
-    if let Some(index) = raw.find(".equals(") {
-        return Some(
-            raw[..index]
-                .trim()
-                .trim_start_matches('!')
-                .trim()
-                .to_string(),
-        );
+struct Condition<'a> {
+    file: &'a SourceFile,
+    node: tree_sitter::Node<'a>,
+}
+
+impl<'a> Condition<'a> {
+    fn new(file: &'a SourceFile, branch: tree_sitter::Node<'a>) -> Option<Self> {
+        Some(Self {
+            file,
+            node: branch.child_by_field_name("condition")?,
+        })
     }
-    ["==", "!=", ">=", "<=", ">", "<"]
-        .iter()
-        .find_map(|operator| raw.split_once(operator).map(|(left, _)| left.trim()))
-        .map(str::to_string)
-}
 
-fn is_enum_comparison(file: &SourceFile, branch: tree_sitter::Node<'_>) -> bool {
-    let Some(condition) = branch.child_by_field_name("condition") else {
-        return false;
-    };
-    let raw = file.text(condition);
-    raw.contains("==")
-        && raw
-            .split_once("==")
-            .is_some_and(|(_, right)| right.contains('.') && right.chars().any(char::is_uppercase))
+    fn selector(&self) -> Option<String> {
+        let raw = self.file.text(self.node).trim();
+        if let Some(index) = raw.find(".equals(") {
+            return Some(
+                raw[..index]
+                    .trim()
+                    .trim_start_matches('!')
+                    .trim()
+                    .to_string(),
+            );
+        }
+        ["==", "!=", ">=", "<=", ">", "<"]
+            .iter()
+            .find_map(|operator| raw.split_once(operator).map(|(left, _)| left.trim()))
+            .map(str::to_string)
+    }
+
+    fn is_enum_comparison(&self) -> bool {
+        let raw = self.file.text(self.node);
+        raw.contains("==")
+            && raw.split_once("==").is_some_and(|(_, right)| {
+                right.contains('.') && right.chars().any(char::is_uppercase)
+            })
+    }
 }
 
 fn is_switch(file: &SourceFile, kind: &str) -> bool {
