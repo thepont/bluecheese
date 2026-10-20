@@ -7,7 +7,7 @@ use super::{
 };
 use crate::lang::{
     LanguageId, SourceFile,
-    coupling::{self, Callable, MethodCoupling},
+    coupling::{self, Callable, MethodCoupling, MethodLocation},
 };
 use crate::walk::descendants;
 use std::collections::HashSet;
@@ -64,9 +64,11 @@ pub fn coupling(files: &[SourceFile], language: LanguageId) -> Vec<MethodCouplin
             let file = project.files[owner.file];
             Callable {
                 owner: method.owner,
-                file_path: file.rel.clone(),
-                class_name: owner.name.clone(),
-                line: file.line(method.node),
+                location: MethodLocation {
+                    file_path: file.rel.clone(),
+                    class_name: owner.name.clone(),
+                    line: file.line(method.node),
+                },
                 reportable: file.language == language
                     && method.node.child_by_field_name("body").is_some()
                     && method.name != "constructor"

@@ -6,10 +6,15 @@ use super::{SourceFile, model_for};
 use crate::finding::Finding;
 
 pub struct MethodCoupling {
+    pub location: MethodLocation,
+    pub counts: CouplingCounts,
+}
+
+#[derive(Clone)]
+pub struct MethodLocation {
     pub file_path: String,
     pub class_name: String,
     pub line: usize,
-    pub counts: CouplingCounts,
 }
 
 pub struct CouplingCounts {
@@ -38,10 +43,10 @@ impl MethodCoupling {
     pub fn into_finding(self, smell_name: &str) -> Finding {
         Finding {
             smell_name: smell_name.into(),
-            file_path: self.file_path.clone(),
-            relative_file_path: self.file_path,
-            class_name: self.class_name,
-            line_numbers: vec![self.line],
+            file_path: self.location.file_path.clone(),
+            relative_file_path: self.location.file_path,
+            class_name: self.location.class_name,
+            line_numbers: vec![self.location.line],
             additional_info: format!("{smell_name} {}", self.counts),
         }
     }
@@ -49,9 +54,7 @@ impl MethodCoupling {
 
 pub struct Callable {
     pub owner: usize,
-    pub file_path: String,
-    pub class_name: String,
-    pub line: usize,
+    pub location: MethodLocation,
     pub reportable: bool,
 }
 
@@ -90,9 +93,7 @@ pub fn count(methods: &[Callable], edges: &[(usize, usize)]) -> Vec<MethodCoupli
                 .map(|caller| methods[*caller].owner)
                 .collect();
             MethodCoupling {
-                file_path: method.file_path.clone(),
-                class_name: method.class_name.clone(),
-                line: method.line,
+                location: method.location.clone(),
                 counts: CouplingCounts {
                     callers: incoming[index].len(),
                     calling_classes: classes.len(),

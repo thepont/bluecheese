@@ -6,7 +6,7 @@ use std::collections::{BTreeSet, HashSet};
 
 use tree_sitter::Node;
 
-use crate::lang::coupling::{self, Callable, MethodCoupling};
+use crate::lang::coupling::{self, Callable, MethodCoupling, MethodLocation};
 use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::{ancestor_while, descendants};
 
@@ -80,9 +80,11 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
             let ty = &project.types[method.owner];
             Callable {
                 owner: method.owner,
-                file_path: ty.file.rel.clone(),
-                class_name: ty.name.clone(),
-                line: model_for(LanguageId::Java).decl_line(method.node),
+                location: MethodLocation {
+                    file_path: ty.file.rel.clone(),
+                    class_name: ty.name.clone(),
+                    line: model_for(LanguageId::Java).decl_line(method.node),
+                },
                 reportable: ty.node.kind() != "interface_declaration"
                     && method.node.child_by_field_name("body").is_some()
                     && !project.interface_contract(method),

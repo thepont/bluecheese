@@ -7,7 +7,7 @@
 
 use crate::lang::{
     LanguageId, SourceFile,
-    coupling::{self, Callable, MethodCoupling},
+    coupling::{self, Callable, MethodCoupling, MethodLocation},
     model_for,
 };
 use crate::walk::descendants;
@@ -87,9 +87,11 @@ pub fn coupling(files: &[SourceFile]) -> Vec<MethodCoupling> {
         .iter()
         .map(|method| Callable {
             owner: method.owner,
-            file_path: method.file.rel.clone(),
-            class_name: method.owner_name.clone(),
-            line: model.decl_line(method.node),
+            location: MethodLocation {
+                file_path: method.file.rel.clone(),
+                class_name: method.owner_name.clone(),
+                line: model.decl_line(method.node),
+            },
             reportable: method.node.child_by_field_name("body").is_some(),
         })
         .collect();
