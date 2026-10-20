@@ -111,24 +111,7 @@ fn catalogue(source: SourceNode<'_>) -> Option<(Catalogue, Declaration<'_>)> {
     let SourceNode { file, node } = source;
     let is_enum = matches!(node.kind(), "enum_declaration" | "enum_item");
     let is_export = node.kind() == "assignment_expression";
-    let (name_node, value) = if is_enum {
-        (
-            node.child_by_field_name("name")?,
-            node.child_by_field_name("body")?,
-        )
-    } else if is_export {
-        (exported_name(source)?, node.child_by_field_name("right")?)
-    } else if matches!(
-        node.kind(),
-        "variable_declarator" | "const_item" | "static_item"
-    ) {
-        (
-            node.child_by_field_name("name")?,
-            node.child_by_field_name("value")?,
-        )
-    } else {
-        return None;
-    };
+    let (name_node, value) = declaration_parts(source)?;
     let positions = if is_enum {
         positions::enum_members(file.at(value))
     } else if is_export {
@@ -174,6 +157,28 @@ fn catalogue(source: SourceNode<'_>) -> Option<(Catalogue, Declaration<'_>)> {
             positions,
         },
     ))
+}
+
+fn declaration_parts(source: SourceNode<'_>) -> Option<(Node<'_>, Node<'_>)> {
+    let node = source.node();
+    if matches!(node.kind(), "enum_declaration" | "enum_item") {
+        Some((
+            node.child_by_field_name("name")?,
+            node.child_by_field_name("body")?,
+        ))
+    } else if node.kind() == "assignment_expression" {
+        Some((exported_name(source)?, node.child_by_field_name("right")?))
+    } else if matches!(
+        node.kind(),
+        "variable_declarator" | "const_item" | "static_item"
+    ) {
+        Some((
+            node.child_by_field_name("name")?,
+            node.child_by_field_name("value")?,
+        ))
+    } else {
+        None
+    }
 }
 
 fn exported_name(source: SourceNode<'_>) -> Option<Node<'_>> {
