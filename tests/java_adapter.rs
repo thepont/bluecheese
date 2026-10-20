@@ -88,7 +88,7 @@ fn metrics_of(file: &SourceFile, method_name: &str) -> (usize, usize) {
                 .expect("method has a name");
             if file.text(name) == method_name {
                 let body = model.body(method).expect("method has a body");
-                return (model.lloc(file, body), model.complexity(file, method));
+                return (model.lloc(file.at(body)), model.complexity(file.at(method)));
             }
         }
     }

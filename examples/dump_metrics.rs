@@ -34,8 +34,8 @@ fn main() {
                     name,
                     model.decl_line(method),
                     file.line(body),
-                    model.lloc(file, body),
-                    model.complexity(file, method),
+                    model.lloc(file.at(body)),
+                    model.complexity(file.at(method)),
                 );
             }
         }

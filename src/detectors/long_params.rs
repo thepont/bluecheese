@@ -33,7 +33,8 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             let mut lines = Vec::new();
 
             for method in model.methods(file.at(ty)) {
-                if model.parameters(method) > MAX_METHOD_PARAMS && !model.is_override(file, method)
+                if model.parameters(method) > MAX_METHOD_PARAMS
+                    && !model.is_override(file.at(method))
                 {
                     lines.push(model.decl_line(method));
                 }

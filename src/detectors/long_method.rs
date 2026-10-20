@@ -32,8 +32,8 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
                     continue;
                 };
 
-                let loc = model.lloc(file, body);
-                let complexity = model.complexity(file, method);
+                let loc = model.lloc(file.at(body));
+                let complexity = model.complexity(file.at(method));
 
                 if loc >= MAX_LLOC || complexity > MAX_COMPLEXITY {
                     lines.push(file.line(body));

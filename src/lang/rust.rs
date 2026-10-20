@@ -64,7 +64,8 @@ impl LanguageModel for RustModel {
         crate::lang::rust_calls::coupling(files)
     }
 
-    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+    fn accessor_chain_depth(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode { file, node } = source;
         if node.kind() != "call_expression" {
             return 0;
         }
@@ -227,7 +228,8 @@ impl LanguageModel for RustModel {
     /// A function written inside `impl Trait for Type` restates the trait's
     /// signature, which is what `@Override` marks in Java. A default method
     /// declared in the trait itself is not: it is the declaration.
-    fn is_override(&self, _file: &SourceFile, node: Node<'_>) -> bool {
+    fn is_override(&self, source: SourceNode<'_>) -> bool {
+        let SourceNode { file: _file, node } = source;
         ancestor_while(node, |_| false, |ancestor| ancestor.kind() == "impl_item")
             .is_some_and(|imp| imp.child_by_field_name("trait").is_some())
     }
@@ -251,7 +253,11 @@ impl LanguageModel for RustModel {
     /// inside them. The Java metric is far more inclusive (Spoon counts nested
     /// invocations); this one is deliberately simpler, since there is no
     /// reference to match.
-    fn lloc(&self, _file: &SourceFile, body: Node<'_>) -> usize {
+    fn lloc(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode {
+            file: _file,
+            node: body,
+        } = source;
         descendants(body)
             .into_iter()
             .filter(|n| n.kind() == "block")
@@ -268,7 +274,8 @@ impl LanguageModel for RustModel {
     /// Cyclomatic complexity: one plus every branch point. A `match` arm is a
     /// branch, except the wildcard arm, which is the fall-through case rather
     /// than a decision.
-    fn complexity(&self, file: &SourceFile, method: Node<'_>) -> usize {
+    fn complexity(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode { file, node: method } = source;
         let mut complexity = 1;
         for node in descendants(method) {
             let kind = node.kind();

@@ -32,7 +32,8 @@ impl LanguageModel for JavaModel {
         node.kind().ends_with("_statement") || node.kind() == "local_variable_declaration"
     }
 
-    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+    fn accessor_chain_depth(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode { file, node } = source;
         if node.kind() != "method_invocation" {
             return 0;
         }
@@ -114,7 +115,8 @@ impl LanguageModel for JavaModel {
         types::parameters(node)
     }
 
-    fn is_override(&self, file: &SourceFile, node: Node<'_>) -> bool {
+    fn is_override(&self, source: SourceNode<'_>) -> bool {
+        let SourceNode { file, node } = source;
         types::is_override(file, node)
     }
 
@@ -126,11 +128,13 @@ impl LanguageModel for JavaModel {
         types::decl_line(node)
     }
 
-    fn lloc(&self, file: &SourceFile, body: Node<'_>) -> usize {
+    fn lloc(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode { file, node: body } = source;
         metrics::lloc(file, body)
     }
 
-    fn complexity(&self, file: &SourceFile, method: Node<'_>) -> usize {
+    fn complexity(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode { file, node: method } = source;
         metrics::cyclomatic_complexity(file, method)
     }
 }

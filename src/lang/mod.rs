@@ -125,7 +125,7 @@ impl Project {
 /// The vocabulary is deliberately small: it is what the ported detectors
 /// actually need, and it grows only when a detector needs a new concept.
 pub trait LanguageModel {
-    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize;
+    fn accessor_chain_depth(&self, source: SourceNode<'_>) -> usize;
 
     fn is_comment(&self, node: Node<'_>) -> bool;
 
@@ -192,7 +192,7 @@ pub trait LanguageModel {
     /// declaring one of its own. The reference tool leaves overrides out of
     /// Long Parameter List: their parameter list is fixed by the declaration
     /// they override, so the smell, and the fix, belong there.
-    fn is_override(&self, file: &SourceFile, node: Node<'_>) -> bool;
+    fn is_override(&self, source: SourceNode<'_>) -> bool;
 
     /// The body of a method, if it has one.
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>>;
@@ -217,10 +217,10 @@ pub trait LanguageModel {
     fn decl_line(&self, node: Node<'_>) -> usize;
 
     /// Logical lines of code in a method body.
-    fn lloc(&self, file: &SourceFile, body: Node<'_>) -> usize;
+    fn lloc(&self, source: SourceNode<'_>) -> usize;
 
     /// Cyclomatic complexity of a method.
-    fn complexity(&self, file: &SourceFile, method: Node<'_>) -> usize;
+    fn complexity(&self, source: SourceNode<'_>) -> usize;
 }
 
 /// All adapters the tool knows about.

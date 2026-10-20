@@ -29,7 +29,8 @@ impl LanguageModel for EcmaModel {
             || matches!(node.kind(), "lexical_declaration" | "variable_declaration")
     }
 
-    fn accessor_chain_depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
+    fn accessor_chain_depth(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode { file, node } = source;
         if node.kind() != "call_expression" {
             return 0;
         }
@@ -137,7 +138,11 @@ impl LanguageModel for EcmaModel {
         }
         usize::from(node.child_by_field_name("parameter").is_some())
     }
-    fn is_override(&self, _file: &SourceFile, _node: Node<'_>) -> bool {
+    fn is_override(&self, source: SourceNode<'_>) -> bool {
+        let SourceNode {
+            file: _file,
+            node: _node,
+        } = source;
         false
     }
     fn body<'a>(&self, node: Node<'a>) -> Option<Node<'a>> {
@@ -146,14 +151,22 @@ impl LanguageModel for EcmaModel {
     fn decl_line(&self, node: Node<'_>) -> usize {
         node.start_position().row + 1
     }
-    fn lloc(&self, _file: &SourceFile, body: Node<'_>) -> usize {
+    fn lloc(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode {
+            file: _file,
+            node: body,
+        } = source;
         descendants(body)
             .into_iter()
             .filter(|node| node.kind() == "statement_block")
             .map(|node| children(node).len())
             .sum()
     }
-    fn complexity(&self, _file: &SourceFile, method: Node<'_>) -> usize {
+    fn complexity(&self, source: SourceNode<'_>) -> usize {
+        let SourceNode {
+            file: _file,
+            node: method,
+        } = source;
         1 + descendants(method)
             .into_iter()
             .filter(|node| {

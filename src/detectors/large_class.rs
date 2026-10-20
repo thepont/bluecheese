@@ -60,7 +60,7 @@ fn non_java_findings(file: &SourceFile) -> Vec<Finding> {
             }
             let wmc: usize = methods
                 .iter()
-                .map(|method| model.complexity(file, *method))
+                .map(|method| model.complexity(file.at(*method)))
                 .sum();
             let tcc = non_java_tcc(file, &field_names, &methods);
             if field_names.len() < FIELD_THRESHOLD && !(wmc >= WMC_THRESHOLD && tcc < TCC_THRESHOLD)
@@ -144,7 +144,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 .methods(file.at(ty))
                 .into_iter()
                 .filter(|m| m.child_by_field_name("body").is_some())
-                .map(|m| model.complexity(file, m))
+                .map(|m| model.complexity(file.at(m)))
                 .sum();
             let tcc = tcc(&analysis);
             if (wmc < WMC_THRESHOLD || tcc >= TCC_THRESHOLD)

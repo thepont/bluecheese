@@ -91,7 +91,7 @@ fn wildcard_match_arm_is_not_a_decision() {
                 .child_by_field_name("name")
                 .expect("method has a name");
             if file.text(name) == "classify" {
-                classified = Some(model.complexity(file, method));
+                classified = Some(model.complexity(file.at(method)));
             }
         }
     }
@@ -218,7 +218,7 @@ fn logical_operators_are_decisions_but_bitwise_is_not() {
         for method in model.methods(features.at(ty)) {
             let name = method.child_by_field_name("name").expect("a name");
             if features.text(name) == "fits" {
-                complexity = Some(model.complexity(&features, method));
+                complexity = Some(model.complexity(features.at(method)));
             }
         }
     }

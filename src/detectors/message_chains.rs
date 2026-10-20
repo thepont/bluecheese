@@ -24,7 +24,7 @@ pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
             let mut lines = Vec::new();
             for method in model.methods(file.at(ty)) {
                 for node in descendants(method) {
-                    if model.accessor_chain_depth(file, node) >= MINIMUM_CALLS {
+                    if model.accessor_chain_depth(file.at(node)) >= MINIMUM_CALLS {
                         lines.push(file.line(node));
                     }
                 }
