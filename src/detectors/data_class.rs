@@ -47,7 +47,6 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             }
 
             let fields = model.fields(ty);
-            let methods = model.methods(file.at(ty));
             let public_mutable_fields = fields
                 .iter()
                 .filter(|field| {
@@ -69,13 +68,9 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 file,
                 fields: &field_names,
             };
-            let smell = if methods.is_empty() {
-                public_mutable_fields > 0
-            } else {
-                methods
-                    .iter()
-                    .all(|method| accessors.is_strict_accessor(*method))
-            };
+            let smell = accessors
+                .only_accessors(ty)
+                .unwrap_or(public_mutable_fields > 0);
             smell.then(|| Finding {
                 smell_name: SMELL_NAME.to_string(),
                 file_path: file.rel.clone(),
@@ -137,16 +132,11 @@ fn non_java_data_class(file: &SourceFile, ty: Node<'_>, name: &str) -> Option<Fi
     if fields.is_empty() {
         return None;
     }
-    let methods = model.methods(file.at(ty));
     let accessors = Accessors {
         file,
         fields: &fields,
     };
-    if !methods.is_empty()
-        && !methods
-            .iter()
-            .all(|method| accessors.is_non_java_accessor(*method))
-    {
+    if !accessors.only_accessors(ty).unwrap_or(true) {
         return None;
     }
     Some(Finding {
@@ -189,6 +179,19 @@ struct Accessors<'a> {
 }
 
 impl Accessors<'_> {
+    fn only_accessors(&self, ty: Node<'_>) -> Option<bool> {
+        let methods = model_for(self.file.language).methods(self.file.at(ty));
+        (!methods.is_empty()).then(|| {
+            methods.iter().all(|method| {
+                if self.file.language == LanguageId::Java {
+                    self.is_strict_accessor(*method)
+                } else {
+                    self.is_non_java_accessor(*method)
+                }
+            })
+        })
+    }
+
     fn is_non_java_accessor(&self, method: Node<'_>) -> bool {
         let Some(statements) = model_for(self.file.language).body_children(method) else {
             return false;
