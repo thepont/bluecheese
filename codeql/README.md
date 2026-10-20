@@ -7,8 +7,9 @@ packs for running those rules in GitHub code scanning and focused query tests.
 
 The current CodeQL port covers **Long Parameter List** and **Long Method** in
 Rust, Java, JavaScript, and TypeScript (TypeScript uses CodeQL's JavaScript
-extractor). It also covers **Feature Envy** in Java, where BlueCheese currently
-supports that rule. Long Parameter List uses the BlueCheese parameter limits.
+extractor). It also covers **Feature Envy** and **Lazy Class** in Java, where
+BlueCheese currently supports those rules. Long Parameter List uses the
+BlueCheese parameter limits.
 The Rust version reports free functions, trait declarations, and inherent
 methods, while excluding trait implementations. Long Method uses the same
 configured size and complexity thresholds. Its CodeQL metrics are AST-based:
