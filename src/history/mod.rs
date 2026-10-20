@@ -69,9 +69,13 @@ fn analyse(files: &[SourceFile], history: &mut dyn History) -> Result<Vec<Findin
         .collect();
     let changes = history.changes()?;
     let mut snapshots = Snapshots::new(history, files);
+    let mut evidence = Evidence {
+        symbols: &symbols,
+        snapshots: &mut snapshots,
+    };
     let mut findings = Vec::new();
     for method in candidates {
-        let commits = evidence(&method, &symbols, &changes, &mut snapshots)?;
+        let commits = evidence.commits(&method, &changes)?;
         if commits.is_empty() {
             continue;
         }
@@ -85,48 +89,44 @@ fn analyse(files: &[SourceFile], history: &mut dyn History) -> Result<Vec<Findin
     Ok(findings)
 }
 
-fn evidence(
-    method: &MethodCoupling,
-    symbols: &BTreeMap<&str, Symbols>,
-    changes: &[Change],
-    snapshots: &mut Snapshots<'_>,
-) -> Result<Vec<String>> {
-    let mut commits = Vec::new();
-    for change in changes {
-        if !changed(&method.location, symbols, change, snapshots)? {
-            continue;
-        }
-        let mut caller_files = BTreeSet::new();
-        for caller in &method.callers {
-            if caller.file_path != method.location.file_path
-                && changed(caller, symbols, change, snapshots)?
-            {
-                caller_files.insert(caller.file_path.as_str());
-            }
-        }
-        if caller_files.len() >= 2 {
-            commits.push(change.id.as_str().to_owned());
-        }
-    }
-    Ok(commits)
+struct Evidence<'a, 'history> {
+    symbols: &'a BTreeMap<&'history str, Symbols>,
+    snapshots: &'a mut Snapshots<'history>,
 }
 
-fn changed(
-    location: &MethodLocation,
-    symbols: &BTreeMap<&str, Symbols>,
-    change: &Change,
-    snapshots: &mut Snapshots<'_>,
-) -> Result<bool> {
-    if !change.paths.contains(&location.file_path) {
-        return Ok(false);
+impl Evidence<'_, '_> {
+    fn commits(&mut self, method: &MethodCoupling, changes: &[Change]) -> Result<Vec<String>> {
+        let mut commits = Vec::new();
+        for change in changes {
+            if !self.changed(&method.location, change)? {
+                continue;
+            }
+            let mut caller_files = BTreeSet::new();
+            for caller in &method.callers {
+                if caller.file_path != method.location.file_path && self.changed(caller, change)? {
+                    caller_files.insert(caller.file_path.as_str());
+                }
+            }
+            if caller_files.len() >= 2 {
+                commits.push(change.id.as_str().to_owned());
+            }
+        }
+        Ok(commits)
     }
-    let Some(key) = symbols
-        .get(location.file_path.as_str())
-        .and_then(|symbols| symbols.at_offset(location.start_byte))
-    else {
-        return Ok(false);
-    };
-    snapshots.changed(change, &location.file_path, key)
+
+    fn changed(&mut self, location: &MethodLocation, change: &Change) -> Result<bool> {
+        if !change.paths.contains(&location.file_path) {
+            return Ok(false);
+        }
+        let Some(key) = self
+            .symbols
+            .get(location.file_path.as_str())
+            .and_then(|symbols| symbols.at_offset(location.start_byte))
+        else {
+            return Ok(false);
+        };
+        self.snapshots.changed(change, &location.file_path, key)
+    }
 }
 
 struct Snapshots<'a> {
