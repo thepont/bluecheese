@@ -41,9 +41,19 @@ fn main() -> anyhow::Result<()> {
     };
     let project = bluecheese::lang::load_project_with(&args.folder, &scope)?;
 
-    // An empty report from a working analyser and an empty report from an
-    // analyser that understood nothing are the same bytes. Refuse to produce
-    // one without saying which happened.
+    print_inventory(&project, &args.folder)?;
+
+    let findings = bluecheese::detect(&project.files, &args.smell)?;
+    println!("{}", serde_json::to_string_pretty(&findings)?);
+    Ok(())
+}
+
+/// Report the scan's coverage before any findings. Empty input is an error;
+/// unsupported files are counted so partial coverage cannot look complete.
+fn print_inventory(
+    project: &bluecheese::lang::Project,
+    folder: &std::path::Path,
+) -> anyhow::Result<()> {
     if project.files.is_empty() {
         let tail = if project.skipped.is_empty() {
             String::new()
@@ -52,7 +62,7 @@ fn main() -> anyhow::Result<()> {
         };
         anyhow::bail!(
             "no source files found under {} (understood extensions: {}){tail}",
-            args.folder.display(),
+            folder.display(),
             bluecheese::lang::supported_extensions().join(", ")
         );
     }
@@ -60,8 +70,6 @@ fn main() -> anyhow::Result<()> {
     let summary = project.language_summary();
     eprintln!("analysed {} files ({summary})", project.files.len());
 
-    // Files with no adapter are invisible in the report otherwise: pointing a
-    // Rust-only tool at a half-JavaScript project would look like a clean run.
     if !project.skipped.is_empty() {
         eprintln!(
             "skipped {} files with no adapter: {}",
@@ -70,8 +78,6 @@ fn main() -> anyhow::Result<()> {
         );
     }
 
-    let findings = bluecheese::detect(&project.files, &args.smell)?;
-    println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())
 }
 
