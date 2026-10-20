@@ -64,6 +64,12 @@ stubs.
 fields. The source detector's weighted method complexity and tight class
 cohesion branch is not included in this query.
 
+**Parallel Inheritance Hierarchies** has a Java query for same-file subclasses
+under separate source-defined parents that have matching three-character name
+prefixes. CodeQL resolves parent types project-wide, while this query's
+name-pairing is a simpler approximation of the source detector's greedy
+matching heuristic.
+
 The other BlueCheese detectors have not yet been ported. A CodeQL database
 contains one language, so rules that compare code across languages need a
 separate multi-database design. Rules that depend on Git history also need

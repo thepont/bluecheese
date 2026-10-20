@@ -1,0 +1,4 @@
+| ParallelHierarchy.java:4:7:4:20 | UserRepository | This class is part of a parallel inheritance hierarchy. |
+| ParallelHierarchy.java:5:7:5:21 | OrderRepository | This class is part of a parallel inheritance hierarchy. |
+| ParallelHierarchy.java:6:7:6:20 | UserController | This class is part of a parallel inheritance hierarchy. |
+| ParallelHierarchy.java:7:7:7:21 | OrderController | This class is part of a parallel inheritance hierarchy. |
