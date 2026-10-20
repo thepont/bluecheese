@@ -60,9 +60,14 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 })
                 .count();
 
+            let field_names: Vec<_> = fields
+                .iter()
+                .filter_map(|field| field.child_by_field_name("name"))
+                .map(|name| file.text(name).to_owned())
+                .collect();
             let accessors = Accessors {
                 file,
-                fields: &fields,
+                fields: &field_names,
             };
             let smell = if methods.is_empty() {
                 public_mutable_fields > 0
@@ -178,12 +183,12 @@ fn has_modifier(file: &SourceFile, node: Node<'_>, modifier: &str) -> bool {
         .any(|word| word == modifier)
 }
 
-struct Accessors<'a, T> {
+struct Accessors<'a> {
     file: &'a SourceFile,
-    fields: &'a [T],
+    fields: &'a [String],
 }
 
-impl Accessors<'_, String> {
+impl Accessors<'_> {
     fn is_non_java_accessor(&self, method: Node<'_>) -> bool {
         let Some(statements) = model_for(self.file.language).body_children(method) else {
             return false;
@@ -246,7 +251,7 @@ impl Accessors<'_, String> {
     }
 }
 
-impl Accessors<'_, Node<'_>> {
+impl Accessors<'_> {
     fn is_strict_accessor(&self, method: Node<'_>) -> bool {
         let Some(statements) = model_for(self.file.language).body_statements(method) else {
             return false;
@@ -313,10 +318,6 @@ impl Accessors<'_, Node<'_>> {
         } else {
             return false;
         };
-        self.fields.iter().any(|field| {
-            field
-                .child_by_field_name("name")
-                .is_some_and(|name| self.file.text(name) == field_name)
-        })
+        self.fields.iter().any(|field| field == field_name)
     }
 }
