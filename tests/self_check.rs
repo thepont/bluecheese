@@ -24,7 +24,7 @@ fn shipped() -> Scope {
     }
 }
 
-fn findings(project: &Project, smell: &str) -> Vec<Finding> {
+fn source_findings(project: &Project, smell: &str) -> Vec<Finding> {
     bluecheese::detect(&project.files, smell).expect("run a ported detector")
 }
 
@@ -44,7 +44,7 @@ fn the_projects_own_source_is_free_of_every_smell_the_tool_can_detect() {
     // the list, and the second port is where a scan pinned to the first would
     // have started missing things.
     for smell in bluecheese::ported_smells() {
-        let findings = findings(&project, smell);
+        let findings = project.detect(smell).expect("run application analysis");
         assert!(
             findings.is_empty(),
             "'{smell}' outside a fixture is not deliberate: {findings:#?}"
@@ -53,16 +53,15 @@ fn the_projects_own_source_is_free_of_every_smell_the_tool_can_detect() {
 }
 
 #[test]
-fn the_exclusion_is_what_keeps_the_corpus_out_of_the_self_scan() {
-    // The same scan, without the scope. It must report the corpus, or the test
-    // above is passing because the walk never reached the fixtures rather than
-    // because of the exclusion — which is exactly the failure a reviewer cannot
-    // see from the outside.
+fn the_exclusion_is_what_keeps_the_corpus_out_of_source_only_scans() {
+    // Source-only fixtures pin every detector independently of a repository's
+    // history. The scoped application scan above uses the same file walker;
+    // this control verifies that the deliberate corpus is reachable.
     let unscoped =
         load_project_with(&common::repo(), &Scope::default()).expect("scan the repository");
 
     for smell in bluecheese::ported_smells() {
-        let findings = findings(&unscoped, smell);
+        let findings = source_findings(&unscoped, smell);
         assert!(
             findings
                 .iter()
