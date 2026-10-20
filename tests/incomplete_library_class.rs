@@ -80,6 +80,141 @@ fn ignores_one_off_helpers_and_helpers_for_local_types() {
 }
 
 #[test]
+fn reports_repeated_timezone_workarounds_around_imported_library_calls() {
+    let findings = scan(
+        "import java.util.Calendar;\n\
+         import java.util.TimeZone;\n\
+         class BookingDisplay {\n\
+             long localMillis(Calendar calendar, TimeZone zone) { return calendar.getTimeInMillis() + zone.getOffset(calendar.getTimeInMillis()); }\n\
+         }\n\
+         class ReminderDisplay {\n\
+             long reminderMillis(Calendar calendar, TimeZone zone) { return calendar.getTimeInMillis() + zone.getOffset(calendar.getTimeInMillis()); }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 4);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "BookingDisplay")
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.class_name == "ReminderDisplay")
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.additional_info.contains("Calendar"))
+            .count(),
+        2
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.additional_info.contains("TimeZone"))
+            .count(),
+        2
+    );
+}
+
+#[test]
+fn ignores_duplicated_code_that_does_not_call_the_imported_type() {
+    let findings = scan(
+        "import vendor.Calendar;\n\
+         class BookingDisplay {\n\
+             String localTime(Calendar calendar, int hour, int offset) { int localHour = (hour + offset + 24) % 24; return Integer.toString(localHour); }\n\
+         }\n\
+         class ReminderDisplay {\n\
+             String label(Calendar calendar, int hour, int offset) { int localHour = (hour + offset + 24) % 24; return Integer.toString(localHour); }\n\
+         }",
+    );
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn ignores_library_workarounds_centralized_in_a_shared_adapter() {
+    let findings = scan(
+        "import java.util.Calendar;\n\
+         import java.util.TimeZone;\n\
+         class CalendarAdapter {\n\
+             static long localMillis(Calendar calendar, TimeZone zone) { return calendar.getTimeInMillis() + zone.getOffset(calendar.getTimeInMillis()); }\n\
+         }\n\
+         class BookingDisplay {\n\
+             long localMillis(Calendar calendar, TimeZone zone) { return CalendarAdapter.localMillis(calendar, zone); }\n\
+         }\n\
+         class ReminderDisplay {\n\
+             long reminderMillis(Calendar calendar, TimeZone zone) { return CalendarAdapter.localMillis(calendar, zone); }\n\
+         }",
+    );
+
+    assert!(findings.is_empty());
+}
+
+#[test]
+fn reports_repeated_byte_order_correction_around_byte_buffer_calls() {
+    let findings = scan(
+        "import java.nio.ByteBuffer;\n\
+         class HeaderReader {\n\
+             short littleEndianWord(ByteBuffer bytes) { int high = bytes.get() & 0xff; int low = bytes.get() & 0xff; return (short) ((low << 8) | high); }\n\
+         }\n\
+         class PacketReader {\n\
+             short packetType(ByteBuffer bytes) { int high = bytes.get() & 0xff; int low = bytes.get() & 0xff; return (short) ((low << 8) | high); }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("ByteBuffer"))
+    );
+}
+
+#[test]
+fn reports_repeated_unicode_to_ascii_workaround_around_static_library_calls() {
+    let findings = scan(
+        "import java.text.Normalizer;\n\
+         class SearchIndex {\n\
+             String asciiKey(String text) { String decomposed = Normalizer.normalize(text, Normalizer.Form.NFD); return decomposed.replaceAll(\"[^\\\\x00-\\\\x7F]\", \"\"); }\n\
+         }\n\
+         class UrlBuilder {\n\
+             String asciiPath(String text) { String decomposed = Normalizer.normalize(text, Normalizer.Form.NFD); return decomposed.replaceAll(\"[^\\\\x00-\\\\x7F]\", \"\"); }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("Normalizer"))
+    );
+}
+
+#[test]
+fn reports_repeated_marshalling_around_jni_native_calls() {
+    let findings = scan(
+        "import java.nio.charset.StandardCharsets;\n\
+         class NativeCodec { static native int decode(byte[] utf8, int length); }\n\
+         class ImageReader {\n\
+             int read(String text) { byte[] utf8 = text.getBytes(StandardCharsets.UTF_8); return NativeCodec.decode(utf8, utf8.length); }\n\
+         }\n\
+         class DocumentReader {\n\
+             int parse(String text) { byte[] utf8 = text.getBytes(StandardCharsets.UTF_8); return NativeCodec.decode(utf8, utf8.length); }\n\
+         }",
+    );
+
+    assert_eq!(findings.len(), 2);
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.additional_info.contains("NativeCodec"))
+    );
+}
+
+#[test]
 fn reports_duplicated_rust_extension_implementations_for_an_imported_type() {
     let file = parse(
         "date_helpers.rs",

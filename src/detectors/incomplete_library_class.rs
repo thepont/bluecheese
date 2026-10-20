@@ -73,7 +73,7 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
         }
     }
 
-    repeated_extension_owners(groups)
+    let mut findings = repeated_extension_owners(groups)
         .into_iter()
         .map(|((class_name, type_name), line)| Finding {
             smell_name: SMELL_NAME.to_owned(),
@@ -86,7 +86,188 @@ fn java_findings(file: &SourceFile) -> Vec<Finding> {
                 type_name
             ),
         })
+        .collect::<Vec<_>>();
+    findings.extend(java_repeated_callsite_findings(file, &imported, &local));
+    findings
+}
+
+fn java_repeated_callsite_findings(
+    file: &SourceFile,
+    imported: &BTreeSet<String>,
+    local: &BTreeSet<String>,
+) -> Vec<Finding> {
+    let mut groups = ExtensionGroups::new();
+    let native_types = java_native_boundary_types(file);
+    for class in java::JAVA
+        .types(file)
+        .into_iter()
+        .filter(|ty| ty.kind() == "class_declaration")
+    {
+        let Some(owner) = java::JAVA.type_name(file.at(class)).map(str::to_owned) else {
+            continue;
+        };
+        for method in java::JAVA.methods(file.at(class)) {
+            let Some(body) = method.child_by_field_name("body") else {
+                continue;
+            };
+            let mut receivers = java_imported_parameters(file, method, imported, local);
+            receivers.extend(
+                imported
+                    .iter()
+                    .filter(|type_name| !local.contains(*type_name))
+                    .map(|type_name| (type_name.clone(), type_name.clone())),
+            );
+            receivers.extend(
+                native_types
+                    .iter()
+                    .map(|type_name| (type_name.clone(), type_name.clone())),
+            );
+            if receivers.is_empty() {
+                continue;
+            }
+            if extension_parameter(file.at(method)).is_some_and(|(type_name, receiver)| {
+                imported.contains(&type_name)
+                    && !local.contains(&type_name)
+                    && extends_receiver(file.at(method), &receiver)
+            }) {
+                continue;
+            }
+
+            for (type_name, receiver) in receivers {
+                if !java_calls_receiver(file, body, &receiver) {
+                    continue;
+                }
+                let shape = java_callsite_shape(file, body);
+                if shape.len() >= MIN_BODY_SHAPE_NODES {
+                    groups
+                        .entry((type_name, shape))
+                        .or_default()
+                        .entry(owner.clone())
+                        .or_insert(method.start_position().row + 1);
+                }
+            }
+        }
+    }
+
+    repeated_extension_owners(groups)
+        .into_iter()
+        .map(|((class_name, type_name), line)| Finding {
+            smell_name: SMELL_NAME.to_owned(),
+            file_path: file.rel.clone(),
+            class_name,
+            line_numbers: vec![line],
+            relative_file_path: file.rel.clone(),
+            additional_info: format!(
+                "repeated call-site workaround around library boundary type {}",
+                type_name
+            ),
+        })
         .collect()
+}
+
+fn java_native_boundary_types(file: &SourceFile) -> BTreeSet<String> {
+    java::JAVA
+        .types(file)
+        .into_iter()
+        .filter(|ty| ty.kind() == "class_declaration")
+        .filter(|ty| {
+            java::JAVA
+                .methods(file.at(*ty))
+                .into_iter()
+                .any(|method| is_native_method(file.at(method)))
+        })
+        .filter_map(|ty| java::JAVA.type_name(file.at(ty)).map(str::to_owned))
+        .collect()
+}
+
+fn is_native_method(source: SourceNode<'_>) -> bool {
+    let mut cursor = source.node().walk();
+    source
+        .node()
+        .named_children(&mut cursor)
+        .find(|child| child.kind() == "modifiers")
+        .is_some_and(|modifiers| {
+            source
+                .file()
+                .text(modifiers)
+                .split_whitespace()
+                .any(|word| word == "native")
+        })
+}
+
+fn java_imported_parameters(
+    file: &SourceFile,
+    method: Node<'_>,
+    imported: &BTreeSet<String>,
+    local: &BTreeSet<String>,
+) -> Vec<(String, String)> {
+    let Some(parameters) = method.child_by_field_name("parameters") else {
+        return Vec::new();
+    };
+    let mut cursor = parameters.walk();
+    parameters
+        .named_children(&mut cursor)
+        .filter(|parameter| parameter.kind() == "formal_parameter")
+        .filter_map(|parameter| {
+            let (Some(type_node), Some(name_node)) = (
+                parameter.child_by_field_name("type"),
+                parameter.child_by_field_name("name"),
+            ) else {
+                return None;
+            };
+            let type_name = file
+                .text(type_node)
+                .trim()
+                .trim_end_matches("[]")
+                .rsplit('.')
+                .next()?
+                .to_owned();
+            (imported.contains(&type_name) && !local.contains(&type_name))
+                .then(|| (type_name, file.text(name_node).to_owned()))
+        })
+        .collect()
+}
+
+fn java_calls_receiver(file: &SourceFile, body: Node<'_>, receiver: &str) -> bool {
+    descendants(body).into_iter().any(|node| {
+        node.kind() == "method_invocation"
+            && node
+                .child_by_field_name("object")
+                .is_some_and(|object| file.text(object).trim() == receiver)
+    })
+}
+
+fn java_callsite_shape(file: &SourceFile, body: Node<'_>) -> Vec<String> {
+    let mut shape = Vec::new();
+    let mut stack = vec![body];
+    while let Some(node) = stack.pop() {
+        let kind = node.kind();
+        let method_name_id = if kind == "method_invocation" {
+            if let Some(name) = node.child_by_field_name("name") {
+                shape.push(format!("call:{}", file.text(name)));
+                Some(name.id())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        if kind.ends_with("_literal") || matches!(kind, "true" | "false" | "null") {
+            shape.push(format!("{}:{}", kind, file.text(node)));
+            continue;
+        }
+        if kind == "identifier" || kind.ends_with("_identifier") || kind.ends_with("_name") {
+            continue;
+        }
+        shape.push(kind.to_owned());
+        let mut cursor = node.walk();
+        let children = node
+            .children(&mut cursor)
+            .filter(|child| Some(child.id()) != method_name_id)
+            .collect::<Vec<_>>();
+        stack.extend(children.into_iter().rev());
+    }
+    shape
 }
 
 fn rust_findings(file: &SourceFile) -> Vec<Finding> {
