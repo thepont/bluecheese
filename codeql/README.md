@@ -62,11 +62,12 @@ are not represented yet.
 are single-statement delegations through a field to another source-defined
 class. The Rust and JavaScript/TypeScript variants are not included yet.
 
-**Refused Bequest** has a Java query for explicit `@Override` methods that
-replace inherited behavior with an empty `void` body or an
-`UnsupportedOperation` exception. It does not yet cover implicit refusal
-through unimplemented parent methods, JavaScript/TypeScript, or Rust trait
-stubs.
+**Refused Bequest** has Java, Rust, and JavaScript/TypeScript queries. Java
+reports explicit `@Override` methods with empty `void` bodies or
+`UnsupportedOperation` exceptions; Rust reports `todo!` or `unimplemented!`
+replacements for default trait methods; JavaScript/TypeScript reports empty
+overrides matched to a same-file parent by method name and parameter count.
+Implicit refusal without an explicit stub remains out of scope.
 
 **Large Class** has Java, Rust, and JavaScript/TypeScript queries for types with
 at least eight instance fields. The source detector's weighted method

@@ -1,0 +1,1 @@
+| RefusedBequest.ts:7:3:7:32 | overrid ... ber) {} | This empty override refuses behavior inherited from its parent class. |

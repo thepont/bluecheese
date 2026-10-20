@@ -1,0 +1,1 @@
+| RefusedBequest.rs:10:5:10:40 | fn run | This trait implementation replaces a default method with a refusal stub. |
