@@ -48,6 +48,18 @@ fn the_projects_own_source_is_free_of_every_smell_the_tool_can_detect() {
     // the list, and the second port is where a scan pinned to the first would
     // have started missing things.
     for smell in bluecheese::ported_smells() {
+        let languages = bluecheese::detector_languages(smell).expect("registered detector");
+        if !project
+            .files
+            .iter()
+            .any(|file| languages.contains(&file.language))
+        {
+            assert!(
+                project.detect(smell).is_err(),
+                "{smell} must refuse unsupported input"
+            );
+            continue;
+        }
         let findings = project.detect(smell).expect("run application analysis");
         assert!(
             findings.is_empty(),

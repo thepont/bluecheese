@@ -134,6 +134,13 @@ impl Project {
         }
     }
 
+    /// Account for languages supported and skipped by a particular detector.
+    /// Reject wholly unsupported nonempty input before claiming analysis coverage.
+    pub fn coverage(&self, smell: &str) -> Result<crate::coverage::AnalysisCoverage> {
+        let languages = crate::detector_languages(smell)?;
+        crate::coverage::AnalysisCoverage::new(&self.files, smell, languages)
+    }
+
     pub fn language_summary(&self) -> String {
         let mut counts = BTreeMap::<LanguageId, usize>::new();
         for file in &self.files {

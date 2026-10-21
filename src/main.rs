@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
     };
     let project = bluecheese::lang::load_project_with(&args.folder, &scope)?;
 
-    print_inventory(&project, &args.folder)?;
+    let coverage = print_inventory(&project, &args.folder, &args.smell)?;
 
     if args.smell == "shotgun" {
         eprintln!(
@@ -71,16 +71,18 @@ fn main() -> anyhow::Result<()> {
     } else {
         project.detect(&args.smell)?
     };
+    eprintln!("{coverage}");
     println!("{}", serde_json::to_string_pretty(&findings)?);
     Ok(())
 }
 
-/// Report the scan's coverage before any findings. Empty input is an error;
-/// unsupported files are counted so partial coverage cannot look complete.
+/// Validate the scan and report skipped inputs. The completed count is printed
+/// after detection succeeds, so a failed run cannot claim to have analysed files.
 fn print_inventory(
     project: &bluecheese::lang::Project,
     folder: &std::path::Path,
-) -> anyhow::Result<()> {
+    smell: &str,
+) -> anyhow::Result<bluecheese::coverage::AnalysisCoverage> {
     if project.files.is_empty() {
         let tail = if project.skipped.is_empty() {
             String::new()
@@ -94,8 +96,14 @@ fn print_inventory(
         );
     }
 
-    let summary = project.language_summary();
-    eprintln!("analysed {} files ({summary})", project.files.len());
+    let coverage = project.coverage(smell)?;
+    if coverage.unsupported_files() > 0 {
+        eprintln!(
+            "partial analysis: skipped {} files unsupported by detector '{smell}': {}",
+            coverage.unsupported_files(),
+            coverage.unsupported_summary()
+        );
+    }
 
     if !project.skipped.is_empty() {
         eprintln!(
@@ -105,7 +113,7 @@ fn print_inventory(
         );
     }
 
-    Ok(())
+    Ok(coverage)
 }
 
 /// How many extensions the skip notice names before summarising the rest. A

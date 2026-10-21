@@ -76,6 +76,32 @@ These are characterisation tests, not parity against a JS/TS reference tool.
 Long Method and Long Parameter List also use the syntax adapters. The other
 existing language-specific detectors retain their documented scope.
 
+### Detector coverage in CLI reports
+
+Parsing a language does not imply that every detector supports it. Feature Envy
+(`feature-envy`), Temporary Field (`temp-field`), Lazy Class (`lazy-class`),
+Divergent Change (`divergent-change`), Parallel Inheritance Hierarchies
+(`parallel-hierarchy`), and Alternative Classes with Different Interfaces
+(`alt-classes`) currently support Java only.
+
+The CLI reports the number of files supported by the selected detector after
+analysis completes. On mixed-language input, it names and counts files skipped
+because the detector does not support their languages. Files with no parser
+are reported separately. When no input file has a supported language, the
+command exits unsuccessfully with an explanation and emits no findings JSON.
+The same rules apply to the default, `--source-only`, and `--reference` modes.
+
+Supported scans keep the JSON array of findings on stdout; coverage diagnostics
+go to stderr. An empty array on a partial scan describes only the supported
+files. Library callers can inspect `Project::coverage` for the
+same counts; `bluecheese::detect` rejects wholly unsupported nonempty input.
+
+Message Chains supports Java, Rust, JavaScript, TypeScript, and TSX. Its rule
+looks for at least three consecutive accessor calls (`get*` or `is*`, plus
+`has*` for JS/TS). Ordinary fluent calls interrupt the chain. Zero findings
+therefore mean no matching accessor chains were found within the detector's
+scope.
+
 This resolver does not run source code or load npm packages. It does not
 resolve arbitrary `require()`, dynamic imports, re-export chains, tsconfig
 path aliases, full TypeScript overload/generic inference or runtime mutation.

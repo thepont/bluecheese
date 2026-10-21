@@ -270,6 +270,16 @@ fn a_rust_file_whose_name_is_not_utf8_reports_nothing() {
     assert_eq!(files.len(), 2, "both files are read and parsed");
 
     for smell in bluecheese::ported_smells() {
+        if !bluecheese::detector_languages(smell)
+            .unwrap()
+            .contains(&LanguageId::Rust)
+        {
+            assert!(
+                bluecheese::detect(&files, smell).is_err(),
+                "{smell} must refuse unsupported Rust input"
+            );
+            continue;
+        }
         let findings = bluecheese::detect(&files, smell).expect("run a ported detector");
         assert!(
             findings

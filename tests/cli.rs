@@ -139,6 +139,152 @@ fn feature_envy_can_be_requested_from_the_cli() {
 }
 
 #[test]
+fn a_java_only_detector_cannot_report_javascript_as_clean() {
+    let tree = TempTree::new("feature-envy-unsupported-language");
+    tree.write(
+        "client.js",
+        "class Client { run(other) { return other.value; } }",
+    );
+
+    let output = run_smell(tree.path(), "feature-envy", &[]);
+
+    assert!(
+        !output.status.success(),
+        "unsupported scan succeeded: stdout={}, stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        output.stdout.is_empty(),
+        "unsupported scan must not emit findings JSON"
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("does not support"), "{stderr}");
+    assert!(stderr.contains("JavaScript"), "{stderr}");
+    assert!(!stderr.contains("analysed 1 files"), "{stderr}");
+}
+
+#[test]
+fn every_java_only_detector_rejects_unsupported_languages_in_every_mode() {
+    for (name, source) in [
+        ("client.js", "class Client {}"),
+        ("client.ts", "class Client {}"),
+        ("client.tsx", "const view = <div />;"),
+        ("client.rs", "fn run() {}"),
+    ] {
+        let tree = TempTree::new("java-only-detectors");
+        tree.write(name, source);
+        let project = bluecheese::lang::load_project(tree.path()).unwrap();
+        for smell in [
+            "feature-envy",
+            "temp-field",
+            "lazy-class",
+            "divergent-change",
+            "parallel-hierarchy",
+            "alt-classes",
+        ] {
+            assert!(
+                bluecheese::detect(&project.files, smell).is_err(),
+                "{smell}: {name}"
+            );
+            assert!(project.detect(smell).is_err(), "{smell}: {name}");
+            assert!(project.detect_source(smell).is_err(), "{smell}: {name}");
+            for flags in [&[][..], &["--reference"][..], &["--source-only"][..]] {
+                let output = run_smell(tree.path(), smell, flags);
+                assert!(!output.status.success(), "{smell}: {name} {flags:?}");
+                assert!(output.stdout.is_empty(), "{smell}: {name} {flags:?}");
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                assert!(stderr.contains("does not support"), "{stderr}");
+                assert!(stderr.contains("supported languages: Java"), "{stderr}");
+                assert!(!stderr.contains("analysed 1 files"), "{stderr}");
+            }
+        }
+    }
+}
+
+#[test]
+fn mixed_scans_count_only_files_supported_by_the_detector() {
+    let tree = TempTree::new("partial-detector-coverage");
+    tree.write(
+        "invoice.java",
+        "class Invoice { int total(Customer c) { return c.balance + c.discount + c.tax; } }",
+    )
+    .write("client.js", "class Client {}")
+    .write("client.ts", "class Client {}")
+    .write("client.tsx", "const view = <div />;")
+    .write("client.rs", "fn run() {}")
+    .write("unparsed.py", "pass");
+
+    for flags in [&[][..], &["--reference"][..], &["--source-only"][..]] {
+        let output = run_smell(tree.path(), "feature-envy", flags);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(reported(&output), ["invoice.java"]);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(stderr.contains("analysed 1 files (1 Java)"), "{stderr}");
+        assert!(
+            stderr.contains(
+                "partial analysis: skipped 4 files unsupported by detector 'feature-envy'"
+            ),
+            "{stderr}"
+        );
+        assert!(
+            stderr.contains("1 Rust, 1 JavaScript, 1 TypeScript, 1 Tsx"),
+            "{stderr}"
+        );
+        assert!(
+            stderr.contains("skipped 1 files with no adapter: 1 .py"),
+            "{stderr}"
+        );
+    }
+}
+
+#[test]
+fn supported_message_chains_distinguish_findings_from_clean_javascript() {
+    for (source, expected) in [
+        (
+            "function run(customer) { customer.getAddress().getCountry().getName(); }",
+            1,
+        ),
+        (
+            "function run(customer) { customer.getAddress().getCountry(); }",
+            0,
+        ),
+    ] {
+        let tree = TempTree::new("message-chain-coverage");
+        tree.write("client.js", source);
+        let output = run_smell(tree.path(), "message-chains", &[]);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(reported(&output).len(), expected);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("analysed 1 files (1 JavaScript)"),
+            "{stderr}"
+        );
+        assert!(!stderr.contains("partial analysis"), "{stderr}");
+    }
+}
+
+#[test]
+fn an_unknown_detector_cannot_claim_a_completed_scan() {
+    let tree = TempTree::new("unknown-detector-coverage");
+    tree.write("client.js", "class Client {}");
+    let output = run_smell(tree.path(), "unknown-detector", &[]);
+    assert!(!output.status.success());
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("unknown smell"), "{stderr}");
+    assert!(!stderr.contains("analysed 1 files"), "{stderr}");
+}
+
+#[test]
 fn incomplete_library_class_can_be_requested_from_the_cli() {
     let tree = TempTree::new("incomplete-library-class-cli");
     tree.write(
