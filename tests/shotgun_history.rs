@@ -88,6 +88,51 @@ fn changes_to_a_callee_and_two_existing_callers_carry_commit_evidence() {
 }
 
 #[test]
+fn historical_parse_failures_skip_only_affected_evidence_and_are_reported() {
+    let repo = Repository::new();
+    repo.0.write("Policy.java", "class Policy { int check( {");
+    repo.commit();
+    repo.write(2, 2, 2);
+    repo.commit();
+    repo.write(3, 3, 3);
+    let valid_commit = repo.commit();
+    let project = load_project(repo.0.path()).unwrap();
+    let report = project.detect_report("shotgun").unwrap();
+    assert_eq!(report.findings.len(), 1);
+    assert!(!report.warnings.is_empty());
+    assert!(
+        project.detect("shotgun").is_err(),
+        "findings-only API must reject incomplete evidence"
+    );
+    repo.0.write("broken.ts", "class Broken {");
+    let output = Command::new(env!("CARGO_BIN_EXE_bluecheese"))
+        .arg("-f")
+        .arg(repo.0.path())
+        .args(["-s", "shotgun"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let findings: Vec<Finding> = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].additional_info.contains(&valid_commit));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("partial analysis")
+            && stderr.contains("Policy.java")
+            && stderr.contains("historical"),
+        "{stderr}"
+    );
+    assert!(
+        stderr.contains("broken.ts") && stderr.contains("analysed 3 files"),
+        "{stderr}"
+    );
+}
+
+#[test]
 fn methods_on_the_same_line_keep_distinct_symbol_identities() {
     let repo = Repository::new();
     repo.0.write(

@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result, ensure};
 
-use crate::finding::Finding;
+use crate::finding::{AnalysisReport, Finding};
 use crate::lang::{
     LanguageId, SourceFile,
     coupling::{self, MethodChanges, MethodCoupling},
@@ -73,10 +73,15 @@ trait History {
 
 pub fn detect(root: &Path, files: &[SourceFile]) -> Result<Vec<Finding>> {
     let mut history = git::GitHistory::open(root, files)?;
-    analyse(files, &mut history)
+    analyse(files, &mut history)?.require_complete()
 }
 
-fn analyse(files: &[SourceFile], history: &mut dyn History) -> Result<Vec<Finding>> {
+pub(crate) fn detect_report(project: &crate::lang::Project) -> Result<AnalysisReport> {
+    let mut history = git::GitHistory::open(project.root(), &project.files)?;
+    analyse(&project.files, &mut history)
+}
+
+fn analyse(files: &[SourceFile], history: &mut dyn History) -> Result<AnalysisReport> {
     ensure!(
         files.iter().all(|file| !file.root().has_error()),
         "current source contains parse errors; history evidence would be incomplete"
@@ -108,7 +113,10 @@ fn analyse(files: &[SourceFile], history: &mut dyn History) -> Result<Vec<Findin
         ));
         findings.push(finding);
     }
-    Ok(findings)
+    Ok(AnalysisReport {
+        findings,
+        warnings: snapshots.warnings.into_iter().collect(),
+    })
 }
 
 struct Evidence<'a, 'history> {
@@ -159,7 +167,8 @@ struct Snapshots<'a> {
     history: &'a mut dyn History,
     languages: BTreeMap<&'a str, LanguageId>,
     revisions: BTreeMap<(ObjectId, String), Option<Arc<Symbols>>>,
-    blobs: BTreeMap<(ObjectId, LanguageId), Arc<Symbols>>,
+    blobs: BTreeMap<(ObjectId, LanguageId), Option<Arc<Symbols>>>,
+    warnings: BTreeSet<String>,
 }
 
 impl<'a> Snapshots<'a> {
@@ -172,6 +181,7 @@ impl<'a> Snapshots<'a> {
                 .collect(),
             revisions: BTreeMap::new(),
             blobs: BTreeMap::new(),
+            warnings: BTreeSet::new(),
         }
     }
 
@@ -186,16 +196,22 @@ impl<'a> Snapshots<'a> {
                 .get(path)
                 .context("unknown source language")?;
             let blob_key = (blob.id, language);
-            if let Some(known) = self.blobs.get(&blob_key) {
-                Some(known.clone())
+            let symbols = if let Some(known) = self.blobs.get(&blob_key) {
+                known.clone()
             } else {
-                let symbols = Arc::new(
-                    Symbols::parse(blob.source, language)
-                        .with_context(|| format!("analysing historical source {path}"))?,
-                );
+                let symbols = Symbols::parse(blob.source, language)
+                    .with_context(|| format!("analysing historical source {path}"))?
+                    .map(Arc::new);
                 self.blobs.insert(blob_key, symbols.clone());
-                Some(symbols)
+                symbols
+            };
+            if symbols.is_none() {
+                self.warnings.insert(format!(
+                    "skipped historical source {path} at {}: parse errors",
+                    revision.as_str()
+                ));
             }
+            symbols
         } else {
             None
         };

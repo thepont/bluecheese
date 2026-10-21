@@ -110,18 +110,26 @@ pub struct Project {
 }
 
 impl Project {
+    pub(crate) fn root(&self) -> &Path {
+        &self.root
+    }
+
     /// Use parallel source declarations first; otherwise require Git evidence
     /// for Shotgun Surgery. These are alternative evidence paths, not a union.
     pub fn detect(&self, smell: &str) -> Result<Vec<crate::finding::Finding>> {
+        self.detect_report(smell)?.require_complete()
+    }
+
+    pub fn detect_report(&self, smell: &str) -> Result<crate::finding::AnalysisReport> {
         if smell == "shotgun" {
             let source = self.detect_source(smell)?;
             if source.is_empty() {
-                crate::history::detect(&self.root, &self.files)
+                crate::history::detect_report(self)
             } else {
-                Ok(source)
+                Ok(crate::finding::AnalysisReport::complete(source))
             }
         } else {
-            crate::detect(&self.files, smell)
+            crate::detect(&self.files, smell).map(crate::finding::AnalysisReport::complete)
         }
     }
 

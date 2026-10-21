@@ -47,7 +47,17 @@ fn main() -> anyhow::Result<()> {
         include: args.include,
         exclude: args.exclude,
     };
-    let project = bluecheese::lang::load_project_with(&args.folder, &scope)?;
+    let mut project = bluecheese::lang::load_project_with(&args.folder, &scope)?;
+    if args.smell == "shotgun" {
+        project.files.retain(|file| {
+            if file.root().has_error() {
+                eprintln!("partial analysis: skipped {}: parse errors", file.rel);
+                false
+            } else {
+                true
+            }
+        });
+    }
 
     let coverage = print_inventory(&project, &args.folder, &args.smell)?;
 
@@ -69,7 +79,11 @@ fn main() -> anyhow::Result<()> {
     } else if args.source_only {
         project.detect_source(&args.smell)?
     } else {
-        project.detect(&args.smell)?
+        let report = project.detect_report(&args.smell)?;
+        for warning in report.warnings {
+            eprintln!("partial analysis: {warning}");
+        }
+        report.findings
     };
     eprintln!("{coverage}");
     println!("{}", serde_json::to_string_pretty(&findings)?);

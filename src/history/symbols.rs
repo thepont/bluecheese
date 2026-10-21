@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result};
 use tree_sitter::{Node, Parser};
 
 use crate::lang::{LanguageId, SourceFile, SourceNode, ecmascript, model_for};
@@ -47,23 +47,22 @@ impl Symbols {
         Self { bodies, positions }
     }
 
-    pub fn parse(source: String, language: LanguageId) -> Result<Self> {
+    pub fn parse(source: String, language: LanguageId) -> Result<Option<Self>> {
         let mut parser = Parser::new();
         parser.set_language(&model_for(language).grammar())?;
         let tree = parser
             .parse(&source, None)
             .context("parsing historical source")?;
-        ensure!(
-            !tree.root_node().has_error(),
-            "historical source contains parse errors"
-        );
-        Ok(Self::from_file(&SourceFile {
+        if tree.root_node().has_error() {
+            return Ok(None);
+        }
+        Ok(Some(Self::from_file(&SourceFile {
             path: PathBuf::new(),
             rel: String::new(),
             source,
             tree,
             language,
-        }))
+        })))
     }
 
     pub fn at_offset(&self, offset: usize) -> Option<&SymbolKey> {

@@ -347,6 +347,18 @@ fn incomplete_source_is_an_error_and_cli_modes_are_exclusive() {
             .detect_source("shotgun")
             .is_err()
     );
+    for flags in [&[][..], &["--source-only"][..], &["--reference"][..]] {
+        let output = Command::new(env!("CARGO_BIN_EXE_bluecheese"))
+            .arg("-f")
+            .arg(malformed.path())
+            .args(["-s", "shotgun"])
+            .args(flags)
+            .output()
+            .unwrap();
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+        assert!(String::from_utf8_lossy(&output.stderr).contains("broken.ts"));
+    }
     let output = Command::new(env!("CARGO_BIN_EXE_bluecheese"))
         .arg("-f")
         .arg(malformed.path())
@@ -354,4 +366,36 @@ fn incomplete_source_is_an_error_and_cli_modes_are_exclusive() {
         .output()
         .unwrap();
     assert!(!output.status.success());
+}
+
+#[test]
+fn malformed_files_do_not_abort_valid_shotgun_source_findings() {
+    let input = tree(&[
+        ("first.ts", "enum Tenant { ACME, CONTOSO }"),
+        ("second.ts", "enum Tenant { ACME, CONTOSO }"),
+        ("broken.ts", "enum Broken {"),
+    ]);
+    for flags in [&[][..], &["--source-only"][..]] {
+        let output = Command::new(env!("CARGO_BIN_EXE_bluecheese"))
+            .arg("-f")
+            .arg(input.path())
+            .args(["-s", "shotgun"])
+            .args(flags)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let findings: Vec<bluecheese::finding::Finding> =
+            serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(findings.len(), 2);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            stderr.contains("partial analysis") && stderr.contains("broken.ts"),
+            "{stderr}"
+        );
+        assert!(stderr.contains("analysed 2 files"), "{stderr}");
+    }
 }

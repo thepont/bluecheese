@@ -4,6 +4,32 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Findings together with any omissions that make the analysis incomplete.
+#[derive(Default)]
+pub struct AnalysisReport {
+    pub findings: Vec<Finding>,
+    pub warnings: Vec<String>,
+}
+
+impl AnalysisReport {
+    pub fn complete(findings: Vec<Finding>) -> Self {
+        Self {
+            findings,
+            warnings: Vec::new(),
+        }
+    }
+
+    /// Callers consuming only findings must not silently lose partial coverage.
+    pub fn require_complete(self) -> anyhow::Result<Vec<Finding>> {
+        anyhow::ensure!(
+            self.warnings.is_empty(),
+            "incomplete analysis: {}",
+            self.warnings.join("; ")
+        );
+        Ok(self.findings)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Finding {
     #[serde(rename = "smellName")]
