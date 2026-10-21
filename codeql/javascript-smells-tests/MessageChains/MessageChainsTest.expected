@@ -1,1 +1,7 @@
-| MessageChains.ts:3:12:3:48 | root.ge ... Value() | This function contains a chain of at least three accessor calls. |
+| JavaScriptProperties.js | mixed |
+| JavaScriptProperties.js | optional |
+| JavaScriptProperties.js | property |
+| MessageChains.ts | longChain |
+| Properties.ts | mixed |
+| Properties.ts | optional |
+| Properties.ts | property |

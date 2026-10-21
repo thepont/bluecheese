@@ -1,6 +1,6 @@
 /**
  * @name Message chains
- * @description A JavaScript or TypeScript function contains at least three nested accessor calls.
+ * @description A JavaScript or TypeScript function navigates at least three properties or accessor calls.
  * @kind problem
  * @problem.severity recommendation
  * @id bluecheese/javascript/message-chains
@@ -8,16 +8,8 @@
  * @tags maintainability
  */
 import javascript
+import MessageChainsLib
 
-predicate isAccessor(MethodCallExpr call) {
-  call.getMethodName().regexpMatch("^(get|is|has).*")
-}
-
-from MethodCallExpr outer, MethodCallExpr middle, MethodCallExpr inner
-where
-  outer.getReceiver() = middle and
-  middle.getReceiver() = inner and
-  isAccessor(outer) and
-  isAccessor(middle) and
-  isAccessor(inner)
-select outer, "This function contains a chain of at least three accessor calls."
+from Expr outer
+where isMessageChain(outer)
+select outer, "This function contains at least three property or accessor navigation steps."
