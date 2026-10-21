@@ -1,4 +1,4 @@
-//! Best-effort Divergent Change heuristic for Java classes.
+//! Best-effort Divergent Change heuristic for Java and ECMAScript classes.
 //!
 //! The heuristic looks for low field cohesion, repeated switches/actions, and
 //! the same field driving conditionals in multiple methods. These source-level
@@ -8,7 +8,7 @@
 use std::collections::BTreeSet;
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 
 pub const SMELL_NAME: &str = "Divergent Change";
@@ -18,23 +18,23 @@ const MIN_DISJOINT_PAIR_RATIO: f64 = 0.75;
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
+        .filter(|file| file.language != LanguageId::Rust)
         .flat_map(file_findings)
         .collect()
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
-    java::JAVA
+    model_for(file.language)
         .types(file)
         .into_iter()
-        .filter(|ty| ty.kind() == "class_declaration")
+        .filter(|ty| model_for(file.language).is_data_type(ty.kind()))
         .filter(|ty| ClassAnalysis { file, class: *ty }.is_divergent())
         .filter_map(|ty| {
             Some(Finding {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
-                class_name: java::JAVA.type_name(file.at(ty))?.to_owned(),
-                line_numbers: vec![java::JAVA.decl_line(ty)],
+                class_name: model_for(file.language).type_name(file.at(ty))?.to_owned(),
+                line_numbers: vec![model_for(file.language).decl_line(ty)],
                 relative_file_path: file.rel.clone(),
                 additional_info: String::new(),
             })
@@ -55,20 +55,15 @@ impl ClassAnalysis<'_> {
         if fields.is_empty() {
             return false;
         }
-        let method_fields = java::JAVA
+        let method_fields = model_for(self.file.language)
             .methods(self.file.at(self.class))
             .into_iter()
             .map(|method| {
                 descendants(method)
                     .into_iter()
-                    .filter(|node| node.kind() == "field_access")
                     .filter_map(|access| {
-                        let (Some(object), Some(field)) = (
-                            access.child_by_field_name("object"),
-                            access.child_by_field_name("field"),
-                        ) else {
-                            return None;
-                        };
+                        let (object, field) =
+                            model_for(self.file.language).field_access_parts(access)?;
                         (self.file.text(object) == "this" && fields.contains(self.file.text(field)))
                             .then(|| self.file.text(field).to_owned())
                     })
@@ -94,20 +89,15 @@ impl ClassAnalysis<'_> {
 
     fn same_field_drives_multiple_methods(&self) -> bool {
         let mut method_counts = std::collections::BTreeMap::<String, usize>::new();
-        for method in java::JAVA.methods(self.file.at(self.class)) {
+        for method in model_for(self.file.language).methods(self.file.at(self.class)) {
             let fields = descendants(method)
                 .into_iter()
                 .filter(|node| node.kind() == "if_statement")
                 .filter_map(|branch| branch.child_by_field_name("condition"))
                 .flat_map(descendants)
-                .filter(|access| access.kind() == "field_access")
                 .filter_map(|access| {
-                    let (Some(object), Some(field)) = (
-                        access.child_by_field_name("object"),
-                        access.child_by_field_name("field"),
-                    ) else {
-                        return None;
-                    };
+                    let (object, field) =
+                        model_for(self.file.language).field_access_parts(access)?;
                     (self.file.text(object) == "this").then(|| self.file.text(field).to_owned())
                 })
                 .collect::<BTreeSet<_>>();
@@ -119,7 +109,7 @@ impl ClassAnalysis<'_> {
     }
 
     fn has_repeated_action_or_switches(&self) -> bool {
-        let methods = java::JAVA.methods(self.file.at(self.class));
+        let methods = model_for(self.file.language).methods(self.file.at(self.class));
         let switch_methods = methods
             .iter()
             .filter(|method| {
@@ -136,13 +126,16 @@ impl ClassAnalysis<'_> {
         for method in methods {
             let actions = descendants(method)
                 .into_iter()
-                .filter(|node| node.kind() == "method_invocation")
+                .filter(|node| matches!(node.kind(), "method_invocation" | "call_expression"))
                 .filter_map(|call| {
-                    let (Some(receiver), Some(name)) = (
-                        call.child_by_field_name("object"),
-                        call.child_by_field_name("name"),
-                    ) else {
-                        return None;
+                    let (receiver, name) = if call.kind() == "method_invocation" {
+                        (
+                            call.child_by_field_name("object")?,
+                            call.child_by_field_name("name")?,
+                        )
+                    } else {
+                        model_for(self.file.language)
+                            .field_access_parts(call.child_by_field_name("function")?)?
                     };
                     Some(format!(
                         "{}.{}",
@@ -161,19 +154,13 @@ impl ClassAnalysis<'_> {
     }
 
     fn fields(&self) -> BTreeSet<String> {
-        let Some(body) = self.class.child_by_field_name("body") else {
-            return BTreeSet::new();
-        };
-        let mut cursor = body.walk();
-        body.named_children(&mut cursor)
-            .filter(|child| child.kind() == "field_declaration")
-            .flat_map(|declaration| {
-                let mut cursor = declaration.walk();
-                declaration
-                    .named_children(&mut cursor)
-                    .filter(|child| child.kind() == "variable_declarator")
-                    .filter_map(|field| field.child_by_field_name("name"))
-                    .collect::<Vec<_>>()
+        model_for(self.file.language)
+            .fields(self.class)
+            .into_iter()
+            .filter_map(|field| {
+                field
+                    .child_by_field_name("name")
+                    .or_else(|| field.child_by_field_name("property"))
             })
             .map(|name| self.file.text(name).to_owned())
             .collect()

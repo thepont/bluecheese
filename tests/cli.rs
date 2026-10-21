@@ -139,12 +139,9 @@ fn feature_envy_can_be_requested_from_the_cli() {
 }
 
 #[test]
-fn a_java_only_detector_cannot_report_javascript_as_clean() {
+fn an_unsupported_detector_cannot_report_rust_as_clean() {
     let tree = TempTree::new("feature-envy-unsupported-language");
-    tree.write(
-        "client.js",
-        "class Client { run(other) { return other.value; } }",
-    );
+    tree.write("client.rs", "fn run() {}");
 
     let output = run_smell(tree.path(), "feature-envy", &[]);
 
@@ -160,18 +157,13 @@ fn a_java_only_detector_cannot_report_javascript_as_clean() {
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(stderr.contains("does not support"), "{stderr}");
-    assert!(stderr.contains("JavaScript"), "{stderr}");
+    assert!(stderr.contains("Rust"), "{stderr}");
     assert!(!stderr.contains("analysed 1 files"), "{stderr}");
 }
 
 #[test]
-fn every_java_only_detector_rejects_unsupported_languages_in_every_mode() {
-    for (name, source) in [
-        ("client.js", "class Client {}"),
-        ("client.ts", "class Client {}"),
-        ("client.tsx", "const view = <div />;"),
-        ("client.rs", "fn run() {}"),
-    ] {
+fn class_detectors_reject_unsupported_rust_in_every_mode() {
+    for (name, source) in [("client.rs", "fn run() {} value")] {
         let tree = TempTree::new("java-only-detectors");
         tree.write(name, source);
         let project = bluecheese::lang::load_project(tree.path()).unwrap();
@@ -224,17 +216,17 @@ fn mixed_scans_count_only_files_supported_by_the_detector() {
         );
         assert_eq!(reported(&output), ["invoice.java"]);
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(stderr.contains("analysed 1 files (1 Java)"), "{stderr}");
+        assert!(
+            stderr.contains("analysed 4 files (1 Java, 1 JavaScript, 1 TypeScript, 1 Tsx)"),
+            "{stderr}"
+        );
         assert!(
             stderr.contains(
-                "partial analysis: skipped 4 files unsupported by detector 'feature-envy'"
+                "partial analysis: skipped 1 files unsupported by detector 'feature-envy'"
             ),
             "{stderr}"
         );
-        assert!(
-            stderr.contains("1 Rust, 1 JavaScript, 1 TypeScript, 1 Tsx"),
-            "{stderr}"
-        );
+        assert!(stderr.contains("1 Rust"), "{stderr}");
         assert!(
             stderr.contains("skipped 1 files with no adapter: 1 .py"),
             "{stderr}"

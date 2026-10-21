@@ -1,13 +1,13 @@
 //! Best-effort Alternative Classes with Different Interfaces heuristic.
 //!
-//! Within one Java file, report classes that have at least two methods with
+//! Within one source file, report classes that have at least two methods with
 //! matching body AST shapes. Identifier names and literal values are ignored,
 //! while operators and control-flow structure remain part of the shape. This
 //! catches similar implementations with different APIs without treating a
 //! project-wide match on generic one-line methods as a pair.
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Alternative Classes with Different Interfaces";
@@ -15,19 +15,19 @@ pub const SMELL_NAME: &str = "Alternative Classes with Different Interfaces";
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
+        .filter(|file| file.language != LanguageId::Rust)
         .flat_map(file_findings)
         .collect()
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
-    let classes = java::JAVA
+    let classes = model_for(file.language)
         .types(file)
         .into_iter()
-        .filter(|ty| ty.kind() == "class_declaration")
+        .filter(|ty| model_for(file.language).is_data_type(ty.kind()))
         .filter_map(|ty| {
-            let name = java::JAVA.type_name(file.at(ty))?.to_owned();
-            let methods = java::JAVA
+            let name = model_for(file.language).type_name(file.at(ty))?.to_owned();
+            let methods = model_for(file.language)
                 .methods(file.at(ty))
                 .into_iter()
                 .filter_map(|method| {
@@ -59,7 +59,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
                 class_name: name,
-                line_numbers: vec![java::JAVA.decl_line(ty)],
+                line_numbers: vec![model_for(file.language).decl_line(ty)],
                 relative_file_path: file.rel.clone(),
                 additional_info: String::new(),
             })

@@ -29,33 +29,46 @@ const ALL_LANGUAGES: &[LanguageId] = &[
     LanguageId::TypeScript,
     LanguageId::Tsx,
 ];
-const JAVA_ONLY: &[LanguageId] = &[LanguageId::Java];
+const CLASS_LANGUAGES: &[LanguageId] = &[
+    LanguageId::Java,
+    LanguageId::JavaScript,
+    LanguageId::TypeScript,
+    LanguageId::Tsx,
+];
 
 const DETECTORS: &[Registration] = &[
     ("data-clumps", detectors::data_clumps::detect, ALL_LANGUAGES),
-    ("alt-classes", detectors::alt_classes::detect, JAVA_ONLY),
-    ("lazy-class", detectors::lazy_class::detect, JAVA_ONLY),
+    (
+        "alt-classes",
+        detectors::alt_classes::detect,
+        CLASS_LANGUAGES,
+    ),
+    ("lazy-class", detectors::lazy_class::detect, CLASS_LANGUAGES),
     (
         "prim-obsession",
         detectors::primitive_obsession::detect,
         ALL_LANGUAGES,
     ),
-    ("feature-envy", detectors::feature_envy::detect, JAVA_ONLY),
+    (
+        "feature-envy",
+        detectors::feature_envy::detect,
+        CLASS_LANGUAGES,
+    ),
     (
         "incomp-lib-class",
         detectors::incomplete_library_class::detect,
         ALL_LANGUAGES,
     ),
-    ("temp-field", detectors::temp_field::detect, JAVA_ONLY),
+    ("temp-field", detectors::temp_field::detect, CLASS_LANGUAGES),
     (
         "parallel-hierarchy",
         detectors::parallel_hierarchy::detect,
-        JAVA_ONLY,
+        CLASS_LANGUAGES,
     ),
     (
         "divergent-change",
         detectors::divergent_change::detect,
-        JAVA_ONLY,
+        CLASS_LANGUAGES,
     ),
     ("data-class", detectors::data_class::detect, ALL_LANGUAGES),
     ("middle-man", detectors::middle_man::detect, ALL_LANGUAGES),

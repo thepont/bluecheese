@@ -1,4 +1,4 @@
-//! Best-effort Temporary Field heuristic for Java.
+//! Best-effort Temporary Field heuristic for Java and ECMAScript.
 //!
 //! A class field is a candidate when every read found in its methods is nested
 //! inside an `if` consequence. Writes alone do not count as uses. This identifies
@@ -8,7 +8,7 @@
 use std::collections::BTreeSet;
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use crate::walk::descendants;
 use tree_sitter::Node;
 
@@ -23,19 +23,19 @@ struct DeclaredField<'a> {
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
+        .filter(|file| file.language != LanguageId::Rust)
         .flat_map(file_findings)
         .collect()
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
-    java::JAVA
+    model_for(file.language)
         .types(file)
         .into_iter()
-        .filter(|ty| ty.kind() == "class_declaration")
+        .filter(|ty| model_for(file.language).is_data_type(ty.kind()))
         .filter_map(|ty| {
-            let methods = java::JAVA.methods(file.at(ty));
-            let constructors = java::JAVA.constructors(file.at(ty));
+            let methods = model_for(file.language).methods(file.at(ty));
+            let constructors = model_for(file.language).constructors(file.at(ty));
             let declared_fields = fields(file, ty);
             let usage = FieldUsage {
                 file,
@@ -63,7 +63,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
             (!lines.is_empty()).then(|| Finding {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
-                class_name: java::JAVA
+                class_name: model_for(file.language)
                     .type_name(file.at(ty))
                     .unwrap_or("<anonymous>")
                     .to_owned(),
@@ -76,6 +76,22 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
 }
 
 fn fields<'a>(file: &SourceFile, class: Node<'a>) -> Vec<DeclaredField<'a>> {
+    if file.language != LanguageId::Java {
+        return model_for(file.language)
+            .fields(class)
+            .into_iter()
+            .filter_map(|field| {
+                let name = field
+                    .child_by_field_name("name")
+                    .or_else(|| field.child_by_field_name("property"))?;
+                Some(DeclaredField {
+                    node: field,
+                    name: file.text(name).to_owned(),
+                    primitive: true,
+                })
+            })
+            .collect();
+    }
     let Some(body) = class.child_by_field_name("body") else {
         return Vec::new();
     };
@@ -120,7 +136,7 @@ fn is_write_target(node: Node<'_>) -> bool {
 fn assignment_for(node: Node<'_>) -> Option<Node<'_>> {
     let field = if node
         .parent()
-        .is_some_and(|parent| parent.kind() == "field_access")
+        .is_some_and(|parent| matches!(parent.kind(), "field_access" | "member_expression"))
     {
         node.parent().expect("checked above")
     } else {
@@ -159,6 +175,14 @@ struct FieldUsage<'a> {
     methods: &'a [Node<'a>],
 }
 impl<'a> FieldUsage<'a> {
+    fn is_reference(&self, node: Node<'_>, name: &str) -> bool {
+        if self.file.language == LanguageId::Java {
+            return node.kind() == "identifier" && self.file.text(node) == name;
+        }
+        model_for(self.file.language)
+            .field_access_parts(node)
+            .is_some_and(|(object, field)| object.kind() == "this" && self.file.text(field) == name)
+    }
     fn references_only_in_branches(&self, name: &str) -> bool {
         let mut saw_reference = false;
         for method in self.methods {
@@ -167,7 +191,7 @@ impl<'a> FieldUsage<'a> {
             };
             for reference in descendants(body)
                 .into_iter()
-                .filter(|node| node.kind() == "identifier" && self.file.text(*node) == name)
+                .filter(|node| self.is_reference(*node, name))
             {
                 if is_write_target(reference) {
                     continue;
@@ -184,8 +208,7 @@ impl<'a> FieldUsage<'a> {
     fn has_unconditional_write(&self, name: &str) -> bool {
         self.methods.iter().any(|method| {
             descendants(*method).into_iter().any(|node| {
-                node.kind() == "identifier"
-                    && self.file.text(node) == name
+                self.is_reference(node, name)
                     && is_write_target(node)
                     && !inside_if_consequence(node, *method)
             })
@@ -195,10 +218,7 @@ impl<'a> FieldUsage<'a> {
     fn is_created_as_branch_local_object(&self, name: &str) -> bool {
         self.methods.iter().any(|method| {
             descendants(*method).into_iter().any(|node| {
-                if node.kind() != "identifier"
-                    || self.file.text(node) != name
-                    || !is_write_target(node)
-                {
+                if !self.is_reference(node, name) || !is_write_target(node) {
                     return false;
                 }
                 let Some(assignment) = assignment_for(node) else {
@@ -208,9 +228,12 @@ impl<'a> FieldUsage<'a> {
                     return false;
                 };
                 inside_if_consequence(node, *method)
-                    && descendants(value)
-                        .into_iter()
-                        .any(|child| child.kind() == "object_creation_expression")
+                    && descendants(value).into_iter().any(|child| {
+                        matches!(
+                            child.kind(),
+                            "object_creation_expression" | "new_expression"
+                        )
+                    })
             })
         })
     }
@@ -234,13 +257,13 @@ impl<'a> FieldUsage<'a> {
                     let condition_nodes = descendants(condition);
                     condition_nodes
                         .iter()
-                        .any(|node| node.kind() == "identifier" && self.file.text(*node) == name)
+                        .any(|node| self.is_reference(*node, name))
                         && condition_nodes
                             .iter()
                             .any(|node| matches!(node.kind(), "null_literal" | "null"))
-                        && descendants(consequence).iter().any(|node| {
-                            node.kind() == "identifier" && self.file.text(*node) == name
-                        })
+                        && descendants(consequence)
+                            .iter()
+                            .any(|node| self.is_reference(*node, name))
                 })
         })
     }
@@ -256,7 +279,7 @@ impl<'a> FieldUsage<'a> {
                     .filter(|method| {
                         descendants(**method)
                             .into_iter()
-                            .any(|node| node.kind() == "identifier" && self.file.text(node) == name)
+                            .any(|node| self.is_reference(node, name))
                     })
                     .count();
                 (name, methods_using_field)

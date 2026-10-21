@@ -1,11 +1,11 @@
-//! Best-effort Lazy Class heuristic for Java.
+//! Best-effort Lazy Class heuristic for Java and ECMAScript.
 //!
 //! A fieldless class with exactly one method whose body consists of a single
 //! call is treated as a likely forwarding shell. This intentionally favors a
 //! narrow, concrete signal over trying to infer the value of every small class.
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
+use crate::lang::{LanguageId, SourceFile, model_for};
 use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Lazy Class";
@@ -13,27 +13,27 @@ pub const SMELL_NAME: &str = "Lazy Class";
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
+        .filter(|file| file.language != LanguageId::Rust)
         .flat_map(file_findings)
         .collect()
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
-    java::JAVA
+    model_for(file.language)
         .types(file)
         .into_iter()
-        .filter(|ty| ty.kind() == "class_declaration")
-        .filter(|ty| has_no_fields(*ty))
+        .filter(|ty| model_for(file.language).is_data_type(ty.kind()))
+        .filter(|ty| has_no_fields(file, *ty))
         .filter(|ty| {
-            let methods = java::JAVA.methods(file.at(*ty));
-            methods.len() == 1 && is_forwarding_method(methods[0])
+            let methods = model_for(file.language).methods(file.at(*ty));
+            methods.len() == 1 && is_forwarding_method(file, methods[0])
         })
         .filter_map(|ty| {
             Some(Finding {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
-                class_name: java::JAVA.type_name(file.at(ty))?.to_owned(),
-                line_numbers: vec![java::JAVA.decl_line(ty)],
+                class_name: model_for(file.language).type_name(file.at(ty))?.to_owned(),
+                line_numbers: vec![model_for(file.language).decl_line(ty)],
                 relative_file_path: file.rel.clone(),
                 additional_info: String::new(),
             })
@@ -41,7 +41,11 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
         .collect()
 }
 
-fn has_no_fields(class: Node<'_>) -> bool {
+fn has_no_fields(file: &SourceFile, class: Node<'_>) -> bool {
+    if file.language != LanguageId::Java {
+        let model = model_for(file.language);
+        return model.fields(class).is_empty() && model.constructors(file.at(class)).is_empty();
+    }
     let Some(body) = class.child_by_field_name("body") else {
         return false;
     };
@@ -51,7 +55,23 @@ fn has_no_fields(class: Node<'_>) -> bool {
         .any(|child| child.kind() == "field_declaration")
 }
 
-fn is_forwarding_method(method: Node<'_>) -> bool {
+fn is_forwarding_method(file: &SourceFile, method: Node<'_>) -> bool {
+    if file.language != LanguageId::Java {
+        let Some(statements) = model_for(file.language).body_statements(method) else {
+            return false;
+        };
+        if statements.len() != 1
+            || !matches!(
+                statements[0].kind(),
+                "return_statement" | "expression_statement"
+            )
+        {
+            return false;
+        }
+        return statements[0]
+            .named_child(0)
+            .is_some_and(|expression| expression.kind() == "call_expression");
+    }
     let Some(body) = method.child_by_field_name("body") else {
         return false;
     };

@@ -1,4 +1,4 @@
-//! Best-effort Parallel Inheritance Hierarchies heuristic for Java.
+//! Best-effort Parallel Inheritance Hierarchies heuristic for Java and ECMAScript.
 //!
 //! Within one source file, two base types form a candidate pair when at least
 //! two of their direct subclasses have corresponding names with a shared
@@ -7,7 +7,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
-use crate::lang::{LanguageId, LanguageModel, SourceFile, java};
+use crate::lang::{LanguageId, SourceFile, SourceNode, model_for};
 use tree_sitter::Node;
 
 pub const SMELL_NAME: &str = "Parallel Inheritance Hierarchies";
@@ -22,17 +22,19 @@ struct TypeInfo<'a> {
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
     files
         .iter()
-        .filter(|file| file.language == LanguageId::Java)
+        .filter(|file| file.language != LanguageId::Rust)
         .flat_map(file_findings)
         .collect()
 }
 
 fn file_findings(file: &SourceFile) -> Vec<Finding> {
-    let types = java::JAVA
+    let types = model_for(file.language)
         .types(file)
         .into_iter()
         .filter_map(|node| {
-            let name = java::JAVA.type_name(file.at(node))?.to_owned();
+            let name = model_for(file.language)
+                .type_name(file.at(node))?
+                .to_owned();
             let parents = parent_types(file, node);
             (!parents.is_empty()).then_some(TypeInfo {
                 node,
@@ -70,7 +72,7 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
                 smell_name: SMELL_NAME.to_owned(),
                 file_path: file.rel.clone(),
                 class_name: ty.name.clone(),
-                line_numbers: vec![java::JAVA.decl_line(ty.node)],
+                line_numbers: vec![model_for(file.language).decl_line(ty.node)],
                 relative_file_path: file.rel.clone(),
                 additional_info: String::new(),
             }
@@ -79,6 +81,14 @@ fn file_findings(file: &SourceFile) -> Vec<Finding> {
 }
 
 fn parent_types(file: &SourceFile, ty: Node<'_>) -> Vec<String> {
+    if file.language != LanguageId::Java {
+        let mut cursor = ty.walk();
+        return ty
+            .named_children(&mut cursor)
+            .filter(|node| matches!(node.kind(), "class_heritage" | "extends_type_clause"))
+            .flat_map(|heritage| ecmascript_parents(file.at(heritage)))
+            .collect();
+    }
     let mut parents = Vec::new();
     if let Some(superclass) = ty.child_by_field_name("superclass") {
         parents.extend(type_names(file, superclass));
@@ -87,6 +97,24 @@ fn parent_types(file: &SourceFile, ty: Node<'_>) -> Vec<String> {
         parents.extend(type_names(file, interfaces));
     }
     parents
+}
+
+fn ecmascript_parents(source: SourceNode<'_>) -> Vec<String> {
+    let file = source.file();
+    let node = source.node();
+    if matches!(
+        node.kind(),
+        "identifier" | "type_identifier" | "member_expression" | "nested_type_identifier"
+    ) {
+        return vec![file.text(node).to_owned()];
+    }
+    if matches!(node.kind(), "type_arguments" | "call_expression") {
+        return Vec::new();
+    }
+    let mut cursor = node.walk();
+    node.named_children(&mut cursor)
+        .flat_map(|child| ecmascript_parents(file.at(child)))
+        .collect()
 }
 
 fn type_names(file: &SourceFile, node: Node<'_>) -> Vec<String> {
