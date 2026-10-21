@@ -1,3 +1,4 @@
+// @tests bluecheese/java/inappropriate-intimacy
 /** Test BlueCheese's Java inappropriate-intimacy rule. */
 import java
 

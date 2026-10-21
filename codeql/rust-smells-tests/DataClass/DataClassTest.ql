@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/data-class
 /** Test BlueCheese's Rust public-data-class rule. */
 import codeql.rust.elements.Struct
 import codeql.rust.elements.StructField

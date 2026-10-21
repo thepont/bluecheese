@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/inappropriate-intimacy
 /** Test resolved foreign-struct field reads in Rust. */
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.FieldExpr

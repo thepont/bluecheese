@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/refused-bequest
 /** Test the JavaScript/TypeScript refused-bequest rule. */
 import javascript
 

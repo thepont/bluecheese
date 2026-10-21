@@ -1,3 +1,4 @@
+// @tests bluecheese/java/middle-man
 /** Test BlueCheese's Java Middle Man rule. */
 import java
 

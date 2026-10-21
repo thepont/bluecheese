@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/long-parameter-list
 /** Test BlueCheese's JavaScript/TypeScript long-parameter rule. */
 import javascript
 import LongParameterListLib

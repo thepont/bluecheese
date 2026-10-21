@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/data-class
 /** Test BlueCheese's TypeScript public-data-class rule. */
 import javascript
 

@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/shotgun-surgery
 /** Test the JavaScript/TypeScript shotgun-surgery rule. */
 import javascript
 

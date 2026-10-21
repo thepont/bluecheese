@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/shotgun-surgery
 /** Test the Rust shotgun-surgery rule. */
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.Function

@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/duplicate-code
 import javascript
 
 predicate sameShape(MethodDefinition left, MethodDefinition right) {

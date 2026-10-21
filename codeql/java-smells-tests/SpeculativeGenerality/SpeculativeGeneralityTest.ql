@@ -1,3 +1,4 @@
+// @tests bluecheese/java/speculative-generality
 /** Test BlueCheese's Java speculative-generality rule. */
 import java
 

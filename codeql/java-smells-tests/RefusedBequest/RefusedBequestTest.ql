@@ -1,3 +1,4 @@
+// @tests bluecheese/java/refused-bequest
 /** Test BlueCheese's Java Refused Bequest rule. */
 import java
 

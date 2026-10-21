@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/inappropriate-intimacy
 /** Test the TypeScript resolved-field subset of Inappropriate Intimacy. */
 import javascript
 

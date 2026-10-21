@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/speculative-generality
 /** Test the Rust no-implementation subset of Speculative Generality. */
 import codeql.rust.elements.Impl
 import codeql.rust.elements.Trait

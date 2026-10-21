@@ -1,3 +1,4 @@
+// @tests bluecheese/java/alternative-classes-different-interfaces
 /** Test BlueCheese's Java Alternative Classes heuristic. */
 import java
 

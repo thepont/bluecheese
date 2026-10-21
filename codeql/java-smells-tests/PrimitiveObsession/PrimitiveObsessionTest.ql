@@ -1,3 +1,4 @@
+// @tests bluecheese/java/primitive-obsession
 /** Test BlueCheese's Java primitive-obsession rule. */
 import java
 

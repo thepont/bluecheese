@@ -1,3 +1,4 @@
+// @tests bluecheese/java/type-code-ladders
 /** Test the Java same-selector if/else-if ladder subset. */
 import java
 

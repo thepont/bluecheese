@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/primitive-obsession
 /** Test BlueCheese's Rust primitive-obsession rule. */
 import codeql.rust.elements.Struct
 import codeql.rust.elements.StructField

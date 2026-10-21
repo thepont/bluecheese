@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/large-class
 /** Test the JavaScript/TypeScript large-class field-count rule. */
 import javascript
 

@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/large-class
 /** Test the Rust large-class field-count rule. */
 import codeql.rust.elements.Struct
 import codeql.rust.elements.StructField

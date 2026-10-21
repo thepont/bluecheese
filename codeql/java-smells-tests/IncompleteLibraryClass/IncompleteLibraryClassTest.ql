@@ -1,3 +1,4 @@
+// @tests bluecheese/java/incomplete-library-class
 /** Test the Java repeated-imported-type helper subset. */
 import java
 

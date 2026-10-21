@@ -1,3 +1,4 @@
+// @tests bluecheese/java/long-method
 /** Test BlueCheese's Java long-method rule. */
 import java
 import LongMethodLib

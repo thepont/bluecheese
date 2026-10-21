@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/message-chains
 /** Test BlueCheese's Rust message-chains rule. */
 import codeql.rust.elements.MethodCallExpr
 

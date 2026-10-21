@@ -1,3 +1,4 @@
+// @tests bluecheese/java/lazy-class
 /** Test BlueCheese's Java Lazy Class rule. */
 import java
 import LazyClassLib

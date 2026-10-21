@@ -1,3 +1,4 @@
+// @tests bluecheese/java/data-class
 /** Test BlueCheese's Java public-data-class rule. */
 import java
 

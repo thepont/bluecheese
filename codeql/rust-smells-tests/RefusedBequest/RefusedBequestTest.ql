@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/refused-bequest
 /** Test the Rust refused-bequest rule for explicit trait stubs. */
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.Function

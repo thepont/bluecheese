@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/long-method
 /** Test BlueCheese's Rust long-method rule. */
 import rust
 import LongMethodLib

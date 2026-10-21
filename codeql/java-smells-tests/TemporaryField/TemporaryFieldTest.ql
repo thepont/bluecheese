@@ -1,3 +1,4 @@
+// @tests bluecheese/java/temporary-field
 /** Test the null-guard case of BlueCheese's Java Temporary Field rule. */
 import java
 

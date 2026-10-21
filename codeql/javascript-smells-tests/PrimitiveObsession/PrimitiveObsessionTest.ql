@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/primitive-obsession
 /** Test BlueCheese's TypeScript primitive-obsession rule. */
 import javascript
 

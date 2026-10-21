@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/long-parameter-list
 import LongParameterListLib
 
 from LongParameterListFunction function

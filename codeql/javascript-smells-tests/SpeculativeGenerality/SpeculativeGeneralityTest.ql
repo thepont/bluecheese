@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/speculative-generality
 /** Test JavaScript/TypeScript abstract-class and interface coverage. */
 import javascript
 

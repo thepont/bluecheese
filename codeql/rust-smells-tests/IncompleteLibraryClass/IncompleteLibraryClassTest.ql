@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/incomplete-library-class
 import rust
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.Function

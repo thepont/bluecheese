@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/long-method
 /** Test BlueCheese's JavaScript and TypeScript long-method rule. */
 import javascript
 import LongMethodLib

@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/duplicate-code
 import rust
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.Function

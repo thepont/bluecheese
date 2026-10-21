@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/switch-statements
 /** Test BlueCheese's JavaScript and TypeScript Switch Statements rule. */
 import javascript
 

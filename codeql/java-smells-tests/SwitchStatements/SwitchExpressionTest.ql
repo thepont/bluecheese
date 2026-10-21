@@ -1,3 +1,4 @@
+// @tests bluecheese/java/switch-expressions
 /** Test BlueCheese's Java Switch Expressions rule. */
 import java
 

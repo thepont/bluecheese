@@ -1,3 +1,4 @@
+// @tests bluecheese/java/long-parameter-list
 /** Test BlueCheese's Java long-parameter rule. */
 import java
 import LongParameterListLib

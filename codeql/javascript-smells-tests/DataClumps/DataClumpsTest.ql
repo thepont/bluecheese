@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/data-clumps
 /** Test BlueCheese's JavaScript and TypeScript data-clumps rule. */
 import javascript
 

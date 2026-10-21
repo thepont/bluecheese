@@ -1,3 +1,4 @@
+// @tests bluecheese/java/message-chains
 /** Test BlueCheese's Java message-chains rule. */
 import java
 

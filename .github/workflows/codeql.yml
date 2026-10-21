@@ -17,6 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Require positive controls for every custom query
+        run: cargo test --locked --test codeql_coverage
+
       - uses: github/codeql-action/init@v4
         with:
           languages: java,javascript-typescript,rust

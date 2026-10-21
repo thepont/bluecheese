@@ -1,3 +1,4 @@
+// @tests bluecheese/java/duplicate-code
 /** Test the Java same-class duplicate-body subset. */
 import java
 

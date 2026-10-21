@@ -1,3 +1,4 @@
+// @tests bluecheese/java/divergent-change
 /** Test the repeated-switch case of BlueCheese's Java Divergent Change rule. */
 import java
 

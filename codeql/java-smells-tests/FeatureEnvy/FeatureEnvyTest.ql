@@ -1,3 +1,4 @@
+// @tests bluecheese/java/feature-envy
 /** Test BlueCheese's Java Feature Envy rule. */
 import java
 import FeatureEnvyLib

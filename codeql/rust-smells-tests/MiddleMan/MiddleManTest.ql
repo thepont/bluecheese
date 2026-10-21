@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/middle-man
 import rust
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.FieldExpr

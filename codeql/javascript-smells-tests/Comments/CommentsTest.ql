@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/comments
 /** Test BlueCheese's JavaScript/TypeScript Comments rule. */
 import javascript
 

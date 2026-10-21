@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/comments
 /** Test BlueCheese's Rust explanatory-comment rule. */
 import rust
 

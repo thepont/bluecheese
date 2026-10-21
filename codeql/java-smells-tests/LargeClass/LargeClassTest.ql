@@ -1,3 +1,4 @@
+// @tests bluecheese/java/large-class
 /** Test the field-count branch of BlueCheese's Java Large Class rule. */
 import java
 

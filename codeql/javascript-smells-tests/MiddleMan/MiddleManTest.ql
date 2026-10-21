@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/middle-man
 import javascript
 
 predicate delegatesThroughProjectField(MethodDefinition method, ClassDefinition owner) {

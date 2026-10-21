@@ -1,3 +1,4 @@
+// @tests bluecheese/java/parallel-hierarchy
 /** Test BlueCheese's Java Parallel Inheritance Hierarchies rule. */
 import java
 

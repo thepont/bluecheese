@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/data-clumps
 /** Test BlueCheese's Rust data-clumps rule. */
 import codeql.rust.elements.AssocItemList
 import codeql.rust.elements.Function

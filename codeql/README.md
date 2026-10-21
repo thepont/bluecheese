@@ -129,6 +129,7 @@ Use the CodeQL bundle that matches the repository's CodeQL query libraries.
 From the repository root, run:
 
 ```sh
+cargo test --locked --test codeql_coverage
 codeql test run \
   codeql/rust-smells-tests \
   codeql/java-smells-tests \
@@ -137,3 +138,28 @@ codeql test run \
 
 The GitHub Actions workflow runs these tests before analyzing Rust, Java, and
 JavaScript/TypeScript with all three custom query packs.
+
+### Positive controls are required
+
+Each test query declares the production query ID it exercises:
+
+```ql
+// @tests bluecheese/rust/duplicate-code
+```
+
+Every production query must have at least one test with a nonempty `.expected`
+file. The coverage gate rejects missing tests, missing expectations, unknown or
+duplicate IDs, and positive tests that expect no findings. CodeQL then checks
+that the query actually produces those expected findings. Both gates must pass.
+
+A dedicated negative test may add `// @negative-only` and expect no findings;
+it cannot satisfy the production query's positive-control requirement. Mixed
+fixtures can contain positive and negative cases, with only the intended
+findings in the expectation. Cover the detection threshold on both sides when
+adding a rule. Rust Duplicate Code demonstrates below, at, and above its
+three-statement threshold, unequal counts, and separate implementation blocks.
+
+Write expectations from the intended behavior and observe the regression fail
+before repairing the fixture or query. Review differences before changing an
+expectation. Positive controls prove detection on those fixtures; the coverage
+limitations above still apply.

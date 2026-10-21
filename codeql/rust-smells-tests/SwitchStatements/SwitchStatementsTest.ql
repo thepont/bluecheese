@@ -1,3 +1,4 @@
+// @tests bluecheese/rust/switch-statements
 /** Test BlueCheese's Rust match-expression rule. */
 import codeql.rust.elements.MatchExpr
 

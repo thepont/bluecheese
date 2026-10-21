@@ -1,3 +1,4 @@
+// @tests bluecheese/java/shotgun-surgery
 /** Test BlueCheese's Java Shotgun Surgery coupling rule. */
 import java
 

@@ -1,3 +1,4 @@
+// @tests bluecheese/java/switch-statements
 /** Test BlueCheese's Java Switch Statements rule. */
 import java
 

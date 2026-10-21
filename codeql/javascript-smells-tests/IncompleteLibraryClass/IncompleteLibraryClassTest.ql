@@ -1,3 +1,4 @@
+// @tests bluecheese/javascript/incomplete-library-class
 import javascript
 
 predicate isPrototypePatch(AssignExpr assignment, Identifier importedName, string methodName, FunctionExpr implementation) {

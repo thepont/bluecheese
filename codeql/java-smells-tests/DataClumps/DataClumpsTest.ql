@@ -1,3 +1,4 @@
+// @tests bluecheese/java/data-clumps
 /** Test BlueCheese's Java data-clumps rule. */
 import java
 
