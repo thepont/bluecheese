@@ -107,3 +107,28 @@ fn parentheses_preserve_chains_and_ordinary_calls_interrupt_them() {
         }
     }
 }
+
+#[test]
+fn ecmascript_property_chains_count_navigation_and_preserve_boundaries() {
+    for ext in ["js", "ts", "tsx"] {
+        for (expression, expected) in [
+            ("a.b.c.d", 1),
+            ("a?.b?.c?.d", 1),
+            ("((a.b)).c.d", 1),
+            ("a['b'].c.d", 1),
+            ("a.getB().c.d", 1),
+            ("a.b.getC().d", 1),
+            ("a.b.c", 0),
+            ("a.b().c().d()", 0),
+            ("a.b.save().c.d", 0),
+            ("a.b.c()", 0),
+        ] {
+            let source = format!("function run(a) {{ return {expression}; }}");
+            let findings = scan(&format!("chain.{ext}"), &source);
+            assert_eq!(findings.len(), expected, "{ext}: {expression}");
+            if expected > 0 {
+                assert_eq!(findings[0].line_numbers, [1]);
+            }
+        }
+    }
+}

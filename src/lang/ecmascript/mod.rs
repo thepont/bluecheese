@@ -53,11 +53,7 @@ impl LanguageModel for EcmaModel {
     }
 
     fn accessor_chain_depth(&self, source: SourceNode<'_>) -> usize {
-        let SourceNode { file, node } = source;
-        if node.kind() != "call_expression" {
-            return 0;
-        }
-        crate::lang::accessors::ECMASCRIPT.depth(file, node)
+        crate::lang::accessors::ECMASCRIPT.navigation_depth(source)
     }
 
     fn is_comment(&self, node: Node<'_>) -> bool {

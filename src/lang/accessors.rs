@@ -1,4 +1,4 @@
-use super::SourceFile;
+use super::{SourceFile, SourceNode};
 use tree_sitter::Node;
 
 pub(super) fn java_accessor_depth(file: &SourceFile, node: Node<'_>) -> usize {
@@ -44,6 +44,45 @@ pub(super) const ECMASCRIPT: MemberAccessorSyntax = MemberAccessorSyntax {
 };
 
 impl MemberAccessorSyntax {
+    pub(super) fn navigation_depth(&self, source: SourceNode<'_>) -> usize {
+        let file = source.file();
+        let node = source.node();
+        if node.parent().is_some_and(|parent| {
+            parent.kind() == "call_expression"
+                && parent.child_by_field_name("function") == Some(node)
+        }) {
+            return 0;
+        }
+        let mut depth = 0;
+        let mut current = Some(node);
+        while let Some(node) = current.and_then(unwrap_parens) {
+            let member = if node.kind() == "call_expression" {
+                let Some(function) = node.child_by_field_name("function") else {
+                    break;
+                };
+                let Some(name) = function.child_by_field_name(self.name_field) else {
+                    break;
+                };
+                if !self
+                    .prefixes
+                    .iter()
+                    .any(|prefix| file.text(name).starts_with(prefix))
+                {
+                    break;
+                }
+                function
+            } else {
+                node
+            };
+            if member.kind() != self.member_kind && member.kind() != "subscript_expression" {
+                break;
+            }
+            depth += 1;
+            current = member.child_by_field_name(self.receiver_field);
+        }
+        depth
+    }
+
     pub(super) fn depth(&self, file: &SourceFile, node: Node<'_>) -> usize {
         let Some(function) = node.child_by_field_name("function") else {
             return 0;
@@ -83,7 +122,7 @@ fn unwrap_parens(mut node: Node<'_>) -> Option<Node<'_>> {
         let mut cursor = node.walk();
         node = node
             .named_children(&mut cursor)
-            .find(|child| child.kind() != "identifier")?;
+            .find(|child| child.kind() != "comment")?;
     }
     Some(node)
 }
