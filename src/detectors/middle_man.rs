@@ -1,6 +1,6 @@
 //! Port of StaticNose's pure delegation and fan out rule.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::finding::Finding;
 use crate::lang::{LanguageId, SourceFile, model_for};
@@ -15,13 +15,19 @@ struct Analysis<'a> {
 }
 
 pub fn detect(files: &[SourceFile]) -> Vec<Finding> {
+    let project_types: BTreeMap<_, _> = files
+        .iter()
+        .map(|file| file.language)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .map(|language| (language, project_type_names(files, language)))
+        .collect();
     files
         .iter()
         .flat_map(|file| {
-            let project_types = project_type_names(files, file.language);
             let analysis = Analysis {
                 file,
-                project_types: &project_types,
+                project_types: &project_types[&file.language],
             };
             let stats: StatsReader = if file.language == LanguageId::Java {
                 |query| query.java_stats()

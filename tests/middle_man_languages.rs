@@ -36,3 +36,39 @@ fn typescript_and_javascript_wrappers_are_reported() {
         assert_eq!(findings[0].class_name, "Service", "{name}");
     }
 }
+
+#[test]
+fn project_wide_delegates_are_found_across_a_large_mixed_language_tree() {
+    let tree = common::TempTree::new("middle-man-scale");
+    for index in 0..1627 {
+        tree.write(
+            &format!("other{index}.ts"),
+            &format!("class Other{index} {{ first() {{ return 1; }} second() {{ return 2; }} }}"),
+        );
+    }
+    tree.write("target.js", "class Target { first() {} second() {} }");
+    tree.write("service.ts", "class Service { target: Target; first() { return this.target.first(); } second() { return this.target.second(); } }");
+    let project = bluecheese::lang::load_project(tree.path()).unwrap();
+    assert_eq!(project.files.len(), 1629);
+    let started = std::time::Instant::now();
+    let findings = bluecheese::detect(&project.files, "middle-man").unwrap();
+    eprintln!("Middle Man on 1629 files: {:?}", started.elapsed());
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].class_name, "Service");
+    assert_eq!(findings[0].relative_file_path, "service.ts");
+}
+
+#[test]
+fn an_unrelated_language_cannot_supply_a_delegation_target() {
+    let files = [
+        parse(
+            "target.java",
+            "class Target { void first() {} void second() {} }",
+        ),
+        parse(
+            "service.ts",
+            "class Service { target: Target; first() { return this.target.first(); } second() { return this.target.second(); } }",
+        ),
+    ];
+    assert!(bluecheese::detect(&files, "middle-man").unwrap().is_empty());
+}
